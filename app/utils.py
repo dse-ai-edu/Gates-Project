@@ -92,7 +92,7 @@ def parse_teaching_style(
 
 def parse_teaching_text(
         question: str,
-        answer: str, 
+        answer: str,
         grading: list[str, str]) -> str:
     
     grading_rubric, grading_text = grading
@@ -102,5 +102,7 @@ def parse_teaching_text(
     if grading_rubric and grading_text:
         grading_template = GRADING_BASE.format(grading_rubric=grading_rubric, grading_text=grading_text)
     # Step 2: final user text
-    final_respond_prompt = GRADING_LOAD.format(question=question, answer=answer)
+    final_respond_prompt = GRADING_LOAD.format(requirement=FEEDBACK_REQUIREMENT, question=question, answer=answer)
+    final_respond_prompt = final_respond_prompt.replace("<<GRADING_BASE_PLACEHOLDER>>", grading_template)
     return final_respond_prompt
+

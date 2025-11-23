@@ -265,11 +265,80 @@ The output, i.e., merged teacher style template, should be no more than 250 word
 
 ## Bridge grading result for response generation
 
-GRADING_BASE = """# Here is the grading result of the same question and answer. 
+GRADING_BASE = """# Here is the grading result of the same question and student answer. 
 You can regard them as a reference. 
-## Rubric: {grading_rubric}. 
-## Grading: {grading_text}."""
+## Rubric for Student ANswer: {grading_rubric}. 
+## Grading for Student ANswer: {grading_text}.\n"""
 
-GRADING_LOAD = """Based on the given question and student answer, please generate a response to the student." \
+GRADING_LOAD = """<<GRADING_BASE_PLACEHOLDER>>
+
+Based on the given question and student answer, please generate a response to the student." \
+## Requirement for your response (try to get higher score for your response): {requirement}.
+
 ## Question: {question}. 
-## Student Answer: {answer}."""
+## Student Answer: {answer}.
+## Teacher Response: \n"""
+
+
+## Feedback Promopt as Requirements
+FEEDBACK_REQUIREMENT = """# KSMT (Knowledge of Students' Mathematical Thinking) Rubric
+
+## Overview
+The KSMT rubric for evaluating teacher responses aims to differentiate responses based on how well they address students' mathematical understanding of the key concepts underlying their solutions or strategies.
+
+For this question, we aim to assess whether teachers understand the student's solution and recognize her proportional reasoning ability. The question specifically asks teachers to analyze Amy's understanding of equivalent ratios; therefore, responses providing accurate and specific analyses of Amy's understanding, with evidence from her work, would receive higher scores.
+
+## Student Work Analysis
+
+Amy's math solution and written explanation do not align perfectly; therefore, it is important to attend closely to the details in both and to acknowledge responses that recognize she is thinking multiplicatively (demonstrating an understanding of equivalent ratios). 
+
+Amy's approach reveals a strong understanding of creating equivalent amounts to compare different situations using scaling strategies. Evidence of this comes from her math work:
+- She compares the first deal (Savemore) by determining the price of 4 crayons, as the deal originally lists the price for 8 crayons
+- Amy does this by multiplying the price by 0.5, demonstrating an understanding of creating equivalent ratios
+- She then compares the price for 12 crayons across two deals (Savemore and BargainHut)
+- Subsequently, she creates equivalent ratios by determining the prices for 24 crayons for the first (Savemore) and third (Costless) deals
+
+The choice of 24 crayons is deliberate, as the third deal provides the price for 24 crayons. However, her written explanation — where she states, "It's only 4 crayons more" — might suggest an additive strategy, but her scaling strategies indicate that she is not thinking additively; rather, she is using imprecise language to describe what she did.
+
+Amy's explanation highlights that, while adding 4 crayons increases the total cost to $2.40, the first deal costs $1 for 8 crayons. Her solution and written explanation provide evidence of her understanding of the covariance between total cost and the number of crayons and demonstrates her grasp of comparing ratios through scaling.
+
+## Scoring Criteria (3-Point Scale)
+
+### Score of 2
+**Awarded if:**
+- The teacher's response includes an accurate analysis of the student's understanding of the multiplicative relationship between quantities in creating equivalent ratios and uses that knowledge to compare different situations
+- The response must provide specific information about how the teacher reached this conclusion or why the student's approach is correct
+- The focus must be on the student's mathematical thinking, and the entire response must be correct
+- **OR** The response diagnoses the student's mathematical thinking, even if the issue is not immediately apparent (e.g., recognizing that Amy's written explanation might suggest additive thinking, but her math work clearly shows multiplicative understanding)
+
+### Score of 1
+**Awarded if:**
+- The teacher's response includes an accurate description or analysis of the student's understanding of creating equivalent ratios (proportions)
+- The evidence is either purely procedural (focusing on what the student did or did not do) or lacks explicit statements about the student's understanding of the multiplicative relationship between quantities
+- The analysis and description of the student's understanding must be specific, not generic
+
+### Score of 0
+**Awarded if:**
+- The teacher's response provides a generic, incorrect, or absent description or analysis of the student's understanding of creating equivalent ratios using multiplicative strategies
+- **OR** The teacher's response restates what the student said or did without analyzing the student's thinking or reasoning
+- Simply stating that the student answered correctly does not demonstrate a focus on the student's understanding
+
+## Examples by Score
+
+| Score | Sample Response | Reason |
+|-------|-----------------|--------|
+| **0** | "Their answer is correct but their math work and explanation is difficult to follow." | No analysis of student thinking. |
+| **0** | "Amy does not understand the concept of unit price as the price for one item." | Incorrect analysis with no evidence supporting the claim. |
+| **1** | "They were able to understand that a group of 8 crayons cost 1.00 dollars and that 3 groups of 8 should have cost 3.00 but didn't." | Describes the student's multiplicative thinking by referencing what the student did. |
+| **1** | "This student knew to find the cost for 4 crayons by figuring out how much 4 crayons cost per each box..." | Correct analysis but evidence is procedural (based on what student did). |
+| **2** | "The student understands the multiplicative relationship between the amount of crayons. 8 crayons × 1.5 = 12. Amy has strong number sense in this thinking." | Correct analysis supported by evidence from student's work. |
+| **2** | "Amy understands the importance of comparing equivalent units. They scaled deal A up to 12 crayons in order to compare with deal B..." | Teacher clearly follows student's work and understands scaling strategies. |
+
+## Key Focus Areas
+Responses focusing on Amy's understanding of:
+- Equivalent ratios
+- Proportion and proportional reasoning
+- Multiplicative relationships
+- Specific details from her mathematical work
+
+Should receive higher scores when they demonstrate analysis of **thinking and understanding** rather than just describing **what Amy did**."""
