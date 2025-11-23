@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+  	<title>Task Selection</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,700' rel='stylesheet' type='text/css'>
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+
+	</head>
+	<body>
+		<div id="colorlib-main" style="width:100%;">
+			<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+				<h2 class="h4" style="cursor: pointer;"><a href="/" style="color: black">❮ Back</a></h2>
+			</div>
+			<section class="ftco-section pt-4 mb-5 ftco-intro">
+				<div id="menu" class="container-fluid px-3 px-md-0">
+				</div>
+			</section>
+		</div><!-- END COLORLIB-MAIN -->
+	</div><!-- END COLORLIB-PAGE -->
+
+	</section>
+
+    <script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+	<script>
+		function showTask() {
+			// need to reload from the database and set it as the menu results
+			fetch('/api/task/show', {
+				method: 'POST', 
+				headers: {
+					'Content-Type': 'application/json'
+				}, 
+				body: JSON.stringify({'user':'test'})
+			}).then(res => res.json()).then(data => {
+				if (data.task_list) {
+					const container = document.getElementById('menu');
+
+					for (let i=0; i<data.task_list.length+4; i+=4) {
+						const rowDiv = document.createElement('div');
+						rowDiv.setAttribute('class','row');
+						for (let j=0; j<4; j++) {
+							if (i+j >= data.task_list.length) {
+								break;
+							}
+							const taskElement = document.createElement('div');
+							taskElement.setAttribute('class','col-md-3');
+							
+							const taskName = document.createElement('h2');
+							taskName.setAttribute('class','h4');
+							taskName.textContent = data.task_list[i+j].name;
+							taskElement.appendChild(taskName);
+
+							const taskDesc = document.createElement('p');
+							taskDesc.textContent = data.task_list[i+j].desc;
+							taskElement.appendChild(taskDesc);
+
+							const taskBtn = document.createElement('button');
+							taskBtn.setAttribute('id','reload-btn');
+							taskBtn.setAttribute('tid',data.task_list[i+j].tid);
+							taskBtn.textContent = 'Enter';
+							taskElement.appendChild(taskBtn);
+
+							rowDiv.appendChild(taskElement);
+						}
+						if (i >= data.task_list.length) {
+							break;
+						}
+						container.appendChild(rowDiv)
+						if (rowDiv.childElementCount == 4) {
+							const br = document.createElement('br');
+							container.appendChild(br);
+						}
+					}
+				}
+			}).then(() => {
+				document.querySelectorAll('#reload-btn').forEach(e => {
+					e.addEventListener("click", function() {
+						sessionStorage.setItem('tid',this.getAttribute('tid'));
+						window.location.href=`/create?section=${encodeURIComponent('answer')}`;
+					})
+				})
+				// document.getElementById("reload-btn").addEventListener("click", function() {
+				// 	sessionStorage.setItem('tid',this.getAttribute('tid'));
+				// 	window.location.href=`/create?section=${encodeURIComponent('answer')}`;
+				// })		
+			})
+		}
+
+		window.onload = showTask;
+	</script>
+    
+	<!-- <script>
+		showTask();
+	</script> -->
+
+	</body>
+</html>

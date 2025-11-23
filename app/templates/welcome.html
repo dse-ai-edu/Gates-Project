@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<title>Welcome</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,700' rel='stylesheet' type='text/css'>
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+	<div id="colorlib-main" style="width:100%;">
+		<section class="ftco-section pt-4 mb-5 ftco-intro">
+			<div class="container-fluid px-3 px-md-0">
+				<div class="row">
+					<div class="col-md-12 mb-4">
+						<h1 class="h2">Welcome</h1>
+						<p>This AI-powered tool is specifically designed to automate the grading of questions for instructors. By supplying the system with question details and a grading rubric, it can generate scores, feedback, and confidence levels for each answer. Additionally, you can enhance its performance by providing external resources such as grading examples or related materials, which may improve grading accuracy. Please explore the two options below to experience the tool.</p>
+					</div>
+					<div class="col-md-6">
+						<h2 class="h4">Create Task</h2>
+						<p>The system will walk you through a step-by-step process to input the required information for creating an automatic grading task. Once all details are provided, you can begin using the tool to grade answers automatically.</p>						
+						<button id="create-btn">Enter</button>
+					</div>
+					<div class="col-md-6">
+						<h2 class="h4">Select Task</h2>
+						<p>The system allows you to access your previously created automatic grading tasks. You can immediately start grading answers using the saved settings, and also view, edit, or update the task configurations as needed.</p>
+						<button id="reload-btn">Enter</button>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div><!-- END COLORLIB-MAIN -->
+	</div><!-- END COLORLIB-PAGE -->
+
+	</section>
+
+	<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+	<script>
+		document.getElementById("create-btn").addEventListener("click", function() {
+			window.location.href=`/create?section=profile`;
+			// when you click the tid will be created 
+			sessionStorage.setItem('tid', crypto.randomUUID())
+		})
+
+		document.getElementById("reload-btn").addEventListener("click", function() {
+			window.location.href='/select';
+		})
+
+	</script>
+</body>
+
+</html>

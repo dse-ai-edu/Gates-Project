@@ -18,3 +18,4 @@ def llm_function(input_text: str, model_id: str = "gpt-4o-mini", max_tokens: int
         return response.choices[0].message.content.strip()
     except Exception as e:
         return f"Error: {str(e)}"
+    

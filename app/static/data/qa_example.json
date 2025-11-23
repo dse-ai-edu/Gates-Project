@@ -1,0 +1,15 @@
+{
+  "question": "What store offers the best deal? How do you know? Explain your decision. Options: SaveMore (5 count box, $1.25), BargainHut (12 count box, $2.40), CostLess (24 count box, $3.75)",
+  "answer": [
+    {
+      "q": "Which store offers the best deal?", 
+      "a": "SaveMore: 8*.5=4*3=12, 1*.5=.5*3=$1.5; BarginHut = $2.40; CostLess: 8*3=24, 1*3=$3.00, costless=$3.80."
+    },
+    {
+      "q": "How do you know? Explain your decision.", 
+      "a": "I know SaveMore is the best deal because it is a dollar and BargainHut is $2.40 even though it's only 4 crayons more. With CostLess it's only 3 times more but is $3.80 which is 80¢ more than you should pay."
+    }
+  ],
+  "evaluation": "Based on their answer provided, how would you rate Amy's level of understanding of equivalent ratios? Options: No/Limited understanding, Partial understanding, Strong understanding",
+  "response_prompt": "What can you say about Amy's understanding of equivalent ratios based on his explanation of the relationship between cost and number of crayons? Please focus on the student thinking demonstrated rather than the procedure they used."
+}

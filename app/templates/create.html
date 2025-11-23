@@ -1,0 +1,677 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+	<title>Automatic Grading Toolkit</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,700' rel='stylesheet' type='text/css'>
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/fileinput.css') }}">
+
+	<script>
+		window.onload = function () {
+			loadSection();
+		};
+	</script>
+
+</head>
+
+<body>
+	<div id="colorlib-page">
+		<a href="#" class="js-colorlib-nav-toggle colorlib-nav-toggle"><i></i></a>
+		<aside id="colorlib-aside" role="complementary" class="js-fullheight">
+			<nav id="colorlib-main-menu" role="navigation">
+				<ul>
+					<h3>Build Task</h3>
+					<li><a href="#" data-content="profile">Profile</a></li>
+					<li><a href="#" data-content="question">Question</a></li>
+					<!-- <li><a href="#" data-content="resource">Resource</a></li> -->
+					<li><a href="#" data-content="rubric">Rubric</a></li>
+					<li><a href="#" data-content="example">Example</a></li>
+					<li><a href="#" data-content="resource">Resource</a></li>
+					<li><a href="#" data-content="optimize">Optimize</a></li>
+					<br>
+					<h3>Start Grade</h3>
+					<li><a href="#" data-content="answer">Answer</a></li>
+					<li><a href="#" data-content="feedback">Feedback</a></li>
+				</ul>
+			</nav>
+		</aside> <!-- END COLORLIB-ASIDE -->
+
+		<div id="colorlib-main">
+		</div><!-- END COLORLIB-MAIN -->
+	</div><!-- END COLORLIB-PAGE -->
+
+	</section>
+
+	<script src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/popper.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/fileinput.js') }}"></script>
+	<script src="https://cdn.jsdelivr.net/npm/diff@5.2.0/dist/diff.min.js"></script>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", function () {
+			const menuLinks = document.querySelectorAll("#colorlib-main-menu a");
+
+			menuLinks.forEach(link => {
+				link.addEventListener("click", function (e) {
+					e.preventDefault();
+					let tid = sessionStorage.getItem('tid');
+					let section = this.getAttribute("data-content");
+					// we may change the way in this for reducing the request frequency to the mongodb
+					fetch('/api/section/load', {
+						method: 'POST', 
+						headers: {
+							'Content-Type': 'application/json'
+						}, 
+						body: JSON.stringify({'tid':tid,'section':section})
+					}).then(res => res.json()).then(data => {
+						if (data.info) {
+							if (data.info.text) {
+								window.location.href = `/create?section=${encodeURIComponent(section)}&input=text`		
+							} else {
+								window.location.href = `/create?section=${encodeURIComponent(section)}`
+							}
+						} else {
+							window.location.href = `/create?section=${encodeURIComponent(section)}`
+						}
+					})
+				});
+			});
+		});
+	</script>
+
+	<script>
+		function taskReload() {
+			const mainPanel = document.getElementById("colorlib-main");
+			// the idea is that based on the needed results, we can judge which is good (Text or File)
+			// everytime you click something, then the system is saving that task into the database.
+			// @ Luke, you may help me on it to load the contents
+		}
+
+		function collectInfo() {
+			let url = new URL(window.location.href);
+			let tid = sessionStorage.getItem('tid');
+			let input = url.searchParams.get('input');
+			let section = url.searchParams.get('section');
+
+			if (section=='profile') {
+				let taskName = document.getElementById('task-name').value;
+				let taskDesc = document.getElementById('task-desc').value;
+				return {'tid':tid, 'name':taskName, 'desc':taskDesc};
+			} else if (input=='text') {
+				let sectInfo = document.getElementById('sect-info').value;
+				return {'tid':tid, [section]: {'text':sectInfo}};
+			} else if (input=='file') {
+				return {'tid':tid, [section]: null};
+			} else {
+				return {'tid':tid, [section]: null};
+			}
+		}
+
+		function restoreInfo() {
+			let url = new URL(window.location.href);
+			let tid = sessionStorage.getItem('tid')
+			if (tid!=null) {
+				let input = url.searchParams.get('input');
+				let section = url.searchParams.get('section');
+
+				fetch(`/api/section/load`, {
+					method: 'POST', 
+					headers: {
+						'Content-Type': 'application/json'
+					}, 
+					body: JSON.stringify({'tid':tid,'section':section})
+				}).then(response => {
+					if (!response.ok) {
+						throw Error('Fail to load ratiotable content.');
+					}
+					return response.json()
+				}).then(result => {
+					if (section=='profile') {
+						if (result.name) {
+							document.getElementById('task-name').value = result.name;
+						}
+						if (result.desc) {
+							document.getElementById('task-desc').value = result.desc;
+						}
+					} else if (input=='text') {
+						if (result.info['text']) {
+							document.getElementById('sect-info').value = result.info['text'];
+						}
+					}				
+				}).catch(error => {
+					console.error(error)
+				})
+			}
+		}
+
+		function saveSection() {
+			let url = new URL(window.location.href);
+			let input = url.searchParams.get('input');
+			let section = url.searchParams.get('section');
+			
+			let sectInfo = collectInfo();
+			if (section=="profile") {
+
+				//addition// requires task name to be filled out when saving
+				const taskName = document.getElementById('task-name').value.trim();
+				if (!taskName) {
+					alert("❗ Task name cannot be empty. Please enter a task name.");
+					return;
+				}
+				//  //
+
+				fetch(`/api/task/create`, {
+					method: 'POST', headers: {
+						'Content-Type': 'application/json'
+					}, 
+					body: JSON.stringify(sectInfo)
+				}).then(response => {
+					if (!response.ok) {
+						throw Error('Save failed! Please try again.');
+					}
+					return response.json()
+				}).then(result => {
+					if (result.success) {
+
+						//  //added code... specific check mark for profile page
+						const status = document.getElementById('save-status');
+						status.textContent = '✔️ Saved';
+
+						const taskNameInput = document.getElementById('task-name');
+						const taskDescInput = document.getElementById('task-desc');
+
+						// Clear the check message when an edit is made
+						const clearStatus = () => {
+							status.textContent = '';
+							taskNameInput.removeEventListener('input', clearStatus);
+							taskDescInput.removeEventListener('input', clearStatus);
+						};
+						//attaches handler to input feilds so check disapears instantly after an edit
+						taskNameInput.addEventListener('input', clearStatus);
+						taskDescInput.addEventListener('input', clearStatus);
+						//  //
+
+					} else {
+						throw Error('Save failed! Please try again.');
+					}
+				}).catch(error => {
+					console.error(error)
+					alert(error)
+				})
+
+			} else {
+
+				//addition below// does not allow an empty save
+				if (input === 'text') {
+					const text = document.getElementById('sect-info').value.trim();
+					if (!text) {
+						alert("❗ Cannot save an empty response. Please enter some text.");
+						return;
+					}
+				}
+				//  //
+
+				fetch(`/api/section/save`, {
+					method: 'POST', headers: {
+						'Content-Type': 'application/json'
+					}, 
+					body: JSON.stringify(sectInfo)
+				}).then(response => {
+					if (!response.ok) {
+						throw Error('Save failed! Please try again.');
+					}
+					return response.json()
+				}).then(result => {
+					if (result.success) {
+						//addition below//  save/check mark appears after a succesful save
+						//alert('Save succeed! Please proceed to the next step.');
+						
+						//gets needed elements
+						const infoMessage = document.getElementById('info-message');
+						const originalText = infoMessage.textContent;
+						
+						//updates message when succesfully saved
+						infoMessage.textContent = '✔️ Saved';
+						infoMessage.style.color = 'green';
+
+						const sectInput = document.getElementById('sect-info');
+						
+						//when user makes an edit, original message is restored
+						const clearStatus = () => {
+							infoMessage.textContent = originalText;
+							infoMessage.style.color = '';
+							sectInput.removeEventListener('input', clearStatus);
+						};
+
+						sectInput.addEventListener('input', clearStatus);
+					//  //
+
+					} else {
+						throw Error('Save failed! Please try again.');
+					}
+				}).catch(error => {
+					console.error(error)
+					alert(error)
+				})
+			}
+		}
+
+		function resetSection() {
+			let url = new URL(window.location.href);
+			let input = url.searchParams.get('input');
+			let section = url.searchParams.get('section');
+			if (section=="profile") {
+				document.getElementById('task-name').value = '';
+				document.getElementById('task-desc').value = '';
+			} else if (input=='text') {
+				document.getElementById('sect-info').value = '';
+			}
+		}
+
+		function updateContent(template) {
+			let url = new URL(window.location.href);
+			let input = url.searchParams.get('input');
+			let section = url.searchParams.get('section');
+			let optid = url.searchParams.get('optid');
+			fetch(`/static/html/${template}.html`).then(
+				response => response.text()
+			).then(html => {
+				const parser = new DOMParser();
+				const shadow = parser.parseFromString(html, 'text/html');
+				document.getElementById('colorlib-main').innerHTML = shadow.getElementById('colorlib-main').innerHTML;
+				if (section == 'answer' && input=='text') {
+					document.getElementById('save-btn').textContent = 'Grade';
+					document.getElementById('save-btn').setAttribute('id', 'grade-btn');
+					document.getElementById('next-btn').remove();
+				}
+				if (['example','resource','optimize'].includes(section) && input==null) {
+					let skipBtn = (document.getElementById('back-btn')).cloneNode(true);
+					skipBtn.querySelector('a').textContent='Skip ❯';
+					skipBtn.querySelector('a').setAttribute('href','#');
+					skipBtn.setAttribute('id', 'next-btn');
+					document.getElementById('back-btn').parentNode.appendChild(skipBtn);
+				}
+			}).then(() => {
+				updateHandler();
+			}).then(() => {
+				if (section=='feedback') {
+					loadFeedback();
+				} else if (section=='rubric' && optid) {
+					loadOptimize(optid);
+				} else {
+					// restore the contents from the databse
+					restoreInfo();
+				}				
+			});
+		};
+
+		function updateHandler() {
+			const tid = sessionStorage.getItem('tid')
+			const url = new URL(window.location.href);
+			const input = url.searchParams.get('input');
+			const section = url.searchParams.get('section')
+			
+			if (document.getElementById('text-btn')) {
+				document.getElementById('text-btn').addEventListener('click', function () {
+					url.searchParams.set('input', 'text');
+					window.location.href = url.toString();
+				})
+			}
+
+			if (document.getElementById('file-btn')) {
+				document.getElementById('file-btn').addEventListener('click', function () {
+					url.searchParams.set('input', 'file');
+					window.location.href = url.toString();
+				})
+			}
+
+			if (document.getElementById('back-btn')) {
+				document.getElementById('back-btn').addEventListener('click', function () {
+					if (section=='answer' && input==null) {
+						// document.getElementById('back-btn').querySelector('a').setAttribute('href','/select');
+						window.location.href = '/select'
+					} else if (input) {
+						// for the page with input, the back is always get it back to the 
+						url.searchParams.delete('input');
+						window.location.href = url.toString();
+					} else {
+						let prevSibling = document.querySelector(`[data-content=${section}]`).parentNode.previousElementSibling;
+						while (prevSibling) {
+							if (prevSibling.firstElementChild) {
+								let prevSection = prevSibling.firstElementChild.getAttribute('data-content');
+								// we may change the way in this for reducing the request frequency to the mongodb
+								fetch('/api/section/load', {
+									method: 'POST', 
+									headers: {
+										'Content-Type': 'application/json'
+									}, 
+									body: JSON.stringify({'tid':tid,'section':prevSection})
+								}).then(res => res.json()).then(data => {
+									if (data.info) {
+										if (data.info.text) {
+											window.location.href = `/create?section=${encodeURIComponent(prevSection)}&input=text`;
+										} else {
+											window.location.href = `/create?section=${encodeURIComponent(prevSection)}`;
+										}
+									} else {
+										window.location.href = `/create?section=${encodeURIComponent(prevSection)}`;
+									}
+								})
+								break;
+							}
+							prevSibling = prevSibling.previousElementSibling;
+						}
+					}
+				})
+			}
+
+			if (document.getElementById('next-btn')) {
+				document.getElementById('next-btn').addEventListener('click', function () {
+					if (section === 'profile') {
+						const nameInput = document.getElementById('task-name');
+						if (nameInput.value.length === 0) {
+							alert("❗ Please enter task name before proceeding.");
+							return;
+						}
+					}
+					
+					if (['question', 'rubric'].includes(section)) {
+						if (input === 'text') {
+							const currentInput = document.getElementById('sect-info');
+							if (!currentInput || !currentInput.value.trim()) {
+								alert("❗ Please enter some text before proceeding.");
+								return;
+							}
+						} else {
+							const currentInput = document.getElementsByClassName('file-item');
+							if (currentInput.length === 0) {
+								alert("❗ Please upload at least one file before proceeding.");
+								return;
+							}
+						}
+					}
+
+					let nextSibling = document.querySelector(`[data-content=${section}]`).parentNode.nextElementSibling;
+					
+					while (nextSibling) {
+						if (nextSibling.firstElementChild) {
+							let nextSection = nextSibling.firstElementChild.getAttribute('data-content');
+							fetch('/api/section/load', {
+								method: 'POST', 
+								headers: {
+									'Content-Type': 'application/json'
+								}, 
+								body: JSON.stringify({'tid':tid,'section':nextSection})
+							}).then(res => res.json()).then(data => {
+								if (data.info) {
+									if (data.info.text) {
+										window.location.href = `/create?section=${encodeURIComponent(nextSection)}&input=text`;
+									} else {
+										window.location.href = `/create?section=${encodeURIComponent(nextSection)}`;
+									}
+								} else {
+									window.location.href = `/create?section=${encodeURIComponent(nextSection)}`;
+								}
+							})
+							break;
+						}
+						nextSibling = nextSibling.nextElementSibling;
+					}
+				})
+			}
+
+			// add the action attached to the button
+			if (document.getElementById('save-btn')) {
+				document.getElementById('save-btn').addEventListener('click', function () {
+					saveSection();
+				})
+			}
+
+			if (document.getElementById('reset-btn')) {
+				document.getElementById('reset-btn').addEventListener('click', function () {
+					resetSection();
+				})
+			}
+
+			if (document.getElementById('grade-btn')) {
+				document.getElementById('grade-btn').addEventListener('click', function () {
+					submitAnswer();
+				})
+			}
+
+			if (document.getElementById('file-input-train')) {
+				document.getElementById('file-input-train').addEventListener('change', function () {
+					showOptimize();
+				})
+			}
+
+			if (document.getElementById('file-input-test')) {
+				document.getElementById('file-input-test').addEventListener('change', function() {
+					showOptimize();
+				})
+			}
+
+			if (document.getElementById('optimize-btn')) {
+				document.getElementById('optimize-btn').addEventListener('click', function () {
+					runOptimize();
+				})
+			}
+
+			if (document.getElementById('discard-btn')) {
+				document.getElementById('discard-btn').addEventListener('click', function () {
+					document.getElementById('opt-rst').style.display='none';
+				})
+			}
+
+			if (document.getElementById('apply-btn')) {
+				document.getElementById('apply-btn').addEventListener('click', function () {
+					// applyOptimize();
+					const optid = document.getElementById('opt-text').getAttribute('optid');
+					window.location.href = `/create?section=rubric&input=text&optid=${optid}`;
+				})
+			}
+
+			if (document.getElementById('drop-area')) {
+				const dropArea = document.getElementById('drop-area');
+				dropArea.addEventListener('dragover', e => {
+					e.preventDefault();
+					dropArea.style.background = '#e3f2fd';
+				});
+
+				dropArea.addEventListener('dragleave', () => {
+					dropArea.style.background = '#fafafa';
+				});
+
+				dropArea.addEventListener('drop', e => {
+					e.preventDefault();
+					dropArea.style.background = '#fafafa';
+					handleFiles(e.dataTransfer.files);
+				});
+			}
+
+			if (document.getElementById('fileElem')) {
+				fileElem.addEventListener('change', () => {
+					handleFiles(fileElem.files);
+				});
+			}
+		}
+
+		function runOptimize() {
+			// const optid = 'opt-test';
+			const optid = 'opt-demo';
+			const rstDiv = document.getElementById('opt-rst');
+			const rstText = document.getElementById('opt-text');
+			rstText.setAttribute('optid', optid)
+			const rstMetric = document.getElementById('opt-metric');
+			const rstWait = document.getElementById('opt-wait');
+			rstWait.style.display = 'block';
+			fetch('/api/optimize/load', {
+				method: 'POST', 
+				headers: {
+					'Content-Type': 'application/json'
+				}, 
+				body: JSON.stringify({'optid':optid})
+			}).then(res => res.json()).then(data => {
+				if (data.output) {
+					const oldText = data.input;
+					const newText = data.output;
+					const html = diffStrings(oldText, newText);
+					rstText.innerHTML = `<div>${html}</div>`;
+					// rstText.textContent = data.output;
+					rstMetric.innerHTML = `
+					<strong>Result:</strong> Grading accuracy on test samples from 82% to 86% (+4%). 
+					The updated rubric is shown below. Click “Apply” to accept the optimized rubric and use it for subsequent grading.`
+				}
+				return new Promise(resolve => setTimeout(resolve, 5000))
+			}).then( _ => {
+				rstWait.style.display='none';
+				rstDiv.setAttribute('optid', optid);
+				rstDiv.style.display='block';
+			})
+			
+		}
+		
+		function loadOptimize(optid) {
+			fetch('/api/optimize/load', {
+				method: 'POST', 
+				headers: {
+					'Content-Type': 'application/json'
+				}, 
+				body: JSON.stringify({'optid':optid})
+			}).then(res => res.json()).then(data => {
+				if (data.output) {
+					document.getElementById('sect-info').value = data.output;;
+				}
+			})
+		}
+
+		function showOptimize() {
+            if (document.getElementById('file-input-train').value && document.getElementById('file-input-test').value) {
+                document.getElementById('opt-div').style.display = 'block';
+				document.getElementById('opt-rst').style.display='none';
+            } else {
+				document.getElementById('opt-div').style.display = 'none';
+			}
+        }
+
+		function submitAnswer() {
+			let url = new URL(window.location.href);
+			let aid = crypto.randomUUID();
+			let tid = sessionStorage.getItem('tid');
+			let input = url.searchParams.get('input');
+			if (input=='text') {
+				let answer = document.getElementById('sect-info').value;
+				fetch(`/api/answer/submit`, {
+					method: 'POST', headers: {
+						'Content-Type': 'application/json'
+					}, 
+					body: JSON.stringify({'aid':aid,'tid':tid,'answer_text':answer})
+				});
+				// for now we will only redirect the page for the text inputs
+				window.location.href = `/create?section=feedback&aid=${aid}`;
+			}
+		}
+
+		function loadFeedback() {
+			let url = new URL(window.location.href);
+  			let aid = url.searchParams.get('aid');
+			
+			const container = document.getElementById("feedback-content");
+			if (aid==null) {
+				container.textContent = "Please step back and submit the answer first.";
+				return
+			}
+			container.textContent = "🔄 Grading in progress...";
+			
+			let attempts = 0;
+			const interval = setInterval(() => {
+				fetch(`/api/feedback/load?aid=${aid}`)
+				.then(res => res.json())
+				.then(data => {
+					if (data.grade) {
+					// container.textContent = data.grade;
+					container.innerHTML = data.grade;
+					clearInterval(interval);
+					} else if (++attempts > 5) {
+					container.textContent = "⚠️ Grading timed out. Please step back and submit the answer again.";
+					clearInterval(interval);
+					}
+				});
+			}, 2000); // Poll every 2 seconds
+		}
+
+		function loadSection() {
+			let url = new URL(window.location.href);
+			let input = url.searchParams.get('input');
+			let section = url.searchParams.get('section');
+			
+			document.querySelectorAll("#colorlib-main-menu li").forEach(li => li.classList.remove("colorlib-active"));
+			document.querySelector(`[data-content=${section}]`).parentElement.classList.add("colorlib-active");
+
+			let selectSection = ['question', 'resource', 'example', 'rubric', 'answer'];
+			if (selectSection.includes(section)) {
+				if (input == "text") {
+					updateContent('textinput');
+				} else if (input == "file") {
+					updateContent('fileinput');
+				} else {
+					updateContent('innavi');
+				}
+			} else if (section=='profile') {
+				updateContent('profile');
+			} else if (section=='feedback') {
+				updateContent('feedback');
+			} else if (section=='optimize') {
+				updateContent('optnavi');
+			} else {
+				document.getElementById('colorlib-main').innerHTML = ""
+			}
+		}
+
+		function diffStrings(oldStr, newStr) {
+			// Using diffWords for word-based difference (use diffChars for character-level)
+			const diff = Diff.diffWords(oldStr, newStr);
+
+			let result = '';
+			diff.forEach(part => {
+				let color = '';
+				if (part.added) color = 'background: #c8e6c9;';    // green for added
+				else if (part.removed) color = 'background: #ffcdd2;'; // red for removed
+
+				result += color
+					? `<span style="${color}">${escapeHtml(part.value)}</span>`
+					: escapeHtml(part.value);
+			});
+
+			return result;
+		}
+
+		// Escape HTML for safe display
+		function escapeHtml(text) {
+			return text.replace(/[&<>"']/g, function(m) {
+				return ({
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&#039;'
+				})[m];
+			});
+		}
+
+
+
+	</script>
+
+</body>
+
+</html>

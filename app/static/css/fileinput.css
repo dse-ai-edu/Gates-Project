@@ -1,0 +1,50 @@
+.drop-area {
+	border: 2px dashed #ccc;
+	padding: 150px;
+	text-align: center;
+	border-radius: 12px;
+	cursor: pointer;
+	background: #fafafa;
+	margin-bottom: 20px;
+}
+
+.drop-area:hover {
+	background: #f0f0f0;
+}
+
+.file-list {
+	margin-top: 10px;
+}
+
+.file-item {
+	background: #f9f9f9;
+	padding: 2px;
+	border-radius: 8px;
+	margin-bottom: 10px;
+	/* font-size: 14px; */
+}
+
+.progress-bar {
+	height: 10px;
+	width: 100%;
+	background: #eee;
+	border-radius: 3px;
+	overflow: hidden;
+	margin-top: 6px;
+}
+
+.progress {
+	height: 100%;
+	width: 0%;
+	background: #4b9eff;
+}
+
+.text-btn {
+	margin-left: 10px;
+	cursor: pointer;
+	/* font-size: 14px; */
+}
+
+.text-btn:hover {
+	text-decoration: underline;
+}

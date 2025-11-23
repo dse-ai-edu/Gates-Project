@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Automatic Grading Tool</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,700' rel='stylesheet' type='text/css'>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<link rel="stylesheet" href="../css/style.css">
+    
+    <style>
+        .radio-group {
+            margin: 1rem 0;
+        }
+        .radio-item {
+            margin: 0.5rem 0;
+            display: flex;
+            align-items: center;
+        }
+        .radio-item input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+        .feedback-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        .action-buttons {
+            margin-top: 1rem;
+            display: flex;
+            gap: 10px;
+        }
+        .action-buttons button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .set-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        .edit-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        .set-btn:hover {
+            background-color: #0056b3;
+        }
+        .edit-btn:hover {
+            background-color: #218838;
+        }
+        .disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+    </style>
+
+</head>
+
+<body>
+	<div id="colorlib-page">
+		<div id="colorlib-main">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem;">
+				<h2 id="back-btn" class="h4" style="cursor: pointer;"><a href="#" style="color: black">❮ Back</a></h2>
+				<h2 class="h4" style="cursor: pointer;"><a href="/" style="color: black">Home ❯</a></h2>
+			</div>
+			<section class="ftco-section pt-4 mb-5 ftco-intro">
+				<div class="container-fluid px-3 px-md-0">
+					<div class="row">
+						<div class="col-md-6">
+							<h2 class="h4">Teaching Style</h2>
+							<p>Select the teaching approach you want to use for generating feedback.</p>
+							<div class="radio-group" id="teaching-style-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="authoritative" name="teaching-style" value="AUTHORITATIVE">
+                                    <label for="authoritative">AUTHORITATIVE</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="socratic" name="teaching-style" value="SOCRATIC">
+                                    <label for="socratic">SOCRATIC</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="nurturing" name="teaching-style" value="NURTURING">
+                                    <label for="nurturing">NURTURING</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="constructive" name="teaching-style" value="CONSTRUCTIVE">
+                                    <label for="constructive">CONSTRUCTIVE</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="direct" name="teaching-style" value="DIRECT" checked>
+                                    <label for="direct">DIRECT</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="plain" name="teaching-style" value="PLAIN">
+                                    <label for="plain">PLAIN</label>
+                                </div>
+                            </div>
+						</div>
+						<div class="col-md-6">
+							<h2 class="h4">Additional Instructions</h2>
+							<p>Enter any additional instructions or context for feedback generation (optional).</p>
+							<textarea class="feedback-textarea" id="additional-instructions" placeholder="Enter additional instructions here..."></textarea>
+                            <div class="action-buttons">
+                                <button class="set-btn" id="set-btn">Set</button>
+                                <button class="edit-btn" id="edit-btn" style="display: none;">Edit</button>
+                            </div>
+						</div>
+					</div>
+				</div>
+			</section>
+        </div><!-- END COLORLIB-MAIN -->
+	</div><!-- END COLORLIB-PAGE -->
+
+    <script>
+        const teachingStyleGroup = document.getElementById('teaching-style-group');
+        const additionalInstructions = document.getElementById('additional-instructions');
+        const setBtn = document.getElementById('set-btn');
+        const editBtn = document.getElementById('edit-btn');
+        
+        setBtn.addEventListener('click', function() {
+            teachingStyleGroup.classList.add('disabled');
+            additionalInstructions.disabled = true;
+            additionalInstructions.classList.add('disabled');
+            
+            setBtn.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+            
+            const selectedStyle = document.querySelector('input[name="teaching-style"]:checked').value;
+            const instructions = additionalInstructions.value;
+            
+            console.log('Selected Teaching Style:', selectedStyle);
+            console.log('Additional Instructions:', instructions);
+        });
+        
+        editBtn.addEventListener('click', function() {
+            teachingStyleGroup.classList.remove('disabled');
+            additionalInstructions.disabled = false;
+            additionalInstructions.classList.remove('disabled');
+            
+            setBtn.style.display = 'inline-block';
+            editBtn.style.display = 'none';
+        });
+    </script>
+</body>
+
+</html>

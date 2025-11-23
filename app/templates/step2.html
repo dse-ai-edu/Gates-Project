@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page 2</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/step2.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Left section: instructions and navigation -->
+        <div class="left-section">
+            <h2 style="text-decoration: underline;">Specify Your Approach</h2>
+            
+            <ul class="instruction-list">
+                <li id="step-1-text">Skip this step and use the preselected general guidelines</li>
+                <li id="step-2-text">Specify your perspectives</li>
+                <li id="step-3-text">Enter your grading scale</li>
+            </ul>
+
+            <div class="traverse-buttons">
+                <!--save session called onclick here-->
+                <a href="/step1" class="nav-link">
+                    <button class="t-button" onclick="saveSession()">Back</button>
+                </a>
+                <a href="/step3" class="nav-link">
+                    <button class="t-button" onclick="saveSession()">Next</button>
+                </a>
+            </div>
+        </div>
+
+        <!-- Right section, content based on stage -->
+        <div class="right-section stage-1" id="stage-box">
+            <button id="stage-back">Back Stage</button>
+            <button id="stage-next">Next Stage</button>
+            
+            <!-- Stage 1 content only -->
+            <div id="stage-content">
+                <p>By selecting skip, the general parameters will be selected for you</br>
+                To enter specific preferences taylored to your grading needs, continue to next stage
+                </p>
+                <button id="default-big-button" onclick="window.location.href='/step3'">Skip This Section</button>
+            </div>
+
+            <div id="stage2-content">
+                <div class="field-group">
+                    <h3 style="color: black;">Enter your grading perspectives, leave blank if none, or less than three</h3>
+                    <textarea>Perspective 1</textarea>
+                </div>
+                <div class="field-group">
+                    <textarea>Perspective 2</textarea>
+                </div>
+                <div class="field-group">
+                    <textarea>Perspective 3</textarea>
+                </div>
+            </div>
+
+            <!-- Stage 3 content only -->
+            <div id="stage3-content">
+                <div class="field-group">
+                    <h3 style="color: black;">Now enter your grading scale: (ex. 1-10, bad-ok-great)</h3>
+                    <textarea></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/step2.js') }}"></script>
+</body>
+</html>

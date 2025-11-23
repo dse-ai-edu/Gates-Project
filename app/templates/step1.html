@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page 1</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/step1.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="left-section">
+            <h2 style="text-decoration: underline;">Enter Your Rubric</h2>
+            <!--save session called onclick here-->
+            <div class="traverse-buttons">
+                <button class="t-button" onclick="saveSession()">Next</button>
+            </div>            
+        </div>
+
+        <div class="right-section">
+            <div id="right-content">
+                <h2>Options: (changes can be made manually after this step)</h2>
+                <div class="option-buttons">
+                    <button class="one-button" onclick="showBox('one')">Type in</button>
+                    <button class="one-button" onclick="showBox('two')">Upload from files</button>  
+                </div>
+            </div>
+        
+            <!-- Box1 content -->
+            <div id="box-one" class="box-container box-one hidden">
+                <div class="box-inner">
+                    <h2>Type your rubric manually</h2>
+                    <textarea id="one-textarea" placeholder="Enter your rubric here..."></textarea>
+                </div>
+            </div>
+        
+            <!-- Box2 content -->
+            <div id="box-two" class="box-container box-two hidden">
+                <div class="box-inner">
+                    <h2>Upload a file</h2>
+                    <input type="file" id="file-upload" style="display: none;"accept=".txt, .json, .csv, .xlsx"/>
+                    <button onclick="document.getElementById('file-upload').click()">Choose File</button>
+                    <span id="file-name">No file chosen</span>
+                </div>
+            </div>
+
+            <!-- Continue button -->
+            <div class="action-button-wrapper">
+                <button class="action-button" id="continue-btn" disabled>Previous</button>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/step1.js') }}"></script>
+</body>
+</html>
