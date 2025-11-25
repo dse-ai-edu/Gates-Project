@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Feedback Generation Interface</title>
+    <title>Final Step - Feedback Generation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -74,6 +74,22 @@
             background-color: #0056b3;
         }
 
+        .back-button {
+            background-color: #6c757d;
+        }
+
+        .back-button:hover {
+            background-color: #545b62;
+        }
+
+        .save-button {
+            background-color: #28a745;
+        }
+
+        .save-button:hover {
+            background-color: #218838;
+        }
+
         .details-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -92,15 +108,43 @@
             margin-top: 0.5rem;
             font-size: 0.9rem;
             line-height: 1.4;
+            color: #666;
+        }
+
+        .bullet-point {
+            margin-left: 1rem;
+            line-height: 1.6;
+        }
+
+        .navigation-buttons {
+            margin-bottom: 2rem;
+            text-align: center;
         }
     </style>
-    <script src="{{ url_for('static', filename='js/step4.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
     <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
     <script>
+        // User authentication check for 4-page system
+        function checkAuthentication() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert('Please login first to access this page.');
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        // Initialize authentication check on page load
+        if (!checkAuthentication()) {
+            // Exit if not authenticated
+            throw new Error('Authentication required');
+        }
+        
         localStorage['userId'] = 'test'
         window.onload = function () {
             loadSession();
-            loadFeedbackSystems();
+            loadConfiguredSystem();
         }
     </script>
 </head>
@@ -108,23 +152,18 @@
 <body>
     <div class="container">
 
-        <!-- Feedback System Selector -->
-        <div class="section">
-            <h2>Select Feedback System</h2>
-            <select id="system-select">
-                <option value="">Select a feedback system</option>
-                <option value="T82">T82</option>
-                <option value="cvic152">cvic152</option>
-            </select>
-            <p id="toggle-details" style="color: blue; text-decoration: underline; cursor: pointer; display: none;">Show Details</p>
+        <!-- Navigation Buttons -->
+        <div class="navigation-buttons">
+            <button class="back-button" onclick="goBack()">Back</button>
+            <button class="save-button" onclick="saveConfiguration()">Save & Complete</button>
         </div>
 
-        <!-- System Details Display -->
-        <div class="section" id="details-display" style="display: none;">
-            <h2>System Configuration Details</h2>
+        <!-- System Configuration Display (Read-only) -->
+        <div class="section" id="details-display">
+            <h2>Your Feedback System Configuration</h2>
             <div class="details-grid">
                 <div class="detail-item">
-                    <h3>Key Words</h3>
+                    <h3>Keywords</h3>
                     <div class="detail-content" id="keywords-content">
                         Loading keywords...
                     </div>
@@ -138,7 +177,28 @@
                 <div class="detail-item">
                     <h3>Base Style</h3>
                     <div class="detail-content" id="base-style-content">
-                        Loading base style...
+                        <select id="base-style-select" onchange="updateBaseStyle()">
+                            <option value="warm">Warm</option>
+                            <option value="humor">Humor</option>
+                            <option value="encouraging">Encouraging</option>
+                            <option value="patient">Patient</option>
+                            <option value="clear">Clear</option>
+                            <option value="supportive">Supportive</option>
+                            <option value="detailed">Detailed</option>
+                            <option value="constructive">Constructive</option>
+                            <option value="motivating">Motivating</option>
+                            <option value="gentle">Gentle</option>
+                            <option value="thorough">Thorough</option>
+                            <option value="empathetic">Empathetic</option>
+                            <option value="precise">Precise</option>
+                            <option value="positive">Positive</option>
+                            <option value="professional">Professional</option>
+                            <option value="creative">Creative</option>
+                            <option value="analytical">Analytical</option>
+                            <option value="inspiring">Inspiring</option>
+                            <option value="balanced">Balanced</option>
+                            <option value="thoughtful">Thoughtful</option>
+                        </select>
                     </div>
                 </div>
                 <div class="detail-item">
@@ -151,7 +211,7 @@
         </div>
 
         <!-- Student Answer Input -->
-        <div class="section" id="student-input" style="display: none;">
+        <div class="section" id="student-input">
             <h2>Student Answer Input</h2>
             <div style="margin-bottom: 1rem;">
                 <button id="inputTextBtn">Input Text</button>
@@ -171,52 +231,165 @@
 
     </div>
     <script>
-        document.getElementById('system-select').addEventListener('change', function () {
-            // Reset details display
-            document.getElementById('details-display').style.display = 'none';
-            document.getElementById('toggle-details').textContent = 'Show Details';
-
-            // Reset student input area
-            if (document.getElementById('system-select').value == "") {
-                document.getElementById('student-input').style.display = 'none';
-                document.getElementById('toggle-details').style.display = 'none';
-            } else {
-                document.getElementById('student-input').style.display = 'block';
-                document.getElementById('toggle-details').style.display = 'block';
-                loadSystemDetails();
+        let lockedStyle = false;
+        let currentBaseStyle = '';
+        
+        // Navigation functions for 4-page system
+        function goBack() {
+            // Navigate back to step2
+            window.location.href = '/step2';
+        }
+        
+        function saveConfiguration() {
+            // Save final configuration and complete the setup
+            const finalConfig = {
+                'tid': sessionStorage.getItem('tid'),
+                'finalConfiguration': {
+                    'timestamp': new Date().toISOString(),
+                    'completed': true
+                }
+            };
+            
+            fetch('/api/configuration/final', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(finalConfig)
+            }).then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    alert('✅ Configuration saved successfully! Your feedback system is ready to use.');
+                    // Could redirect to a dashboard or keep on same page
+                } else {
+                    alert('❗ Save failed. Please try again.');
+                }
+            }).catch(error => {
+                console.error('Save error:', error);
+                alert('❗ An error occurred while saving. Please try again.');
+            });
+        }
+        
+        // Load configured system details from previous steps
+        function loadConfiguredSystem() {
+            const tid = sessionStorage.getItem('tid');
+            if (!tid) {
+                console.error('No session ID found');
+                return;
             }
-            document.getElementById('textInputArea').style.display = 'none';
-
-            // Hide the generate button and result
-            document.getElementById('generateFeedbackBtn').style.display = 'none';
-            document.getElementById('feedback-display').style.display = 'none';
-
-            // Clear the textarea value
-            const textarea = document.getElementById('student-answer');
-            if (textarea) {
-                textarea.value = '';
+            
+            // Load data from both step1 and step2
+            Promise.all([
+                loadStepData('base_style'),
+                loadStepData('macro_feedback')
+            ]).then(([baseData, macroData]) => {
+                displayConfiguration(baseData, macroData);
+            }).catch(error => {
+                console.error('Failed to load configuration:', error);
+                displayDefaultConfiguration();
+            });
+        }
+        
+        function loadStepData(section) {
+            return fetch('/api/section/load', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    'tid': sessionStorage.getItem('tid'),
+                    'section': section
+                })
+            }).then(response => response.json());
+        }
+        
+        function displayConfiguration(baseData, macroData) {
+            // Display Keywords (from step1 styles)
+            const keywords = baseData.info?.styles || [];
+            document.getElementById('keywords-content').textContent = 
+                keywords.length > 0 ? keywords.join(', ') : 'N/A';
+            
+            // Display Structure (from step1 templates)
+            const templates = baseData.info?.templates || [];
+            const structureHtml = templates.length > 0 
+                ? templates.map(template => `<div class="bullet-point">* ${template}</div>`).join('')
+                : '<div class="bullet-point">N/A</div>';
+            document.getElementById('structure-content').innerHTML = structureHtml;
+            
+            // Display Base Style (from step2 teaching style)
+            const teachingStyle = macroData.info?.teaching_style || '';
+            currentBaseStyle = teachingStyle.toLowerCase();
+            const baseStyleSelect = document.getElementById('base-style-select');
+            if (teachingStyle) {
+                baseStyleSelect.value = currentBaseStyle;
             }
-        });
-
-        document.getElementById('toggle-details').addEventListener('click', function () {
-            const detailsDisplay = document.getElementById('details-display');
-            const isHidden = detailsDisplay.style.display === 'none';
-
-            detailsDisplay.style.display = isHidden ? 'block' : 'none';
-            this.textContent = isHidden ? 'Hide Details' : 'Show Details';
-        });
-
+            
+            // Check if style is locked
+            lockedStyle = macroData.info?.locked_style || false;
+            baseStyleSelect.disabled = lockedStyle;
+            if (lockedStyle) {
+                baseStyleSelect.style.backgroundColor = '#e9ecef';
+                baseStyleSelect.style.cursor = 'not-allowed';
+            }
+            
+            // Display Personalization (from step2 instructions)
+            const personalization = macroData.info?.instructions || '';
+            document.getElementById('personalization-content').textContent = 
+                personalization.trim() ? personalization : 'N/A';
+        }
+        
+        function displayDefaultConfiguration() {
+            // Fallback display when data loading fails
+            document.getElementById('keywords-content').textContent = 'N/A';
+            document.getElementById('structure-content').innerHTML = '<div class="bullet-point">N/A</div>';
+            document.getElementById('base-style-select').value = 'direct';
+            document.getElementById('personalization-content').textContent = 'N/A';
+        }
+        
+        function updateBaseStyle() {
+            if (!lockedStyle) {
+                const selectedStyle = document.getElementById('base-style-select').value;
+                currentBaseStyle = selectedStyle;
+                
+                // Update backend with new style selection
+                const updateData = {
+                    'tid': sessionStorage.getItem('tid'),
+                    'macro_feedback': {
+                        'teaching_style': selectedStyle.toUpperCase(),
+                        'instructions': document.getElementById('personalization-content').textContent,
+                        'locked_style': false
+                    }
+                };
+                
+                fetch('/api/section/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                }).then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        console.log('Base style updated to:', selectedStyle);
+                    }
+                }).catch(error => {
+                    console.error('Failed to update base style:', error);
+                });
+            }
+        }
+        
+        // Student input and feedback generation functionality
         const inputTextBtn = document.getElementById('inputTextBtn');
         const generateFeedbackBtn = document.getElementById('generateFeedbackBtn');
         const textInputArea = document.getElementById('textInputArea');
         const feedbackDisplay = document.getElementById("feedback-display");
-
+        
         inputTextBtn.addEventListener('click', function () {
             textInputArea.style.display = 'block';
             generateFeedbackBtn.style.display = 'block';
             feedbackDisplay.style.display = 'none';
         });
-
+        
         generateFeedbackBtn.addEventListener('click', function () {
             const studentAnswer = document.getElementById('student-answer').value.trim();
             if (!studentAnswer) {
@@ -230,73 +403,48 @@
             // Trigger the feedback generation
             generatePersonalizedFeedback();
         });
-
-        // Function to load system details based on selected system
-        function loadSystemDetails() {
-            const selectedSystem = document.getElementById('system-select').value;
-            
-            // Mock data - in real implementation, this would come from the backend
-            const systemDetails = {
-                'T82': {
-                    keywords: 'Mathematics, Problem-solving, Algebraic thinking, Critical analysis',
-                    structure: 'Introduction → Analysis → Suggestions → Conclusion',
-                    baseStyle: 'Warm, Encouraging, Analytical, Thoughtful',
-                    personalization: 'Focus on growth mindset, Ask guiding questions, Use positive reinforcement'
-                },
-                'cvic152': {
-                    keywords: 'Civic engagement, Social responsibility, Community, Democratic participation',
-                    structure: 'Context → Evaluation → Recommendations → Next Steps',
-                    baseStyle: 'Professional, Supportive, Clear, Inspiring',
-                    personalization: 'Connect to real-world applications, Emphasize civic duty, Encourage participation'
-                }
-            };
-
-            if (systemDetails[selectedSystem]) {
-                const details = systemDetails[selectedSystem];
-                document.getElementById('keywords-content').textContent = details.keywords;
-                document.getElementById('structure-content').textContent = details.structure;
-                document.getElementById('base-style-content').textContent = details.baseStyle;
-                document.getElementById('personalization-content').textContent = details.personalization;
-            }
-        }
-
-        // Function to load available feedback systems
-        function loadFeedbackSystems() {
-            // In real implementation, this would fetch from the backend
-            console.log('Loading feedback systems...');
-        }
-
-        // Function to generate personalized feedback
+        
+        // Function to generate personalized feedback using current configuration
         function generatePersonalizedFeedback() {
-            const selectedSystem = document.getElementById('system-select').value;
             const studentAnswer = document.getElementById('student-answer').value;
             const resultTextarea = document.getElementById('result-textarea');
-
-            // Mock API call - replace with actual backend integration
+            
+            // Use current configuration to generate feedback
+            const config = {
+                baseStyle: currentBaseStyle,
+                keywords: document.getElementById('keywords-content').textContent,
+                structure: document.getElementById('structure-content').textContent,
+                personalization: document.getElementById('personalization-content').textContent
+            };
+            
+            // Mock API call with configuration-aware feedback
             setTimeout(() => {
-                const mockFeedback = `[FIXED DEFAULT FEEDBACK]Based on your response about ${selectedSystem}, I can see you've put thought into this answer. Here are some observations and suggestions:
+                const mockFeedback = `Based on your configured ${config.baseStyle} teaching style, here's personalized feedback for the student:
 
 **Strengths:**
-- You demonstrate a good understanding of the core concepts
-- Your reasoning shows logical progression
-- You've made connections to relevant examples
+- You demonstrate understanding of the key concepts
+- Your response shows thoughtful consideration
+- Good use of examples to support your points
 
-**Areas for Improvement:**
-- Consider elaborating on your main argument with more specific details
-- Try to address potential counterarguments to strengthen your position
-- Include more concrete examples to support your points
+**Areas for Development:**
+- Consider expanding on your main arguments with more detail
+- Try to connect your ideas more explicitly to the broader context
+- Include additional evidence to strengthen your position
 
-**Next Steps:**
-- Review the course materials on [specific topic]
-- Practice applying these concepts to different scenarios
-- Consider how this relates to real-world applications
+**Suggestions:**
+- Review related materials to deepen your understanding
+- Practice articulating your thoughts more systematically
+- Consider alternative perspectives on this topic
 
-Keep up the thoughtful analysis! Your engagement with the material is evident, and with some refinement, your responses will be even stronger.`;
+Your engagement with the material is evident and appreciated. Keep building on these foundations!
+
+---
+Generated using: ${config.baseStyle.charAt(0).toUpperCase() + config.baseStyle.slice(1)} style
+Keywords: ${config.keywords !== 'N/A' ? config.keywords : 'General academic feedback'}`;
 
                 resultTextarea.value = mockFeedback;
-            }, 2000); // 2 second delay to simulate processing
+            }, 2000);
         }
     </script>
 </body>
-
 </html>

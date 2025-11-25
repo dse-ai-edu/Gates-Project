@@ -159,6 +159,23 @@
     
     <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
     <script>
+        // User authentication check for 4-page system
+        function checkAuthentication() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert('Please login first to access this page.');
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        // Initialize authentication check on page load
+        if (!checkAuthentication()) {
+            // Exit if not authenticated
+            throw new Error('Authentication required');
+        }
+        
         // DOM element references
         const addTemplateBtn = document.getElementById('add-template-btn');
         const resetStylesBtn = document.getElementById('reset-styles-btn');
@@ -199,19 +216,30 @@
                 return;
             }
             
-            // Navigate to next step
-            window.location.href = `/create?section=macro_feedback`;
+            // Navigate to step2
+            window.location.href = '/step2';
         }
         
         function goBack() {
-            window.location.href = '/';
+            // Navigate back to login (or show confirmation)
+            if (confirm('Are you sure you want to go back to login? Unsaved changes will be lost.')) {
+                // Clear session data if needed
+                sessionStorage.removeItem('tid');
+                window.location.href = '/login';
+            }
         }
         
         // Save and reset functions adapted for this page
         function saveSection() {
             const selectedStyles = getSelectedStyles();
             const templateTexts = getTemplateTexts();
-            const tid = sessionStorage.getItem('tid');
+            let tid = sessionStorage.getItem('tid');
+            
+            // Create session ID if it doesn't exist (for 4-page system compatibility)
+            if (!tid) {
+                tid = crypto.randomUUID();
+                sessionStorage.setItem('tid', tid);
+            }
             
             if (selectedStyles.length === 0) {
                 alert("❗ Please select at least one style descriptor.");

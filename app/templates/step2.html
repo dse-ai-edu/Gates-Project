@@ -28,7 +28,7 @@
             </div>
             
             <div class="traverse-buttons" style="margin-top: 1rem;">
-                <button class="t-button" onclick="proceedNext()">Complete Setup</button>
+                <button class="t-button" onclick="proceedNext()">Next</button>
             </div>
         </div>
 
@@ -113,7 +113,7 @@ For example:
                         </div>
                     </div>
                     <br>
-                    <p style="color: #666;">Your feedback generation system is ready. Click "Complete Setup" to finish configuration.</p>
+                    <p style="color: #666;">Your feedback generation system is ready. Click "Next" to proceed to the final step.</p>
                 </div>
             </div>
         </div>
@@ -121,6 +121,23 @@ For example:
 
     <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
     <script>
+        // User authentication check for 4-page system
+        function checkAuthentication() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert('Please login first to access this page.');
+                window.location.href = '/login';
+                return false;
+            }
+            return true;
+        }
+        
+        // Initialize authentication check on page load
+        if (!checkAuthentication()) {
+            // Exit if not authenticated
+            throw new Error('Authentication required');
+        }
+        
         let currentStage = 2;
         const maxStages = 3;
         let locked_style = false; // Track if personalized style is locked
@@ -215,19 +232,26 @@ For example:
                 return;
             }
             
-            // Navigate to answer input or completion page
-            window.location.href = `/create?section=answer`;
+            // Navigate to step_final
+            window.location.href = '/step_final';
         }
         
         function goBack() {
-            window.location.href = `/create?section=base_style`;
+            // Navigate back to step1
+            window.location.href = '/step1';
         }
         
         // Save function adapted for this page
         function saveSection() {
             const teachingStyle = getSelectedTeachingStyle();
             const additionalInstructions = getAdditionalInstructions();
-            const tid = sessionStorage.getItem('tid');
+            let tid = sessionStorage.getItem('tid');
+            
+            // Create session ID if it doesn't exist (for 4-page system compatibility)
+            if (!tid) {
+                tid = crypto.randomUUID();
+                sessionStorage.setItem('tid', tid);
+            }
             
             if (!teachingStyle) {
                 alert("❗ Please select a teaching style.");
