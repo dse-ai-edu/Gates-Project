@@ -105,4 +105,3 @@ def parse_teaching_text(
     final_respond_prompt = GRADING_LOAD.format(requirement=FEEDBACK_REQUIREMENT, question=question, answer=answer)
     final_respond_prompt = final_respond_prompt.replace("<<GRADING_BASE_PLACEHOLDER>>", grading_template)
     return final_respond_prompt
-

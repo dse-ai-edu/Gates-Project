@@ -3,70 +3,252 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page 2</title>
+    <title>Teaching Style and Personalization</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/step2.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_style.css') }}">
 </head>
 <body>
 
     <div class="container">
         <!-- Left section: instructions and navigation -->
         <div class="left-section">
-            <h2 style="text-decoration: underline;">Specify Your Approach</h2>
+            <h2 style="text-decoration: underline;">Configure Teaching Approach</h2>
+            <p id="save-status"></p>
             
             <ul class="instruction-list">
-                <li id="step-1-text">Skip this step and use the preselected general guidelines</li>
-                <li id="step-2-text">Specify your perspectives</li>
-                <li id="step-3-text">Enter your grading scale</li>
+                <li id="step-1-text">Select your primary teaching style</li>
+                <li id="step-2-text">Add personalized response examples</li>
+                <li id="step-3-text">Review and finalize settings</li>
             </ul>
 
             <div class="traverse-buttons">
                 <!--save session called onclick here-->
-                <a href="/step1" class="nav-link">
-                    <button class="t-button" onclick="saveSession()">Back</button>
-                </a>
-                <a href="/step3" class="nav-link">
-                    <button class="t-button" onclick="saveSession()">Next</button>
-                </a>
+                <button class="t-button" onclick="goBack()">Back</button>
+                <button class="t-button" onclick="saveSection()">Save</button>
+            </div>
+            
+            <div class="traverse-buttons" style="margin-top: 1rem;">
+                <button class="t-button" onclick="proceedNext()">Complete Setup</button>
             </div>
         </div>
 
         <!-- Right section, content based on stage -->
         <div class="right-section stage-1" id="stage-box">
-            <button id="stage-back">Back Stage</button>
-            <button id="stage-next">Next Stage</button>
+            <button id="stage-back" onclick="switchStage('back')">Back Stage</button>
+            <button id="stage-next" onclick="switchStage('next')">Next Stage</button>
             
-            <!-- Stage 1 content only -->
+            <!-- Stage 1 content: Teaching Style Selection -->
             <div id="stage-content">
-                <p>By selecting skip, the general parameters will be selected for you</br>
-                To enter specific preferences taylored to your grading needs, continue to next stage
-                </p>
-                <button id="default-big-button" onclick="window.location.href='/step3'">Skip This Section</button>
+                <h3 style="color: black;">Select Your Primary Teaching Style</h3>
+                <p>Choose the teaching approach that best matches your feedback philosophy:</p>
+                <div class="radio-group" id="teaching-style-group">
+                    <div class="radio-item">
+                        <input type="radio" id="authoritative" name="teaching-style" value="AUTHORITATIVE">
+                        <label for="authoritative">AUTHORITATIVE - Clear, direct guidance with expert knowledge</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="socratic" name="teaching-style" value="SOCRATIC">
+                        <label for="socratic">SOCRATIC - Question-based learning to guide discovery</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="nurturing" name="teaching-style" value="NURTURING">
+                        <label for="nurturing">NURTURING - Supportive, encouraging, and patient approach</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="constructive" name="teaching-style" value="CONSTRUCTIVE">
+                        <label for="constructive">CONSTRUCTIVE - Focus on building understanding step by step</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="direct" name="teaching-style" value="DIRECT" checked>
+                        <label for="direct">DIRECT - Straightforward, efficient communication</label>
+                    </div>
+                    <div class="radio-item">
+                        <input type="radio" id="plain" name="teaching-style" value="PLAIN">
+                        <label for="plain">PLAIN - Simple, unadorned feedback style</label>
+                    </div>
+                </div>
             </div>
 
-            <div id="stage2-content">
+            <!-- Stage 2 content: Personalized Examples -->
+            <div id="stage2-content" style="display: none;">
                 <div class="field-group">
-                    <h3 style="color: black;">Enter your grading perspectives, leave blank if none, or less than three</h3>
-                    <textarea>Perspective 1</textarea>
+                    <h3 style="color: black;">Enter Your Personalized Response Examples</h3>
+                    <p>Provide examples of how you typically give feedback or your preferred tone:</p>
+                    <textarea class="feedback-textarea" id="additional-instructions" placeholder="Enter additional instructions or example responses here...
+
+For example:
+- I always start with something positive
+- I prefer to ask guiding questions
+- I like to relate concepts to real-world applications
+- I emphasize growth mindset language"></textarea>
                 </div>
-                <div class="field-group">
-                    <textarea>Perspective 2</textarea>
-                </div>
-                <div class="field-group">
-                    <textarea>Perspective 3</textarea>
+                
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="set-btn">Lock Settings</button>
+                    <button class="btn btn-success" id="edit-btn" style="display: none;">Edit Settings</button>
                 </div>
             </div>
 
-            <!-- Stage 3 content only -->
-            <div id="stage3-content">
+            <!-- Stage 3 content: Review -->
+            <div id="stage3-content" style="display: none;">
                 <div class="field-group">
-                    <h3 style="color: black;">Now enter your grading scale: (ex. 1-10, bad-ok-great)</h3>
-                    <textarea></textarea>
+                    <h3 style="color: black;">Review Your Configuration</h3>
+                    <div id="review-content">
+                        <p><strong>Selected Teaching Style:</strong> <span id="review-style">None selected</span></p>
+                        <p><strong>Personalized Instructions:</strong></p>
+                        <div id="review-instructions" style="border: 1px solid #ccc; padding: 0.75rem; border-radius: 4px; background: #f9f9f9; min-height: 100px;">
+                            No additional instructions provided
+                        </div>
+                    </div>
+                    <br>
+                    <p style="color: #666;">Your feedback generation system is ready. Click "Complete Setup" to finish configuration.</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/step2.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+    <script>
+        let currentStage = 1;
+        const maxStages = 3;
+        
+        // DOM element references
+        const setBtn = document.getElementById('set-btn');
+        const editBtn = document.getElementById('edit-btn');
+        
+        // Event listeners
+        setBtn.addEventListener('click', setTeachingStyle);
+        editBtn.addEventListener('click', editTeachingStyle);
+        
+        // Stage switching functionality
+        function switchStage(direction) {
+            if (direction === 'next' && currentStage < maxStages) {
+                currentStage++;
+            } else if (direction === 'back' && currentStage > 1) {
+                currentStage--;
+            }
+            
+            updateStageDisplay();
+            updateStageNavigation();
+            
+            if (currentStage === 3) {
+                updateReviewContent();
+            }
+        }
+        
+        function updateStageDisplay() {
+            // Hide all stage content
+            document.getElementById('stage-content').style.display = 'none';
+            document.getElementById('stage2-content').style.display = 'none';
+            document.getElementById('stage3-content').style.display = 'none';
+            
+            // Show current stage content
+            if (currentStage === 1) {
+                document.getElementById('stage-content').style.display = 'block';
+            } else if (currentStage === 2) {
+                document.getElementById('stage2-content').style.display = 'block';
+            } else if (currentStage === 3) {
+                document.getElementById('stage3-content').style.display = 'block';
+            }
+        }
+        
+        function updateStageNavigation() {
+            const backBtn = document.getElementById('stage-back');
+            const nextBtn = document.getElementById('stage-next');
+            
+            backBtn.style.display = currentStage > 1 ? 'block' : 'none';
+            nextBtn.style.display = currentStage < maxStages ? 'block' : 'none';
+        }
+        
+        function updateReviewContent() {
+            const selectedStyle = getSelectedTeachingStyle();
+            const additionalInstructions = getAdditionalInstructions();
+            
+            document.getElementById('review-style').textContent = selectedStyle || 'None selected';
+            document.getElementById('review-instructions').textContent = additionalInstructions || 'No additional instructions provided';
+        }
+        
+        // Navigation functions
+        function proceedNext() {
+            // Validate before proceeding
+            const teachingStyle = getSelectedTeachingStyle();
+            
+            if (!teachingStyle) {
+                alert("❗ Please select a teaching style before completing setup.");
+                return;
+            }
+            
+            // Navigate to answer input or completion page
+            window.location.href = `/create?section=answer`;
+        }
+        
+        function goBack() {
+            window.location.href = `/create?section=base_style`;
+        }
+        
+        // Save function adapted for this page
+        function saveSection() {
+            const teachingStyle = getSelectedTeachingStyle();
+            const additionalInstructions = getAdditionalInstructions();
+            const tid = sessionStorage.getItem('tid');
+            
+            if (!teachingStyle) {
+                alert("❗ Please select a teaching style.");
+                return;
+            }
+            
+            const sectInfo = {
+                'tid': tid, 
+                'macro_feedback': {
+                    'teaching_style': teachingStyle, 
+                    'instructions': additionalInstructions
+                }
+            };
+            
+            fetch(`/api/section/save`, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                }, 
+                body: JSON.stringify(sectInfo)
+            }).then(response => {
+                if (!response.ok) {
+                    throw Error('Save failed! Please try again.');
+                }
+                return response.json()
+            }).then(result => {
+                if (result.success) {
+                    const status = document.getElementById('save-status');
+                    status.textContent = '✔️ Saved';
+                    status.style.color = 'green';
+                    
+                    // Clear status when user makes changes
+                    const clearStatus = () => {
+                        status.textContent = '';
+                        status.style.color = '';
+                    };
+                    
+                    document.querySelectorAll('input[type="radio"], #additional-instructions').forEach(input => {
+                        input.addEventListener('change', clearStatus, {once: true});
+                    });
+                } else {
+                    throw Error('Save failed! Please try again.');
+                }
+            }).catch(error => {
+                console.error(error)
+                alert(error)
+            })
+        }
+        
+        // Initialize page
+        updateStageDisplay();
+        updateStageNavigation();
+        
+        // Monitor changes for debugging and review updates
+        document.addEventListener('change', function() {
+            console.log('Selected teaching style:', getSelectedTeachingStyle());
+            console.log('Additional instructions:', getAdditionalInstructions());
+        });
+    </script>
 </body>
 </html>

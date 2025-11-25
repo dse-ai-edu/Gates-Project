@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-  	<title>Task Selection</title>
+  	<title>Feedback System Selection</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -32,7 +32,7 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
 	<script>
-		function showTask() {
+		function showFeedbackSystems() {
 			// need to reload from the database and set it as the menu results
 			fetch('/api/task/show', {
 				method: 'POST', 
@@ -51,25 +51,25 @@
 							if (i+j >= data.task_list.length) {
 								break;
 							}
-							const taskElement = document.createElement('div');
-							taskElement.setAttribute('class','col-md-3');
+							const systemElement = document.createElement('div');
+							systemElement.setAttribute('class','col-md-3');
 							
-							const taskName = document.createElement('h2');
-							taskName.setAttribute('class','h4');
-							taskName.textContent = data.task_list[i+j].name;
-							taskElement.appendChild(taskName);
+							const systemName = document.createElement('h2');
+							systemName.setAttribute('class','h4');
+							systemName.textContent = data.task_list[i+j].name;
+							systemElement.appendChild(systemName);
 
-							const taskDesc = document.createElement('p');
-							taskDesc.textContent = data.task_list[i+j].desc;
-							taskElement.appendChild(taskDesc);
+							const systemDesc = document.createElement('p');
+							systemDesc.textContent = data.task_list[i+j].desc;
+							systemElement.appendChild(systemDesc);
 
-							const taskBtn = document.createElement('button');
-							taskBtn.setAttribute('id','reload-btn');
-							taskBtn.setAttribute('tid',data.task_list[i+j].tid);
-							taskBtn.textContent = 'Enter';
-							taskElement.appendChild(taskBtn);
+							const systemBtn = document.createElement('button');
+							systemBtn.setAttribute('id','reload-btn');
+							systemBtn.setAttribute('tid',data.task_list[i+j].tid);
+							systemBtn.textContent = 'Enter';
+							systemElement.appendChild(systemBtn);
 
-							rowDiv.appendChild(taskElement);
+							rowDiv.appendChild(systemElement);
 						}
 						if (i >= data.task_list.length) {
 							break;
@@ -95,11 +95,11 @@
 			})
 		}
 
-		window.onload = showTask;
+		window.onload = showFeedbackSystems;
 	</script>
     
 	<!-- <script>
-		showTask();
+		showFeedbackSystems();
 	</script> -->
 
 	</body>

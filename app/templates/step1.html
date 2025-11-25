@@ -3,54 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page 1</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/step1.css') }}">
+    <title>Base Style and Feedback Template</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
 </head>
 
 <body>
     <div class="container">
         <div class="left-section">
-            <h2 style="text-decoration: underline;">Enter Your Rubric</h2>
+            <h2 style="text-decoration: underline;">Configure Base Style & Templates</h2>
+            <p id="save-status"></p>
             <!--save session called onclick here-->
             <div class="traverse-buttons">
-                <button class="t-button" onclick="saveSession()">Next</button>
+                <button class="t-button" onclick="saveSection()">Save</button>
+                <button class="t-button" onclick="resetSection()">Reset</button>
+            </div>
+            <div class="traverse-buttons" style="margin-top: 1rem;">
+                <button class="t-button" onclick="proceedNext()">Next</button>
             </div>            
         </div>
 
         <div class="right-section">
             <div id="right-content">
-                <h2>Options: (changes can be made manually after this step)</h2>
+                <h2>Setup Options: (configure your feedback generation preferences)</h2>
                 <div class="option-buttons">
-                    <button class="one-button" onclick="showBox('one')">Type in</button>
-                    <button class="one-button" onclick="showBox('two')">Upload from files</button>  
+                    <button class="one-button" onclick="showBox('style')">Style Descriptors</button>
+                    <button class="one-button" onclick="showBox('template')">Feedback Templates</button>  
                 </div>
             </div>
         
-            <!-- Box1 content -->
-            <div id="box-one" class="box-container box-one hidden">
+            <!-- Style Descriptors content -->
+            <div id="box-style" class="box-container box-one hidden">
                 <div class="box-inner">
-                    <h2>Type your rubric manually</h2>
-                    <textarea id="one-textarea" placeholder="Enter your rubric here..."></textarea>
+                    <h2>Select Teaching Style Characteristics</h2>
+                    <p>Choose descriptors that match your preferred approach:</p>
+                    <button class="btn btn-info" id="reset-styles-btn" style="margin-bottom: 1rem;">Reset All</button>
+                    <div class="style-grid" id="style-grid">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="warm" value="warm">
+                            <label for="warm">Warm</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="humor" value="humor">
+                            <label for="humor">Humor</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="encouraging" value="encouraging">
+                            <label for="encouraging">Encouraging</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="patient" value="patient">
+                            <label for="patient">Patient</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="clear" value="clear">
+                            <label for="clear">Clear</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="supportive" value="supportive">
+                            <label for="supportive">Supportive</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="detailed" value="detailed">
+                            <label for="detailed">Detailed</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="constructive" value="constructive">
+                            <label for="constructive">Constructive</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="motivating" value="motivating">
+                            <label for="motivating">Motivating</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="gentle" value="gentle">
+                            <label for="gentle">Gentle</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="thorough" value="thorough">
+                            <label for="thorough">Thorough</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="empathetic" value="empathetic">
+                            <label for="empathetic">Empathetic</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="precise" value="precise">
+                            <label for="precise">Precise</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="positive" value="positive">
+                            <label for="positive">Positive</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="professional" value="professional">
+                            <label for="professional">Professional</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="creative" value="creative">
+                            <label for="creative">Creative</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="analytical" value="analytical">
+                            <label for="analytical">Analytical</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="inspiring" value="inspiring">
+                            <label for="inspiring">Inspiring</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="balanced" value="balanced">
+                            <label for="balanced">Balanced</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="thoughtful" value="thoughtful">
+                            <label for="thoughtful">Thoughtful</label>
+                        </div>
+                    </div>
                 </div>
             </div>
         
-            <!-- Box2 content -->
-            <div id="box-two" class="box-container box-two hidden">
+            <!-- Feedback Templates content -->
+            <div id="box-template" class="box-container box-two hidden">
                 <div class="box-inner">
-                    <h2>Upload a file</h2>
-                    <input type="file" id="file-upload" style="display: none;"accept=".txt, .json, .csv, .xlsx"/>
-                    <button onclick="document.getElementById('file-upload').click()">Choose File</button>
-                    <span id="file-name">No file chosen</span>
+                    <h2>Structure of Feedback Response</h2>
+                    <p>* Enter section titles for reply text items, such as "improvement". <br>
+                       * Use parentheses for additional notes, e.g., "improvement (suggestions on how to enhance mathematical abilities)". <br>
+                       * For hierarchical categories, use colons to separate levels, e.g., "improvement: knowledge to review" & "improvement: follow-up question".</p>
+                    <div class="template-section">
+                        <button class="btn btn-info" id="add-template-btn">Add One</button>
+                        <div class="template-container" id="template-container">
+                            <div class="template-row">
+                                <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="strength">
+                                <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+                            </div>
+                            <div class="template-row">
+                                <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="weakness">
+                                <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+                            </div>
+                            <div class="template-row">
+                                <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="improvement">
+                                <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Continue button -->
+            <!-- Back button -->
             <div class="action-button-wrapper">
-                <button class="action-button" id="continue-btn" disabled>Previous</button>
+                <button class="action-button" id="back-btn" onclick="goBack()">Previous</button>
             </div>
         </div>
     </div>
-    <script src="{{ url_for('static', filename='js/step1.js') }}"></script>
+    
+    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+    <script>
+        // DOM element references
+        const addTemplateBtn = document.getElementById('add-template-btn');
+        const resetStylesBtn = document.getElementById('reset-styles-btn');
+        
+        // Page initialization
+        updateAddButtonState();
+        
+        // Event listeners
+        resetStylesBtn.addEventListener('click', resetStyles);
+        addTemplateBtn.addEventListener('click', addTemplate);
+        
+        // Box switching functionality
+        function showBox(boxType) {
+            // Hide all boxes
+            document.getElementById('box-style').classList.add('hidden');
+            document.getElementById('box-template').classList.add('hidden');
+            
+            // Show selected box
+            if (boxType === 'style') {
+                document.getElementById('box-style').classList.remove('hidden');
+            } else if (boxType === 'template') {
+                document.getElementById('box-template').classList.remove('hidden');
+            }
+        }
+        
+        // Navigation functions
+        function proceedNext() {
+            // Validate before proceeding
+            const selectedStyles = getSelectedStyles();
+            const templateTexts = getTemplateTexts();
+            
+            if (selectedStyles.length === 0) {
+                alert("❗ Please select at least one style descriptor before proceeding.");
+                return;
+            }
+            if (templateTexts.length === 0) {
+                alert("❗ Please enter at least one feedback template item before proceeding.");
+                return;
+            }
+            
+            // Navigate to next step
+            window.location.href = `/create?section=macro_feedback`;
+        }
+        
+        function goBack() {
+            window.location.href = '/';
+        }
+        
+        // Save and reset functions adapted for this page
+        function saveSection() {
+            const selectedStyles = getSelectedStyles();
+            const templateTexts = getTemplateTexts();
+            const tid = sessionStorage.getItem('tid');
+            
+            if (selectedStyles.length === 0) {
+                alert("❗ Please select at least one style descriptor.");
+                return;
+            }
+            if (templateTexts.length === 0) {
+                alert("❗ Please enter at least one feedback template item.");
+                return;
+            }
+            
+            const sectInfo = {
+                'tid': tid, 
+                'base_style': {
+                    'styles': selectedStyles, 
+                    'templates': templateTexts
+                }
+            };
+            
+            fetch(`/api/section/save`, {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json'
+                }, 
+                body: JSON.stringify(sectInfo)
+            }).then(response => {
+                if (!response.ok) {
+                    throw Error('Save failed! Please try again.');
+                }
+                return response.json()
+            }).then(result => {
+                if (result.success) {
+                    const status = document.getElementById('save-status');
+                    status.textContent = '✔️ Saved';
+                    status.style.color = 'green';
+                    
+                    // Clear status when user makes changes
+                    const clearStatus = () => {
+                        status.textContent = '';
+                        status.style.color = '';
+                    };
+                    
+                    document.querySelectorAll('input[type="checkbox"], .template-input').forEach(input => {
+                        input.addEventListener('change', clearStatus, {once: true});
+                    });
+                } else {
+                    throw Error('Save failed! Please try again.');
+                }
+            }).catch(error => {
+                console.error(error)
+                alert(error)
+            })
+        }
+        
+        function resetSection() {
+            // Reset style descriptors
+            document.querySelectorAll('#style-grid input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            // Reset template inputs
+            document.querySelectorAll('.template-input').forEach(input => {
+                input.value = '';
+            });
+        }
+        
+        // Monitor changes for debugging
+        document.addEventListener('change', function() {
+            console.log('Selected styles:', getSelectedStyles());
+            console.log('Template texts:', getTemplateTexts());
+        });
+    </script>
 </body>
 </html>

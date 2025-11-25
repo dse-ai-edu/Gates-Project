@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feedback Generation Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: #fff;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .section h3 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+
+        #result-textarea {
+            height: 200px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .detail-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 1rem;
+            background-color: #fafafa;
+        }
+
+        .detail-content {
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+    </style>
+    <script src="{{ url_for('static', filename='js/step4.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script>
+        localStorage['userId'] = 'test'
+        window.onload = function () {
+            loadSession();
+            loadFeedbackSystems();
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- Feedback System Selector -->
+        <div class="section">
+            <h2>Select Feedback System</h2>
+            <select id="system-select">
+                <option value="">Select a feedback system</option>
+                <option value="T82">T82</option>
+                <option value="cvic152">cvic152</option>
+            </select>
+            <p id="toggle-details" style="color: blue; text-decoration: underline; cursor: pointer; display: none;">Show Details</p>
+        </div>
+
+        <!-- System Details Display -->
+        <div class="section" id="details-display" style="display: none;">
+            <h2>System Configuration Details</h2>
+            <div class="details-grid">
+                <div class="detail-item">
+                    <h3>Key Words</h3>
+                    <div class="detail-content" id="keywords-content">
+                        Loading keywords...
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <h3>Structure</h3>
+                    <div class="detail-content" id="structure-content">
+                        Loading structure...
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <h3>Base Style</h3>
+                    <div class="detail-content" id="base-style-content">
+                        Loading base style...
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <h3>Personalization</h3>
+                    <div class="detail-content" id="personalization-content">
+                        Loading personalization...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Answer Input -->
+        <div class="section" id="student-input" style="display: none;">
+            <h2>Student Answer Input</h2>
+            <div style="margin-bottom: 1rem;">
+                <button id="inputTextBtn">Input Text</button>
+            </div>
+            <div id="textInputArea" style="display: none;">
+                <textarea id="student-answer" placeholder="Write the student answer here..."></textarea>
+            </div>
+            <br>
+            <button id="generateFeedbackBtn" style="display: none;">Generate Feedback</button>
+        </div>
+
+        <!-- Feedback Result Display -->
+        <div class="section" id="feedback-display" style="display: none;">
+            <h2>Generated Feedback</h2>
+            <textarea id="result-textarea" readonly>Generating Feedback...</textarea>
+        </div>
+
+    </div>
+    <script>
+        document.getElementById('system-select').addEventListener('change', function () {
+            // Reset details display
+            document.getElementById('details-display').style.display = 'none';
+            document.getElementById('toggle-details').textContent = 'Show Details';
+
+            // Reset student input area
+            if (document.getElementById('system-select').value == "") {
+                document.getElementById('student-input').style.display = 'none';
+                document.getElementById('toggle-details').style.display = 'none';
+            } else {
+                document.getElementById('student-input').style.display = 'block';
+                document.getElementById('toggle-details').style.display = 'block';
+                loadSystemDetails();
+            }
+            document.getElementById('textInputArea').style.display = 'none';
+
+            // Hide the generate button and result
+            document.getElementById('generateFeedbackBtn').style.display = 'none';
+            document.getElementById('feedback-display').style.display = 'none';
+
+            // Clear the textarea value
+            const textarea = document.getElementById('student-answer');
+            if (textarea) {
+                textarea.value = '';
+            }
+        });
+
+        document.getElementById('toggle-details').addEventListener('click', function () {
+            const detailsDisplay = document.getElementById('details-display');
+            const isHidden = detailsDisplay.style.display === 'none';
+
+            detailsDisplay.style.display = isHidden ? 'block' : 'none';
+            this.textContent = isHidden ? 'Hide Details' : 'Show Details';
+        });
+
+        const inputTextBtn = document.getElementById('inputTextBtn');
+        const generateFeedbackBtn = document.getElementById('generateFeedbackBtn');
+        const textInputArea = document.getElementById('textInputArea');
+        const feedbackDisplay = document.getElementById("feedback-display");
+
+        inputTextBtn.addEventListener('click', function () {
+            textInputArea.style.display = 'block';
+            generateFeedbackBtn.style.display = 'block';
+            feedbackDisplay.style.display = 'none';
+        });
+
+        generateFeedbackBtn.addEventListener('click', function () {
+            const studentAnswer = document.getElementById('student-answer').value.trim();
+            if (!studentAnswer) {
+                alert('Please enter a student answer before generating feedback.');
+                return;
+            }
+            
+            feedbackDisplay.style.display = 'block';
+            document.getElementById('result-textarea').value = 'Generating Feedback...';
+            
+            // Trigger the feedback generation
+            generatePersonalizedFeedback();
+        });
+
+        // Function to load system details based on selected system
+        function loadSystemDetails() {
+            const selectedSystem = document.getElementById('system-select').value;
+            
+            // Mock data - in real implementation, this would come from the backend
+            const systemDetails = {
+                'T82': {
+                    keywords: 'Mathematics, Problem-solving, Algebraic thinking, Critical analysis',
+                    structure: 'Introduction → Analysis → Suggestions → Conclusion',
+                    baseStyle: 'Warm, Encouraging, Analytical, Thoughtful',
+                    personalization: 'Focus on growth mindset, Ask guiding questions, Use positive reinforcement'
+                },+
+                'cvic152': {
+   /z                 keywords: 'Civic engagement, Social responsibility, Community, Democratic participation',
+                    structure: 'Context → Evaluation → Recommendations → Next Steps',
+                    baseStyle: 'Professional, Supportive, Clear, Inspiring',
+                    personalization: 'Connect to real-world applications, Emphasize civic duty, Encourage participation'
+                }
+            };
+
+            if (systemDetails[selectedSystem]) {
+                const details = systemDetails[selectedSystem];
+                document.getElementById('keywords-content').textContent = details.keywords;
+                document.getElementById('structure-content').textContent = details.structure;
+                document.getElementById('base-style-content').textContent = details.baseStyle;
+                document.getElementById('personalization-content').textContent = details.personalization;
+            }
+        }
+
+        // Function to load available feedback systems
+        function loadFeedbackSystems() {
+            // In real implementation, this would fetch from the backend
+            console.log('Loading feedback systems...');
+        }
+
+        // Function to generate personalized feedback
+        function generatePersonalizedFeedback() {
+            const selectedSystem = document.getElementById('system-select').value;
+            const studentAnswer = document.getElementById('student-answer').value;
+            const resultTextarea = document.getElementById('result-textarea');
+
+            // Mock API call - replace with actual backend integration
+            setTimeout(() => {
+                const mockFeedback = `[FIXED DEFAULT FEEDBACK]Based on your response about ${selectedSystem}, I can see you've put thought into this answer. Here are some observations and suggestions:
+
+**Strengths:**
+- You demonstrate a good understanding of the core concepts
+- Your reasoning shows logical progression
+- You've made connections to relevant examples
+
+**Areas for Improvement:**
+- Consider elaborating on your main argument with more specific details
+- Try to address potential counterarguments to strengthen your position
+- Include more concrete examples to support your points
+
+**Next Steps:**
+- Review the course materials on [specific topic]
+- Practice applying these concepts to different scenarios
+- Consider how this relates to real-world applications
+
+Keep up the thoughtful analysis! Your engagement with the material is evident, and with some refinement, your responses will be even stronger.`;
+
+                resultTextarea.value = mockFeedback;
+            }, 2000); // 2 second delay to simulate processing
+        }
+    </script>
+</body>
+
+</html>

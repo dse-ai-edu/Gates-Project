@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-	<title>Automatic Grading Toolkit</title>
+	<title>Automatic Feedback Generation Tool</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -27,16 +27,11 @@
 		<aside id="colorlib-aside" role="complementary" class="js-fullheight">
 			<nav id="colorlib-main-menu" role="navigation">
 				<ul>
-					<h3>Build Task</h3>
-					<li><a href="#" data-content="profile">Profile</a></li>
-					<li><a href="#" data-content="question">Question</a></li>
-					<!-- <li><a href="#" data-content="resource">Resource</a></li> -->
-					<li><a href="#" data-content="rubric">Rubric</a></li>
-					<li><a href="#" data-content="example">Example</a></li>
-					<li><a href="#" data-content="resource">Resource</a></li>
-					<li><a href="#" data-content="optimize">Optimize</a></li>
+					<h3>Build Feedback System</h3>
+					<li><a href="#" data-content="base_style">Base Style and Feedback Template</a></li>
+					<li><a href="#" data-content="macro_feedback">Teaching Style and Personalization</a></li>
 					<br>
-					<h3>Start Grade</h3>
+					<h3>Generate Feedback</h3>
 					<li><a href="#" data-content="answer">Answer</a></li>
 					<li><a href="#" data-content="feedback">Feedback</a></li>
 				</ul>
@@ -102,10 +97,14 @@
 			let input = url.searchParams.get('input');
 			let section = url.searchParams.get('section');
 
-			if (section=='profile') {
-				let taskName = document.getElementById('task-name').value;
-				let taskDesc = document.getElementById('task-desc').value;
-				return {'tid':tid, 'name':taskName, 'desc':taskDesc};
+			if (section=='base_style') {
+				let selectedStyles = getSelectedStyles();
+				let templateTexts = getTemplateTexts();
+				return {'tid':tid, 'base_style': {'styles': selectedStyles, 'templates': templateTexts}};
+			} else if (section=='macro_feedback') {
+				let teachingStyle = getSelectedTeachingStyle();
+				let additionalInstructions = getAdditionalInstructions();
+				return {'tid':tid, 'macro_feedback': {'teaching_style': teachingStyle, 'instructions': additionalInstructions}};
 			} else if (input=='text') {
 				let sectInfo = document.getElementById('sect-info').value;
 				return {'tid':tid, [section]: {'text':sectInfo}};
@@ -131,19 +130,40 @@
 					body: JSON.stringify({'tid':tid,'section':section})
 				}).then(response => {
 					if (!response.ok) {
-						throw Error('Fail to load ratiotable content.');
+						throw Error('Fail to load section content.');
 					}
 					return response.json()
 				}).then(result => {
-					if (section=='profile') {
-						if (result.name) {
-							document.getElementById('task-name').value = result.name;
+					if (section=='base_style') {
+						if (result.info && result.info.styles) {
+							// Restore selected style descriptors
+							result.info.styles.forEach(style => {
+								const checkbox = document.getElementById(style);
+								if (checkbox) checkbox.checked = true;
+							});
 						}
-						if (result.desc) {
-							document.getElementById('task-desc').value = result.desc;
+						if (result.info && result.info.templates) {
+							// Restore template texts
+							const templateInputs = document.querySelectorAll('.template-input');
+							result.info.templates.forEach((template, index) => {
+								if (templateInputs[index]) {
+									templateInputs[index].value = template;
+								}
+							});
+						}
+					} else if (section=='macro_feedback') {
+						if (result.info && result.info.teaching_style) {
+							// Restore selected teaching style
+							const radio = document.querySelector(`input[name="teaching-style"][value="${result.info.teaching_style}"]`);
+							if (radio) radio.checked = true;
+						}
+						if (result.info && result.info.instructions) {
+							// Restore additional instructions
+							const textarea = document.getElementById('additional-instructions');
+							if (textarea) textarea.value = result.info.instructions;
 						}
 					} else if (input=='text') {
-						if (result.info['text']) {
+						if (result.info && result.info['text']) {
 							document.getElementById('sect-info').value = result.info['text'];
 						}
 					}				
@@ -159,17 +179,32 @@
 			let section = url.searchParams.get('section');
 			
 			let sectInfo = collectInfo();
-			if (section=="profile") {
+			if (section=="base_style" || section=="macro_feedback") {
 
-				//addition// requires task name to be filled out when saving
-				const taskName = document.getElementById('task-name').value.trim();
-				if (!taskName) {
-					alert("❗ Task name cannot be empty. Please enter a task name.");
-					return;
+				// Validation for base_style section
+				if (section=="base_style") {
+					const selectedStyles = getSelectedStyles();
+					const templateTexts = getTemplateTexts();
+					if (selectedStyles.length === 0) {
+						alert("❗ Please select at least one style descriptor.");
+						return;
+					}
+					if (templateTexts.length === 0) {
+						alert("❗ Please enter at least one feedback template item.");
+						return;
+					}
 				}
-				//  //
 
-				fetch(`/api/task/create`, {
+				// Validation for macro_feedback section  
+				if (section=="macro_feedback") {
+					const teachingStyle = getSelectedTeachingStyle();
+					if (!teachingStyle) {
+						alert("❗ Please select a teaching style.");
+						return;
+					}
+				}
+
+				fetch(`/api/section/save`, {
 					method: 'POST', headers: {
 						'Content-Type': 'application/json'
 					}, 
@@ -181,25 +216,30 @@
 					return response.json()
 				}).then(result => {
 					if (result.success) {
-
-						//  //added code... specific check mark for profile page
-						const status = document.getElementById('save-status');
-						status.textContent = '✔️ Saved';
-
-						const taskNameInput = document.getElementById('task-name');
-						const taskDescInput = document.getElementById('task-desc');
-
-						// Clear the check message when an edit is made
-						const clearStatus = () => {
-							status.textContent = '';
-							taskNameInput.removeEventListener('input', clearStatus);
-							taskDescInput.removeEventListener('input', clearStatus);
-						};
-						//attaches handler to input feilds so check disapears instantly after an edit
-						taskNameInput.addEventListener('input', clearStatus);
-						taskDescInput.addEventListener('input', clearStatus);
-						//  //
-
+						// Show success message
+						const status = document.getElementById('save-status') || document.getElementById('info-message');
+						if (status) {
+							const originalText = status.textContent;
+							status.textContent = '✔️ Saved';
+							status.style.color = 'green';
+							
+							// Clear status when user makes changes
+							const clearStatus = () => {
+								status.textContent = originalText;
+								status.style.color = '';
+							};
+							
+							// Add event listeners to clear status on change
+							if (section == "base_style") {
+								document.querySelectorAll('input[type="checkbox"], .template-input').forEach(input => {
+									input.addEventListener('change', clearStatus, {once: true});
+								});
+							} else if (section == "macro_feedback") {
+								document.querySelectorAll('input[type="radio"], #additional-instructions').forEach(input => {
+									input.addEventListener('change', clearStatus, {once: true});
+								});
+							}
+						}
 					} else {
 						throw Error('Save failed! Please try again.');
 					}
@@ -269,9 +309,23 @@
 			let url = new URL(window.location.href);
 			let input = url.searchParams.get('input');
 			let section = url.searchParams.get('section');
-			if (section=="profile") {
-				document.getElementById('task-name').value = '';
-				document.getElementById('task-desc').value = '';
+			if (section=="base_style") {
+				// Reset style descriptors
+				document.querySelectorAll('#style-grid input[type="checkbox"]').forEach(checkbox => {
+					checkbox.checked = false;
+				});
+				// Reset template inputs
+				document.querySelectorAll('.template-input').forEach(input => {
+					input.value = '';
+				});
+			} else if (section=="macro_feedback") {
+				// Reset teaching style selection
+				document.querySelectorAll('input[name="teaching-style"]').forEach(radio => {
+					radio.checked = false;
+				});
+				// Reset additional instructions
+				const textarea = document.getElementById('additional-instructions');
+				if (textarea) textarea.value = '';
 			} else if (input=='text') {
 				document.getElementById('sect-info').value = '';
 			}
@@ -282,6 +336,14 @@
 			let input = url.searchParams.get('input');
 			let section = url.searchParams.get('section');
 			let optid = url.searchParams.get('optid');
+			
+			// Map sections to their corresponding templates
+			if (section == 'base_style') {
+				template = 'feedback_step1';
+			} else if (section == 'macro_feedback') {
+				template = 'feedback_step2';
+			}
+			
 			fetch(`/static/html/${template}.html`).then(
 				response => response.text()
 			).then(html => {
@@ -289,24 +351,15 @@
 				const shadow = parser.parseFromString(html, 'text/html');
 				document.getElementById('colorlib-main').innerHTML = shadow.getElementById('colorlib-main').innerHTML;
 				if (section == 'answer' && input=='text') {
-					document.getElementById('save-btn').textContent = 'Grade';
-					document.getElementById('save-btn').setAttribute('id', 'grade-btn');
+					document.getElementById('save-btn').textContent = 'Generate';
+					document.getElementById('save-btn').setAttribute('id', 'generate-btn');
 					document.getElementById('next-btn').remove();
-				}
-				if (['example','resource','optimize'].includes(section) && input==null) {
-					let skipBtn = (document.getElementById('back-btn')).cloneNode(true);
-					skipBtn.querySelector('a').textContent='Skip ❯';
-					skipBtn.querySelector('a').setAttribute('href','#');
-					skipBtn.setAttribute('id', 'next-btn');
-					document.getElementById('back-btn').parentNode.appendChild(skipBtn);
 				}
 			}).then(() => {
 				updateHandler();
 			}).then(() => {
 				if (section=='feedback') {
 					loadFeedback();
-				} else if (section=='rubric' && optid) {
-					loadOptimize(optid);
 				} else {
 					// restore the contents from the databse
 					restoreInfo();
@@ -337,7 +390,6 @@
 			if (document.getElementById('back-btn')) {
 				document.getElementById('back-btn').addEventListener('click', function () {
 					if (section=='answer' && input==null) {
-						// document.getElementById('back-btn').querySelector('a').setAttribute('href','/select');
 						window.location.href = '/select'
 					} else if (input) {
 						// for the page with input, the back is always get it back to the 
@@ -376,27 +428,25 @@
 
 			if (document.getElementById('next-btn')) {
 				document.getElementById('next-btn').addEventListener('click', function () {
-					if (section === 'profile') {
-						const nameInput = document.getElementById('task-name');
-						if (nameInput.value.length === 0) {
-							alert("❗ Please enter task name before proceeding.");
+					// Validation for feedback generation steps
+					if (section === 'base_style') {
+						const selectedStyles = getSelectedStyles();
+						const templateTexts = getTemplateTexts();
+						if (selectedStyles.length === 0) {
+							alert("❗ Please select at least one style descriptor before proceeding.");
+							return;
+						}
+						if (templateTexts.length === 0) {
+							alert("❗ Please enter at least one feedback template item before proceeding.");
 							return;
 						}
 					}
 					
-					if (['question', 'rubric'].includes(section)) {
-						if (input === 'text') {
-							const currentInput = document.getElementById('sect-info');
-							if (!currentInput || !currentInput.value.trim()) {
-								alert("❗ Please enter some text before proceeding.");
-								return;
-							}
-						} else {
-							const currentInput = document.getElementsByClassName('file-item');
-							if (currentInput.length === 0) {
-								alert("❗ Please upload at least one file before proceeding.");
-								return;
-							}
+					if (section === 'macro_feedback') {
+						const teachingStyle = getSelectedTeachingStyle();
+						if (!teachingStyle) {
+							alert("❗ Please select a teaching style before proceeding.");
+							return;
 						}
 					}
 
@@ -442,41 +492,9 @@
 				})
 			}
 
-			if (document.getElementById('grade-btn')) {
-				document.getElementById('grade-btn').addEventListener('click', function () {
+			if (document.getElementById('generate-btn')) {
+				document.getElementById('generate-btn').addEventListener('click', function () {
 					submitAnswer();
-				})
-			}
-
-			if (document.getElementById('file-input-train')) {
-				document.getElementById('file-input-train').addEventListener('change', function () {
-					showOptimize();
-				})
-			}
-
-			if (document.getElementById('file-input-test')) {
-				document.getElementById('file-input-test').addEventListener('change', function() {
-					showOptimize();
-				})
-			}
-
-			if (document.getElementById('optimize-btn')) {
-				document.getElementById('optimize-btn').addEventListener('click', function () {
-					runOptimize();
-				})
-			}
-
-			if (document.getElementById('discard-btn')) {
-				document.getElementById('discard-btn').addEventListener('click', function () {
-					document.getElementById('opt-rst').style.display='none';
-				})
-			}
-
-			if (document.getElementById('apply-btn')) {
-				document.getElementById('apply-btn').addEventListener('click', function () {
-					// applyOptimize();
-					const optid = document.getElementById('opt-text').getAttribute('optid');
-					window.location.href = `/create?section=rubric&input=text&optid=${optid}`;
 				})
 			}
 
@@ -505,64 +523,6 @@
 			}
 		}
 
-		function runOptimize() {
-			// const optid = 'opt-test';
-			const optid = 'opt-demo';
-			const rstDiv = document.getElementById('opt-rst');
-			const rstText = document.getElementById('opt-text');
-			rstText.setAttribute('optid', optid)
-			const rstMetric = document.getElementById('opt-metric');
-			const rstWait = document.getElementById('opt-wait');
-			rstWait.style.display = 'block';
-			fetch('/api/optimize/load', {
-				method: 'POST', 
-				headers: {
-					'Content-Type': 'application/json'
-				}, 
-				body: JSON.stringify({'optid':optid})
-			}).then(res => res.json()).then(data => {
-				if (data.output) {
-					const oldText = data.input;
-					const newText = data.output;
-					const html = diffStrings(oldText, newText);
-					rstText.innerHTML = `<div>${html}</div>`;
-					// rstText.textContent = data.output;
-					rstMetric.innerHTML = `
-					<strong>Result:</strong> Grading accuracy on test samples from 82% to 86% (+4%). 
-					The updated rubric is shown below. Click “Apply” to accept the optimized rubric and use it for subsequent grading.`
-				}
-				return new Promise(resolve => setTimeout(resolve, 5000))
-			}).then( _ => {
-				rstWait.style.display='none';
-				rstDiv.setAttribute('optid', optid);
-				rstDiv.style.display='block';
-			})
-			
-		}
-		
-		function loadOptimize(optid) {
-			fetch('/api/optimize/load', {
-				method: 'POST', 
-				headers: {
-					'Content-Type': 'application/json'
-				}, 
-				body: JSON.stringify({'optid':optid})
-			}).then(res => res.json()).then(data => {
-				if (data.output) {
-					document.getElementById('sect-info').value = data.output;;
-				}
-			})
-		}
-
-		function showOptimize() {
-            if (document.getElementById('file-input-train').value && document.getElementById('file-input-test').value) {
-                document.getElementById('opt-div').style.display = 'block';
-				document.getElementById('opt-rst').style.display='none';
-            } else {
-				document.getElementById('opt-div').style.display = 'none';
-			}
-        }
-
 		function submitAnswer() {
 			let url = new URL(window.location.href);
 			let aid = crypto.randomUUID();
@@ -590,7 +550,7 @@
 				container.textContent = "Please step back and submit the answer first.";
 				return
 			}
-			container.textContent = "🔄 Grading in progress...";
+			container.textContent = "🔄 Generating feedback...";
 			
 			let attempts = 0;
 			const interval = setInterval(() => {
@@ -602,7 +562,7 @@
 					container.innerHTML = data.grade;
 					clearInterval(interval);
 					} else if (++attempts > 5) {
-					container.textContent = "⚠️ Grading timed out. Please step back and submit the answer again.";
+					container.textContent = "⚠️ Feedback generation timed out. Please step back and submit the answer again.";
 					clearInterval(interval);
 					}
 				});
@@ -617,7 +577,7 @@
 			document.querySelectorAll("#colorlib-main-menu li").forEach(li => li.classList.remove("colorlib-active"));
 			document.querySelector(`[data-content=${section}]`).parentElement.classList.add("colorlib-active");
 
-			let selectSection = ['question', 'resource', 'example', 'rubric', 'answer'];
+			let selectSection = ['answer'];
 			if (selectSection.includes(section)) {
 				if (input == "text") {
 					updateContent('textinput');
@@ -626,33 +586,15 @@
 				} else {
 					updateContent('innavi');
 				}
-			} else if (section=='profile') {
-				updateContent('profile');
+			} else if (section=='base_style') {
+				updateContent('feedback_step1');
+			} else if (section=='macro_feedback') {
+				updateContent('feedback_step2');
 			} else if (section=='feedback') {
 				updateContent('feedback');
-			} else if (section=='optimize') {
-				updateContent('optnavi');
 			} else {
 				document.getElementById('colorlib-main').innerHTML = ""
 			}
-		}
-
-		function diffStrings(oldStr, newStr) {
-			// Using diffWords for word-based difference (use diffChars for character-level)
-			const diff = Diff.diffWords(oldStr, newStr);
-
-			let result = '';
-			diff.forEach(part => {
-				let color = '';
-				if (part.added) color = 'background: #c8e6c9;';    // green for added
-				else if (part.removed) color = 'background: #ffcdd2;'; // red for removed
-
-				result += color
-					? `<span style="${color}">${escapeHtml(part.value)}</span>`
-					: escapeHtml(part.value);
-			});
-
-			return result;
 		}
 
 		// Escape HTML for safe display
@@ -667,9 +609,6 @@
 				})[m];
 			});
 		}
-
-
-
 	</script>
 
 </body>

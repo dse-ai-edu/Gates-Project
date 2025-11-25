@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Automatic Grading Tool</title>
+    <title>Automatic Feedback Generation Tool - step 2/2</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -11,60 +11,7 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 
 	<link rel="stylesheet" href="../css/style.css">
-    
-    <style>
-        .radio-group {
-            margin: 1rem 0;
-        }
-        .radio-item {
-            margin: 0.5rem 0;
-            display: flex;
-            align-items: center;
-        }
-        .radio-item input[type="radio"] {
-            margin-right: 0.5rem;
-        }
-        .feedback-textarea {
-            width: 100%;
-            min-height: 200px;
-            padding: 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-family: inherit;
-            resize: vertical;
-        }
-        .action-buttons {
-            margin-top: 1rem;
-            display: flex;
-            gap: 10px;
-        }
-        .action-buttons button {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-        .set-btn {
-            background-color: #007bff;
-            color: white;
-        }
-        .edit-btn {
-            background-color: #28a745;
-            color: white;
-        }
-        .set-btn:hover {
-            background-color: #0056b3;
-        }
-        .edit-btn:hover {
-            background-color: #218838;
-        }
-        .disabled {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-    </style>
-
+    <link rel="stylesheet" href="../css/feedback.css">
 </head>
 
 <body>
@@ -108,12 +55,12 @@
                             </div>
 						</div>
 						<div class="col-md-6">
-							<h2 class="h4">Additional Instructions</h2>
-							<p>Enter any additional instructions or context for feedback generation (optional).</p>
+							<h2 class="h4">Personalized Response Example</h2>
+							<p>Enter any additional feedback responses of you or your preferred style.</p>
 							<textarea class="feedback-textarea" id="additional-instructions" placeholder="Enter additional instructions here..."></textarea>
                             <div class="action-buttons">
-                                <button class="set-btn" id="set-btn">Set</button>
-                                <button class="edit-btn" id="edit-btn" style="display: none;">Edit</button>
+                                <button class="btn btn-primary" id="set-btn">Set</button>
+                                <button class="btn btn-success" id="edit-btn" style="display: none;">Edit</button>
                             </div>
 						</div>
 					</div>
@@ -122,35 +69,15 @@
         </div><!-- END COLORLIB-MAIN -->
 	</div><!-- END COLORLIB-PAGE -->
 
+    <script src="../js/feedback.js"></script>
     <script>
-        const teachingStyleGroup = document.getElementById('teaching-style-group');
-        const additionalInstructions = document.getElementById('additional-instructions');
+        // DOM element references
         const setBtn = document.getElementById('set-btn');
         const editBtn = document.getElementById('edit-btn');
         
-        setBtn.addEventListener('click', function() {
-            teachingStyleGroup.classList.add('disabled');
-            additionalInstructions.disabled = true;
-            additionalInstructions.classList.add('disabled');
-            
-            setBtn.style.display = 'none';
-            editBtn.style.display = 'inline-block';
-            
-            const selectedStyle = document.querySelector('input[name="teaching-style"]:checked').value;
-            const instructions = additionalInstructions.value;
-            
-            console.log('Selected Teaching Style:', selectedStyle);
-            console.log('Additional Instructions:', instructions);
-        });
-        
-        editBtn.addEventListener('click', function() {
-            teachingStyleGroup.classList.remove('disabled');
-            additionalInstructions.disabled = false;
-            additionalInstructions.classList.remove('disabled');
-            
-            setBtn.style.display = 'inline-block';
-            editBtn.style.display = 'none';
-        });
+        // Event listeners
+        setBtn.addEventListener('click', setTeachingStyle);
+        editBtn.addEventListener('click', editTeachingStyle);
     </script>
 </body>
 
