@@ -5,7 +5,7 @@ import numpy as np
 
 from app import key_iter
 
-from app.personalize.respond_prompts import *
+from app.prompts import *
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
