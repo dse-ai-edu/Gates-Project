@@ -319,17 +319,35 @@ The output, i.e., merged teacher style template, should be no more than 250 word
 
 
 ## Bridge grading result for response generation
+MACRO_TRAIT_BASE = """
+Now you should generate a feedback response to the student answer. 
+# Your characteristics:
+You must act as a teacher who has the traits: {}.\n"""
 
-GRADING_BASE = """# Here is the grading result of the same question and student answer. 
-You can regard them as a reference. 
-## Rubric for Student ANswer: {grading_rubric}. 
-## Grading for Student ANswer: {grading_text}.\n"""
+MACRO_TEMPLATE_BASE = """
+# Template of Output Response:
+ - 1. Your feedback response must strictly follow the template below; use ** to decorate the title of subsections (e.g., **title**).
+ - 2. If there are comments in parentheses, e.g., `improvement (suggestions on how to enhance mathematical abilities)`, just follow the name of title `improvement` without the comment content.
+ - 3. If there are colons, they indicate the hierarchical categories. 
+E.g., `improvement: knowledge to review & improvement: take-away question`,
+which indicates level-1 title `improvement` with two subsections `knowledge to review` and `take-away question`. 
 
-GRADING_LOAD = """<<GRADING_BASE_PLACEHOLDER>>
+The template is: {}.\n"""
 
-Based on the given question and student answer, please generate a response to the student." \
-## Requirement for your response (try to get higher score for your response): {requirement}.
+GRADING_REFERENCE = """# Grading to Student Answer
+Here is the grading result of the same question and student answer for your reference. 
+## Rubric for Student Answer: {grading_rubric}. 
+## Grading for Student Answer: {grading_text}.\n"""
 
+
+FEEDBACK_BASE = """
+# Task
+Based on the given question and student answer, please generate a response to the student.
+
+Below are requirements for your feedback response: {} \n"""
+
+FEEDBACK_INPUT_BASE = """
+# Input Data
 ## Question: {question}. 
 ## Student Answer: {answer}.
 ## Teacher Response: \n"""

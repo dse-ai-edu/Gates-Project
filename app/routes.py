@@ -157,7 +157,7 @@ def configuration_final():
         response = {'success': False}
     return jsonify(response)
 
-@app.route('/api/response/submit', methods=['POST'])
+@app.route('/api/comment/submit', methods=['POST'])
 def answer_respond():
     """Generate personalized feedback response for student answer (no scoring involved)"""
     data = request.get_json()
@@ -167,14 +167,15 @@ def answer_respond():
     answer_text = data.get("student_answer", "")
 
     try:
-        system_info = database['feedback_system'].find_one({'tid': tid})
+        system_info = database['comment'].find_one({'tid': tid})
         if not system_info:
             raise ValueError('Feedback system not found: {}'.format(tid))
         
         if answer_text.strip():
+            system_info = system_info[0] if isinstance(system_info, list) else system_info
             # Extract configuration from system
-            micro_feedback = system_info.get('micro_feedback', {})
-            macro_feedback = system_info.get('macro_feedback', {})
+            micro_feedback = system_info.get('micro_style', {})
+            macro_feedback = system_info.get('macro_style', {})
             
             # Get style descriptors and templates
             style_keywords = macro_feedback.get('keywords', [])
@@ -187,8 +188,6 @@ def answer_respond():
             
             # Build system prompt for feedback generation (no scoring)
             system_prompts = utils.parse_teaching_style(
-                style_keywords=style_keywords,
-                feedback_templates=feedback_templates,
                 teach_style=teach_style,
                 teach_example=teach_example,
             )
@@ -197,9 +196,11 @@ def answer_respond():
             custom_prompt = system_prompts['custom'] if system_prompts.get('custom', '') else None
             
             # Build user prompt with student answer (no scoring)
-            user_prompt = utils.build_feedback_user_prompt(
+            user_prompt = utils.parse_teaching_text(
+                question="",
                 student_answer=answer_text,
-                feedback_structure=feedback_templates
+                style_keywords=style_keywords,
+                feedback_templates=feedback_templates,
             )
             
             # Generate feedback using LLM (no scoring)
@@ -213,10 +214,17 @@ def answer_respond():
             )
             
             # Store feedback in database (no scoring)
-            database['responder'].insert_one({
+            max_attempt_record = database['comment'].find_one(
+                {'tid': tid, 'aid': aid, 'question': qid},
+                sort=[('attempt_id', -1)]
+                )
+            next_attempt_id = (max_attempt_record.get('attempt_id', -1) + 1) if max_attempt_record else 0
+
+            database['comment'].insert_one({
                 'tid': tid,
                 'aid': aid,
                 'question': qid,
+                'attempt_id': next_attempt_id,
                 'student_answer': answer_text,
                 'generated_response': feedback_text,  # Changed from 'generated_feedback'
                 'system_config': {
@@ -242,22 +250,22 @@ def answer_respond():
     
     return jsonify(response)
 
-@app.route('/api/response/load', methods=['GET'])
+@app.route('/api/comment/load', methods=['GET'])
 def response_load():
     """Load generated feedback response by answer ID"""
     aid = request.args.get('aid')
+    attempt_id = request.args.get('attempt_id')
     try:
-        result = database['feedback'].find_one({'aid': aid})
-        if result:
+        result = database['comment'].find_one({'aid': aid, 'attempt_id': attempt_id})
+        response_text = result.get('generated_response', '')
+        if response_text:
             # Return the generated response (no scoring)
-            response_text = result.get('generated_response', '')
-            confidence = result.get('confidence')
-            
+            confidence = result.get('confidence', '-1')
+
             # Format as HTML for display
             formatted_response = utils.format_response_html(
                 response_text=response_text,
                 confidence=confidence,
-                system_config=result.get('system_config', {})
             )
             
             return jsonify({'response': formatted_response})
@@ -265,79 +273,6 @@ def response_load():
     except:
         traceback.print_exc()
         return jsonify({'response': None})
-
-# Remove the feedback/generate endpoint as we're using response/submit instead
-# Keep answer/submit for legacy compatibility but redirect to response/submit
-@app.route('/api/answer/submit', methods=['POST'])
-def answer_submit():
-    """Legacy endpoint - redirect to response/submit"""
-    data = request.get_json()
-    try:
-        # Redirect to the actual response generation
-        with app.test_client() as client:
-            response = client.post('/api/response/submit', 
-                                 json=data,
-                                 content_type='application/json')
-            result = response.get_json()
-            
-        return jsonify(result)
-        
-    except:
-        traceback.print_exc()
-        return jsonify({'success': False})
-
-# Update feedback/load to also support the new response format
-@app.route('/api/feedback/load', methods=['GET'])
-def feedback_load():
-    """Load generated feedback by answer ID (legacy compatibility)"""
-    aid = request.args.get('aid')
-    try:
-        result = database['feedback'].find_one({'aid': aid})
-        if result:
-            # Check for both old and new response field names
-            response_text = (result.get('generated_response') or 
-                           result.get('generated_feedback') or 
-                           result.get('grade', ''))
-            
-            confidence = result.get('confidence')
-            
-            # Format as HTML for display
-            formatted_response = utils.format_response_html(
-                response_text=response_text,
-                confidence=confidence,
-                system_config=result.get('system_config', {})
-            )
-            
-            return jsonify({'grade': formatted_response})  # Keep 'grade' key for legacy compatibility
-        return jsonify({'grade': None})
-    except:
-        traceback.print_exc()
-        return jsonify({'grade': None})
-
-@app.route('/api/response/load', methods=['GET'])
-def response_load():
-    aid = request.args.get('aid')
-    result = database['feedback'].find_one({'aid': aid})
-    if result:
-        return jsonify({'response': result.get('response', '')})
-    return jsonify({'response': None})
-
-# ==================== Legacy API Routes (for backward compatibility) ==================== #
-
-@app.route('/api/optimize/load', methods=['POST'])
-def optimize_load():
-    """Legacy optimization endpoint - return empty for now"""
-    data = request.get_json()
-    optid = data.get('optid')
-    # Return empty result as optimization is not part of feedback generation
-    return jsonify({'output': None})
-
-@app.route('/api/bucket/upload', methods=['POST'])
-def bucket_upload():
-    """File upload endpoint - placeholder for future implementation"""
-    file = request.files['file']
-    # TODO: Implement file upload for feedback resources
-    return jsonify({'success': False, 'message': 'File upload not implemented yet'})
 
 # ==================== Utility API Routes ==================== #
 

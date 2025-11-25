@@ -95,15 +95,50 @@ def parse_teaching_style(
 def parse_teaching_text(
         question: str,
         answer: str,
-        grading: list[str, str]) -> str:
+        style_keywords: str,
+        feedback_templates: str = "",
+        # grading: list[str, str]
+        ) -> str:
     
-    grading_rubric, grading_text = grading
-
     # Step 1: optional, add grading information
-    grading_template = ""
-    if grading_rubric and grading_text:
-        grading_template = GRADING_BASE.format(grading_rubric=grading_rubric, grading_text=grading_text)
-    # Step 2: final user text
-    final_respond_prompt = GRADING_LOAD.format(requirement=FEEDBACK_REQUIREMENT, question=question, answer=answer)
-    final_respond_prompt = final_respond_prompt.replace("<<GRADING_BASE_PLACEHOLDER>>", grading_template)
+    # grading_rubric, grading_text = grading
+    grading_prompt = ""
+    # if grading_rubric and grading_text:
+    #     grading_prompt = GRADING_REFERENCE.format(grading_rubric=grading_rubric, grading_text=grading_text)
+    
+    # Step 2: add macro-view-style
+    macro_trait_prompt = MACRO_TRAIT_BASE.format(style_keywords)
+
+    if not feedback_templates:
+        feedback_templates = "- Stength, - Weakness, - Improvement."
+    macro_template_prompt = MACRO_TEMPLATE_BASE.format(feedback_templates)
+    
+    # Step 3: final user text
+    final_respond_prompt = macro_trait_prompt
+    final_respond_prompt += FEEDBACK_BASE.format(FEEDBACK_REQUIREMENT)
+    final_respond_prompt += FEEDBACK_INPUT_BASE.format(question=question, answer=answer)
+    if grading_prompt: final_respond_prompt += grading_prompt
+    final_respond_prompt += macro_template_prompt
     return final_respond_prompt
+
+
+def format_response_html(response_text: str = "Placeholder of Response.", confidence: str|float = 0):
+    ## text
+    html_text = response_text.replace('\n', '<br>')
+    import re
+    html_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html_text)
+    
+    ## conf
+    processed_confidence = 0.0
+    if confidence is not None:
+        confidence_str = str(confidence)[:20]
+        pattern = r'^(\d+|\d+\.\d+)$'
+        match = re.match(pattern, confidence_str.strip())
+        if match:
+            number_str = match.group(1)
+            processed_confidence = float(number_str)
+            processed_confidence = round(processed_confidence, 4)
+    confidence_display = f'<br><span style="color: #666666;">conf: {processed_confidence:.4f}</span>'
+    
+    formatted_html = f"{html_text}{confidence_display}"
+    return formatted_html
