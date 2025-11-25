@@ -70,17 +70,29 @@
             </div>
 
             <!-- Stage 2 content: Personalized Examples -->
-            <div id="stage2-content" style="display: none;">
+            <div id="stage2-content" style="display: block;">
                 <div class="field-group">
                     <h3 style="color: black;">Enter Your Personalized Response Examples</h3>
                     <p>Provide examples of how you typically give feedback or your preferred tone:</p>
-                    <textarea class="feedback-textarea" id="additional-instructions" placeholder="Enter additional instructions or example responses here...
+                    
+                    <div style="margin: 1rem 0;">
+                        <button class="btn btn-info" id="reset-responses-btn">Reset Personalized Responses</button>
+                        <button class="btn btn-info" id="add-responses-btn" style="margin-left: 0.5rem;">Add My Example Responses</button>
+                    </div>
+                    
+                    <div style="margin: 0.5rem 0;">
+                        <p style="color: red; font-size: 0.9rem; margin: 0;">If added, teaching style will be locked and cannot be modified in real-time during generation phase.</p>
+                    </div>
+                    
+                    <div id="textarea-container" style="display: none;">
+                        <textarea class="feedback-textarea" id="additional-instructions" placeholder="Enter additional instructions or example responses here...
 
 For example:
 - I always start with something positive
 - I prefer to ask guiding questions
 - I like to relate concepts to real-world applications
 - I emphasize growth mindset language"></textarea>
+                    </div>
                 </div>
                 
                 <div class="action-buttons">
@@ -109,12 +121,37 @@ For example:
 
     <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
     <script>
-        let currentStage = 1;
+        let currentStage = 2;
         const maxStages = 3;
+        let locked_style = false; // Track if personalized style is locked
         
         // DOM element references
         const setBtn = document.getElementById('set-btn');
         const editBtn = document.getElementById('edit-btn');
+        const resetResponsesBtn = document.getElementById('reset-responses-btn');
+        const addResponsesBtn = document.getElementById('add-responses-btn');
+        const textareaContainer = document.getElementById('textarea-container');
+        const additionalInstructions = document.getElementById('additional-instructions');
+        
+        // Event listeners
+        setBtn.addEventListener('click', setTeachingStyle);
+        editBtn.addEventListener('click', editTeachingStyle);
+        
+        // New button event listeners
+        resetResponsesBtn.addEventListener('click', function() {
+            // Reset to default state
+            locked_style = false;
+            additionalInstructions.value = '';
+            textareaContainer.style.display = 'none';
+            console.log('Personalized responses reset. locked_style:', locked_style);
+        });
+        
+        addResponsesBtn.addEventListener('click', function() {
+            // Show textarea and lock style
+            locked_style = true;
+            textareaContainer.style.display = 'block';
+            console.log('Personalized responses enabled. locked_style:', locked_style);
+        });
         
         // Event listeners
         setBtn.addEventListener('click', setTeachingStyle);
@@ -201,7 +238,8 @@ For example:
                 'tid': tid, 
                 'macro_feedback': {
                     'teaching_style': teachingStyle, 
-                    'instructions': additionalInstructions
+                    'instructions': additionalInstructions,
+                    'locked_style': locked_style
                 }
             };
             
@@ -248,6 +286,7 @@ For example:
         document.addEventListener('change', function() {
             console.log('Selected teaching style:', getSelectedTeachingStyle());
             console.log('Additional instructions:', getAdditionalInstructions());
+            console.log('Locked style:', locked_style);
         });
     </script>
 </body>
