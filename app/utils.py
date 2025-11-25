@@ -52,7 +52,7 @@ def llm_generate(input_text:str, system_text:str=None, input_image:list=None, ma
 ## Response Generation 
 def parse_teaching_style(
         teach_style: str = None, 
-        teach_order: str = None, 
+        teach_example: str = None, 
         resource: str = None, 
         example: str = None) -> str:
 
@@ -76,19 +76,21 @@ def parse_teaching_style(
     #  
     # Step 2: Generate personal template
     teach_style_custom_text = ""
-    if teach_order:
-        teach_style_custom_text = str(teach_order).strip()
-        from personalize.prompt_tool import complete_style_extraction
+    if teach_example:
+        teach_style_custom_text = str(teach_example).strip()
+        from prompt_tool import complete_style_extraction
         personal_template = complete_style_extraction(teach_style_custom_text)
     #  
     # Step 3: Merge templates or use standard
     if standard_template and personal_template:
-        from personalize.prompt_tool import complete_style_merge
+        from prompt_tool import complete_style_merge
         final_respond_prompt = complete_style_merge(standard_template, personal_template)
     else:
         final_respond_prompt = standard_template
     #  
-    return final_respond_prompt
+    return {"final": final_respond_prompt, 
+            "selected": standard_template, 
+            "custom": personal_template, }
 
 def parse_teaching_text(
         question: str,

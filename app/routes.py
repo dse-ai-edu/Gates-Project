@@ -33,14 +33,6 @@ def step2():
 def step_final():
     return render_template('step_final.html')
 
-# Legacy routes for compatibility
-@app.route('/create')
-def create():
-    return render_template('create.html')
-
-@app.route('/select')
-def select():
-    return render_template('select.html')
 
 # ==================== API Route (returns JSON) ==================== #
 
@@ -65,85 +57,85 @@ def api_login():
         response = {'success': False, 'message': 'Authentication error'}
     return jsonify(response)
 
-@app.route('/api/task/create', methods=['POST'])
-def task_create():
-    """Create or update feedback system configuration"""
-    data = request.get_json()
-    tid = data.get('tid')
-    name = data.get('name')
-    desc = data.get('desc')
-    try:
-        if not database['feedback_system'].find_one({'tid': tid}):
-            database['feedback_system'].insert_one({
-                'tid': tid, 
-                'name': name, 
-                'desc': desc,
-                'created_at': datetime.utcnow(),
-                'updated_at': datetime.utcnow()
-            })
-        else:
-            database['feedback_system'].find_one_and_update(
-                {'tid': tid}, 
-                {'$set': {
-                    'name': name, 
-                    'desc': desc,
-                    'updated_at': datetime.utcnow()
-                }}
-            )    
-        response = {'success': True}
-    except:
-        traceback.print_exc()
-        response = {'success': False}
-    return jsonify(response)
+# @app.route('/api/task/create', methods=['POST'])
+# def task_create():
+#     """Create or update feedback system configuration"""
+#     data = request.get_json()
+#     tid = data.get('tid')
+#     name = data.get('name')
+#     desc = data.get('desc')
+#     try:
+#         if not database['feedback_system'].find_one({'tid': tid}):
+#             database['feedback_system'].insert_one({
+#                 'tid': tid, 
+#                 'name': name, 
+#                 'desc': desc,
+#                 'created_at': datetime.utcnow(),
+#                 'updated_at': datetime.utcnow()
+#             })
+#         else:
+#             database['feedback_system'].find_one_and_update(
+#                 {'tid': tid}, 
+#                 {'$set': {
+#                     'name': name, 
+#                     'desc': desc,
+#                     'updated_at': datetime.utcnow()
+#                 }}
+#             )    
+#         response = {'success': True}
+#     except:
+#         traceback.print_exc()
+#         response = {'success': False}
+#     return jsonify(response)
 
-@app.route('/api/task/show', methods=['POST'])
-def task_show():
-    """Show available feedback systems"""
-    data = request.get_json()
-    user = data.get('user')
-    try:
-        task_list = database['feedback_system'].find(
-            {'tid': {'$exists': True}}, 
-            {'tid': 1, 'name': 1, 'desc': 1, '_id': 0}
-        ).to_list()
-        response = {'task_list': task_list}
-    except:
-        traceback.print_exc()
-        response = {}
-    return jsonify(response)
+# @app.route('/api/task/show', methods=['POST'])
+# def task_show():
+#     """Show available feedback systems"""
+#     data = request.get_json()
+#     user = data.get('user')
+#     try:
+#         task_list = database['feedback_system'].find(
+#             {'tid': {'$exists': True}}, 
+#             {'tid': 1, 'name': 1, 'desc': 1, '_id': 0}
+#         ).to_list()
+#         response = {'task_list': task_list}
+#     except:
+#         traceback.print_exc()
+#         response = {}
+#     return jsonify(response)
 
-@app.route('/api/section/save', methods=['POST'])
-def section_save():
-    """Save configuration data from step1 and step2"""
-    data = request.get_json()
-    try:
-        database['feedback_system'].find_one_and_update(
-            {'tid': data.get('tid')}, 
-            {'$set': {**data, 'updated_at': datetime.utcnow()}},
-            upsert=True
-        )
-        response = {'success': True}
-    except:
-        traceback.print_exc()
-        response = {'success': False}
-    return jsonify(response)
+# @app.route('/api/section/save', methods=['POST'])
+# def section_save():
+#     """Save configuration data from step1 and step2"""
+#     data = request.get_json()
+#     try:
+#         database['feedback_system'].find_one_and_update(
+#             {'tid': data.get('tid')}, 
+#             {'$set': {**data, 'updated_at': datetime.utcnow()}},
+#             upsert=True
+#         )
+#         response = {'success': True}
+#     except:
+#         traceback.print_exc()
+#         response = {'success': False}
+#     return jsonify(response)
 
-@app.route('/api/section/load', methods=['POST'])
-def section_load():
-    """Load configuration data for step1 and step2"""
-    data = request.get_json()
-    section = data.get('section')
-    response = {}
-    try:
-        system_info = database['feedback_system'].find_one({'tid': data.get('tid')})
-        if system_info:
-            if section in ['base_style', 'macro_feedback']:
-                response = {'info': system_info.get(section, {})}
-            else:
-                response = {'info': {}}
-    except:
-        traceback.print_exc()
-    return jsonify(response)
+# @app.route('/api/section/load', methods=['POST'])
+# def section_load():
+#     """Load configuration data for step1 and step2"""
+#     data = request.get_json()
+#     section = data.get('section')
+#     response = {}
+#     try:
+#         system_info = database['feedback_system'].find_one({'tid': data.get('tid')})
+#         if system_info:
+#             if section in ['base_style', 'macro_feedback']:
+#                 response = {'info': system_info.get(section, {})}
+#             else:
+#                 response = {'info': {}}
+#     except:
+#         traceback.print_exc()
+#     return jsonify(response)
 
 @app.route('/api/configuration/final', methods=['POST'])
 def configuration_final():
@@ -171,34 +163,38 @@ def answer_respond():
     data = request.get_json()
     tid = data.get('tid')
     aid = data.get('aid', str(uuid.uuid4()))
-    answer_text = data.get('answer_text')
-    
+    qid = data.get('qid')
+    answer_text = data.get("student_answer", "")
+
     try:
         system_info = database['feedback_system'].find_one({'tid': tid})
         if not system_info:
             raise ValueError('Feedback system not found: {}'.format(tid))
         
-        if answer_text:
+        if answer_text.strip():
             # Extract configuration from system
-            base_style = system_info.get('base_style', {})
+            micro_feedback = system_info.get('micro_feedback', {})
             macro_feedback = system_info.get('macro_feedback', {})
             
             # Get style descriptors and templates
-            style_descriptors = base_style.get('styles', [])
-            feedback_templates = base_style.get('templates', [])
+            style_keywords = macro_feedback.get('keywords', [])
+            feedback_templates = macro_feedback.get('templates', [])
             
             # Get teaching style and personalization
-            teaching_style = macro_feedback.get('teaching_style', 'DIRECT')
-            personal_instructions = macro_feedback.get('instructions', '')
+            teach_style = micro_feedback.get('teach_style', 'DIRECT')
+            teach_example = micro_feedback.get('examples', '')
             locked_style = macro_feedback.get('locked_style', False)
             
             # Build system prompt for feedback generation (no scoring)
-            system_prompt = utils.build_feedback_system_prompt(
-                style_descriptors=style_descriptors,
+            system_prompts = utils.parse_teaching_style(
+                style_keywords=style_keywords,
                 feedback_templates=feedback_templates,
-                teaching_style=teaching_style,
-                personal_instructions=personal_instructions
+                teach_style=teach_style,
+                teach_example=teach_example,
             )
+
+            system_prompt = system_prompts['final']
+            custom_prompt = system_prompts['custom'] if system_prompts.get('custom', '') else None
             
             # Build user prompt with student answer (no scoring)
             user_prompt = utils.build_feedback_user_prompt(
@@ -217,16 +213,20 @@ def answer_respond():
             )
             
             # Store feedback in database (no scoring)
-            database['feedback'].insert_one({
+            database['responder'].insert_one({
                 'tid': tid,
                 'aid': aid,
+                'question': qid,
                 'student_answer': answer_text,
                 'generated_response': feedback_text,  # Changed from 'generated_feedback'
                 'system_config': {
-                    'style_descriptors': style_descriptors,
-                    'teaching_style': teaching_style,
-                    'templates': feedback_templates,
-                    'locked_style': locked_style
+                    'style_keywords': style_keywords,
+                    'feedback_templates': feedback_templates,
+                    'teach_style': teach_style,
+                    'teach_example': teach_example,
+                    'final_prompt': system_prompt,
+                    'selected_prompt': system_prompts['selected'],
+                    'custome_prompt': custom_prompt
                 },
                 'confidence': feedback_prob,
                 'generated_at': datetime.utcnow()
@@ -234,7 +234,7 @@ def answer_respond():
             
             response = {'success': True, 'aid': aid}
         else:
-            raise ValueError('Student answer text is required')
+            response = {'success': False, 'aid': aid}
             
     except Exception as e:
         traceback.print_exc()
@@ -313,85 +313,6 @@ def feedback_load():
     except:
         traceback.print_exc()
         return jsonify({'grade': None})
-
-@app.route('/api/response/submit', methods=['POST'])
-def answer_respond():
-    data = request.get_json()
-    tid = data.get('tid')
-    aid = data.get('aid')
-    answer_text = data.get('answer_text')
-    answer_file = data.get('answer_file')
-    try:
-        task_info = database['feedback_system'].find_one({'tid': tid})
-        if not task_info:
-            raise ValueError('Fail to fetch task id: {}'.format(tid)) 
-        
-        if answer_text is not None and answer_file is None:
-            # Extract configuration for feedback generation
-            base_style = task_info.get('base_style', {})
-            macro_feedback = task_info.get('macro_feedback', {})
-            
-            # Mock question for compatibility (since we focus on feedback, not grading)
-            question = "Please provide feedback on the following student response:"
-            
-            # Get teaching style configuration
-            teach_style = macro_feedback.get('teaching_style', 'DIRECT')
-            teach_order = ' '.join(base_style.get('templates', ['general feedback']))
-            
-            # Get additional instructions
-            if macro_feedback.get('instructions'):
-                resource = macro_feedback.get('instructions', '')
-            else:
-                resource = ''
-            example = ''
-
-            answer = answer_text
-            input_system_text = utils.parse_teaching_style(
-                teach_style=teach_style,
-                teach_order=teach_order,
-                resource=resource,
-                example=example
-            )
-            input_user_text = utils.parse_teaching_text(
-                question=question,
-                answer=answer,
-                grading=['', '']  # No grading for feedback generation
-            )
-            
-            model_name = 'gpt-4o'
-            llm_text, llm_prob = utils.llm_generate(
-                input_text=input_user_text,
-                system_text=input_system_text,
-                model=model_name,
-                temperature=0,
-                logprobs=True
-            )
-            feedback_text = llm_text
-            if isinstance(feedback_text, list):
-                feedback_text = feedback_text[0]
-            
-            # Clean up the feedback text if it starts with unwanted prefixes
-            if feedback_text.startswith('Score:') or feedback_text.startswith('Grade:'):
-                feedback_lines = feedback_text.split('\n')
-                feedback_text = '\n'.join(feedback_lines[1:])
-            
-            database['feedback'].update_one(
-                {'tid': tid, 'aid': aid},
-                {'$set': {
-                    'response': feedback_text,
-                    'response_prob': llm_prob
-                }},
-                upsert=True
-            )
-            response = {'success': True}
-        elif answer_text is None and answer_file is not None:
-            raise NotImplementedError()
-        else:
-            raise ValueError('Duplicate or missing inputs in file and text.')
-    except:
-        traceback.print_exc()
-        response = {'success': False}
-    return jsonify(response)
 
 @app.route('/api/response/load', methods=['GET'])
 def response_load():
