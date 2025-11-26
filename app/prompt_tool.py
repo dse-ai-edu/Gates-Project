@@ -1,4 +1,4 @@
-from prompts import (
+from app.prompts import (
     COMMUNICATION_STYLE_EXTRACTION_PROMPT,
     TEACHING_METHOD_EXTRACTION_PROMPT,
     EMOTIONAL_TONE_EXTRACTION_PROMPT,
@@ -7,6 +7,7 @@ from prompts import (
     MERGE_PROMPT
 )
 
+from utils import llm_generate as llm_function
 
 ### make teacher style prmopt ###
 def extract_teaching_components(teacher_responses):
@@ -39,30 +40,33 @@ def assemble_teaching_style_template(teacher_identity, communication_style, teac
 
 
 ### Post-processing ###
-def compress_style_text(input_text, llm_function, maximum=275):
+def compress_style_text(input_text, maximum=275):
     if len(input_text.split()) > int(maximum):
-        input_text = llm_function(SUMMARIZE_PROMPT.format(input_text))
+        input_text = llm_function(SUMMARIZE_PROMPT.format(input_text), max_tokens=350, temperature=0.7)
     return input_text
 
 
-def complete_style_extraction(teacher_responses, llm_function):
+def complete_style_extraction(teacher_responses):
     extraction_prompts = extract_teaching_components(teacher_responses)
-    communication_style = llm_function(extraction_prompts['communication_prompt'])
-    teaching_methods = llm_function(extraction_prompts['methods_prompt'])
-    emotional_tone = llm_function(extraction_prompts['emotional_prompt'])
+    communication_style = llm_function(extraction_prompts['communication_prompt'], max_tokens=350, temperature=0.7)
+    teaching_methods = llm_function(extraction_prompts['methods_prompt'], max_tokens=350, temperature=0.7)
+    emotional_tone = llm_function(extraction_prompts['emotional_prompt'], max_tokens=350, temperature=0.7)
     
     identity_prompt = create_identity_prompt(communication_style, teaching_methods, emotional_tone)
-    teacher_identity = llm_function(identity_prompt)
+    teacher_identity = llm_function(identity_prompt, max_tokens=350, temperature=0.7)
     
     final_prompt = assemble_teaching_style_template(
         teacher_identity, communication_style, teaching_methods, emotional_tone
     )
-    return compress_style_text(final_prompt, llm_function, maximum=275)
+    return compress_style_text(final_prompt, maximum=275)
 
 
-def complete_style_merge(standard_template, personal_template, llm_function):
+def complete_style_merge(standard_template, personal_template):
     input_prompts = MERGE_PROMPT.format(
         standard_template=standard_template,
         personal_template=personal_template)
-    output_template = llm_function(input_prompts)
-    return compress_style_text(output_template, llm_function, maximum=275)
+    output_template = llm_function(input_prompts, max_tokens=350, temperature=0.7)
+    return compress_style_text(output_template, maximum=275)
+
+
+# max_tokens=350, temperature=0.7, logprobs = True

@@ -3,6 +3,10 @@ import openai
 import traceback
 import numpy as np
 
+import os
+import html
+import re
+
 from app import key_iter
 
 from app.prompts import *
@@ -15,7 +19,7 @@ def verify_response(response_text):
     # leave if for now and we will implement it later based on need
     return True
 
-def llm_generate(input_text:str, system_text:str=None, input_image:list=None, max_retry:int=3, **kwarg):
+def vllm_generate(input_text:str, system_text:str=None, input_image:list=None, max_retry:int=3, **kwarg):
     if input_image:
         image_list = [encode_image('./app/'+x) for x in input_image]
         messages = [{
@@ -49,12 +53,38 @@ def llm_generate(input_text:str, system_text:str=None, input_image:list=None, ma
     raise SystemError('failed to generate response with llm.')
 
 
+def llm_generate(input_text: str, system_text:str=None,  max_retry:int=3, **kwarg) -> str:
+    
+    messages = [{'role':'user','content':input_text},]
+    
+    if system_text is not None:
+        messages = [{'role':'system','content':system_text},] + messages
+    
+    for _ in range(max_retry):
+        try:
+            client = openai.OpenAI(api_key=next(key_iter))
+            response = client.chat.completions.create(
+                messages=messages, 
+                **kwarg
+            )
+            response_text = response.choices[0].message.content
+            if response.choices[0].logprobs:
+                response_prob = response.choices[0].logprobs.content[0].logprob
+                response_prob = np.round(np.exp(response_prob)*100, 2)
+            else:
+                response_prob = None
+            return response_text, response_prob
+        except:
+            traceback.print_exc()
+
+
 ## Response Generation 
 def parse_teaching_style(
         teach_style: str = None, 
         teach_example: str = None, 
         resource: str = None, 
-        example: str = None) -> str:
+        example: str = None,
+        **kwarg) -> str:
 
     # Step 1: Process teach_style
     standard_template = str(PLAIN)
@@ -75,15 +105,15 @@ def parse_teaching_style(
             standard_template = str(PLAIN)
     #  
     # Step 2: Generate personal template
-    teach_style_custom_text = ""
+    personal_template = ""
     if teach_example:
         teach_style_custom_text = str(teach_example).strip()
-        from prompt_tool import complete_style_extraction
+        from app.prompt_tool import complete_style_extraction
         personal_template = complete_style_extraction(teach_style_custom_text)
     #  
     # Step 3: Merge templates or use standard
     if standard_template and personal_template:
-        from prompt_tool import complete_style_merge
+        from app.prompt_tool import complete_style_merge
         final_respond_prompt = complete_style_merge(standard_template, personal_template)
     else:
         final_respond_prompt = standard_template
@@ -119,13 +149,15 @@ def parse_teaching_text(
     final_respond_prompt += FEEDBACK_INPUT_BASE.format(question=question, answer=answer)
     if grading_prompt: final_respond_prompt += grading_prompt
     final_respond_prompt += macro_template_prompt
+    final_respond_prompt += FEEDBACK_OUTPUT_INSTRUCTION
+    final_respond_prompt += "## Teacher (you) Response [NO MORE THAN *500* WORDS]: "
     return final_respond_prompt
 
 
 def format_response_html(response_text: str = "Placeholder of Response.", confidence: str|float = 0):
     ## text
-    html_text = response_text.replace('\n', '<br>')
-    import re
+    html_text = html.escape(response_text)
+    html_text = html_text.replace('\n', '<br>')
     html_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html_text)
     
     ## conf
@@ -138,7 +170,7 @@ def format_response_html(response_text: str = "Placeholder of Response.", confid
             number_str = match.group(1)
             processed_confidence = float(number_str)
             processed_confidence = round(processed_confidence, 4)
-    confidence_display = f'<br><span style="color: #666666;">conf: {processed_confidence:.4f}</span>'
     
-    formatted_html = f"{html_text}{confidence_display}"
+    confidence_display = f'<span style="color:#666;font-size:0.85em;">[conf: {processed_confidence:.4f}]</span>'
+    formatted_html = f"{html_text} <br> ----- <br> {confidence_display}"
     return formatted_html

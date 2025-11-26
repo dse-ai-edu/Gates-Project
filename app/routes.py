@@ -6,7 +6,6 @@ import traceback
 
 from flask import render_template, request, jsonify
 
-import uuid
 import app.utils as utils
 import app.prompts as prompts
 from app import app, database, s3_client
@@ -14,6 +13,9 @@ from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
 
+question_this = """
+What store offers the best deal? How do you know? Explain your decision. Options: SaveMore (5 count box, $1.25), BargainHut (12 count box, $2.40), CostLess (24 count box, $3.75).
+"""
 # ==================== Page Route (returns HTML) ==================== #
 
 @app.route('/')
@@ -143,7 +145,7 @@ def configuration_final():
     data = request.get_json()
     tid = data.get('tid')
     try:
-        database['feedback_system'].find_one_and_update(
+        database['comment'].find_one_and_update(
             {'tid': tid},
             {'$set': {
                 'completed': True,
@@ -157,22 +159,71 @@ def configuration_final():
         response = {'success': False}
     return jsonify(response)
 
+
+@app.route('/api/comment/update_style', methods=['POST'])
+def update_style_config():
+    data = request.get_json()
+    tid = data.get('tid')
+    try:
+        if not tid:
+            raise ValueError('Missing required field: tid')
+        
+        config_data = {
+            'style_keywords': data.get('style_keywords', []),
+            'feedback_templates': data.get('feedback_templates', []),
+            'teach_style': data.get('teach_style', ''),
+            'teach_example': data.get('teach_example', '')
+        }
+        
+        existing_record = database['comment_config'].find_one({'tid': tid})
+        
+        if existing_record:
+            # Tid exists - append new config to existing config list
+            current_config_list = existing_record.get('config', [])
+            current_config_list.append(config_data)
+            database['comment_config'].find_one_and_update(
+                {'tid': tid},
+                {'$set': {
+                    'config': current_config_list,
+                    'updated_at': datetime.utcnow()
+                }}
+                )         
+        else:
+            # Tid doesn't exist - create new record with config as list containing one dict
+            new_record = {
+                'tid': tid,
+                'config': [config_data],
+                'created_at': datetime.utcnow(),
+                'updated_at': datetime.utcnow()
+            }
+            database['comment_config'].insert_one(new_record)
+
+        response = {'success': True}
+        
+    except Exception as e:
+        print(f"Error in update_style_config: {str(e)}")
+        traceback.print_exc()
+        response = {'success': False, 'error': str(e)}
+    return jsonify(response)
+
 @app.route('/api/comment/submit', methods=['POST'])
-def answer_respond():
+def comment_submit():
     """Generate personalized feedback response for student answer (no scoring involved)"""
     data = request.get_json()
     tid = data.get('tid')
     aid = data.get('aid', str(uuid.uuid4()))
     qid = data.get('qid')
     answer_text = data.get("student_answer", "")
-
+    model_name = 'gpt-4o'
+    
     try:
-        system_info = database['comment'].find_one({'tid': tid})
+        system_info = database['comment_config'].find_one({'tid': tid})
         if not system_info:
             raise ValueError('Feedback system not found: {}'.format(tid))
         
         if answer_text.strip():
-            system_info = system_info[0] if isinstance(system_info, list) else system_info
+            system_info = system_info['config']
+            system_info = system_info[-1] if isinstance(system_info, list) else system_info
             # Extract configuration from system
             micro_feedback = system_info.get('micro_style', {})
             macro_feedback = system_info.get('macro_style', {})
@@ -197,8 +248,8 @@ def answer_respond():
             
             # Build user prompt with student answer (no scoring)
             user_prompt = utils.parse_teaching_text(
-                question="",
-                student_answer=answer_text,
+                question=question_this,
+                answer=answer_text,
                 style_keywords=style_keywords,
                 feedback_templates=feedback_templates,
             )
@@ -209,15 +260,17 @@ def answer_respond():
                 input_text=user_prompt,
                 system_text=system_prompt,
                 model=model_name,
-                temperature=0.3,  # Slightly higher temperature for more natural feedback
+                temperature=0.7, 
+                max_tokens = 750,
                 logprobs=True
             )
             
             # Store feedback in database (no scoring)
             max_attempt_record = database['comment'].find_one(
-                {'tid': tid, 'aid': aid, 'question': qid},
+                {'tid': tid},
                 sort=[('attempt_id', -1)]
                 )
+            print(f">>>6>>> {max_attempt_record}")
             next_attempt_id = (max_attempt_record.get('attempt_id', -1) + 1) if max_attempt_record else 0
 
             database['comment'].insert_one({
@@ -234,29 +287,34 @@ def answer_respond():
                     'teach_example': teach_example,
                     'final_prompt': system_prompt,
                     'selected_prompt': system_prompts['selected'],
-                    'custome_prompt': custom_prompt
+                    'custom_prompt': custom_prompt
                 },
                 'confidence': feedback_prob,
                 'generated_at': datetime.utcnow()
             })
-            
-            response = {'success': True, 'aid': aid}
+            print(f"insert one record with tid {tid} and atmp_id {next_attempt_id}")
+            print(f">>>8>>>{feedback_text}")
+            print(f">>>9>>>{feedback_prob}")
+            response = {'success': True, 'tid': tid, 'aid': aid, 'attempt_id': next_attempt_id}
         else:
-            response = {'success': False, 'aid': aid}
+            response = {'success': False, 'tid': tid, 'aid': aid}
             
     except Exception as e:
         traceback.print_exc()
         response = {'success': False, 'error': str(e)}
-    
+
+    print(">>>1>>>", aid, next_attempt_id)
     return jsonify(response)
 
 @app.route('/api/comment/load', methods=['GET'])
-def response_load():
+def comment_load():
     """Load generated feedback response by answer ID"""
-    aid = request.args.get('aid')
+    tid = request.args.get('tid')
     attempt_id = request.args.get('attempt_id')
+    print(">>>1>>>", tid, attempt_id)
     try:
-        result = database['comment'].find_one({'aid': aid, 'attempt_id': attempt_id})
+        print(f"want to find one record with tid {tid} and atmp_id {attempt_id}")
+        result = database['comment'].find_one({'tid': tid, 'attempt_id': int(attempt_id)})
         response_text = result.get('generated_response', '')
         if response_text:
             # Return the generated response (no scoring)
@@ -267,12 +325,15 @@ def response_load():
                 response_text=response_text,
                 confidence=confidence,
             )
-            
-            return jsonify({'response': formatted_response})
-        return jsonify({'response': None})
+            print(f">>>3>>>{formatted_response}")
+            print(f">>>4>>>{response_text}")
+            print(f">>>5>>>{confidence}")
+
+            return jsonify({'success': True, 'response': formatted_response})
+        return jsonify({'success': False, 'response': None})
     except:
         traceback.print_exc()
-        return jsonify({'response': None})
+        return jsonify({'success': False, 'response': None})
 
 # ==================== Utility API Routes ==================== #
 

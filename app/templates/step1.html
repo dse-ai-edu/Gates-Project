@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Base Style and Feedback Template</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
 </head>
 
 <body>
@@ -13,153 +13,34 @@
         <div class="left-section">
             <h2 style="text-decoration: underline;">Configure Base Style & Templates</h2>
             <p id="save-status"></p>
-            <!--save session called onclick here-->
+            
             <div class="traverse-buttons">
-                <button class="t-button" onclick="saveSection()">Save</button>
-                <button class="t-button" onclick="resetSection()">Reset</button>
+                <button class="t-button" onclick="saveAndProceed()">Save</button>
+                <!-- <button class="t-button" onclick="resetSection()">Reset</button> -->
             </div>
-            <div class="traverse-buttons" style="margin-top: 1rem;">
-                <button class="t-button" onclick="proceedNext()">Next</button>
-            </div>            
         </div>
 
         <div class="right-section">
-            <div id="right-content">
-                <h2>Setup Options: (configure your feedback generation preferences)</h2>
-                <div class="option-buttons">
-                    <button class="one-button" onclick="showBox('style')">Style Descriptors</button>
-                    <button class="one-button" onclick="showBox('template')">Feedback Templates</button>  
-                </div>
-            </div>
-        
-            <!-- Style Descriptors content -->
-            <div id="box-style" class="box-container box-one hidden">
-                <div class="box-inner">
-                    <h2>Select Teaching Style Characteristics</h2>
-                    <p>Choose descriptors that match your preferred approach:</p>
-                    <button class="btn btn-info" id="reset-styles-btn" style="margin-bottom: 1rem;">Reset All</button>
-                    <div class="style-grid" id="style-grid">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="warm" value="warm">
-                            <label for="warm">Warm</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="humor" value="humor">
-                            <label for="humor">Humor</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="encouraging" value="encouraging">
-                            <label for="encouraging">Encouraging</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="patient" value="patient">
-                            <label for="patient">Patient</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="clear" value="clear">
-                            <label for="clear">Clear</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="supportive" value="supportive">
-                            <label for="supportive">Supportive</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="detailed" value="detailed">
-                            <label for="detailed">Detailed</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="constructive" value="constructive">
-                            <label for="constructive">Constructive</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="motivating" value="motivating">
-                            <label for="motivating">Motivating</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="gentle" value="gentle">
-                            <label for="gentle">Gentle</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="thorough" value="thorough">
-                            <label for="thorough">Thorough</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="empathetic" value="empathetic">
-                            <label for="empathetic">Empathetic</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="precise" value="precise">
-                            <label for="precise">Precise</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="positive" value="positive">
-                            <label for="positive">Positive</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="professional" value="professional">
-                            <label for="professional">Professional</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="creative" value="creative">
-                            <label for="creative">Creative</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="analytical" value="analytical">
-                            <label for="analytical">Analytical</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="inspiring" value="inspiring">
-                            <label for="inspiring">Inspiring</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="balanced" value="balanced">
-                            <label for="balanced">Balanced</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="thoughtful" value="thoughtful">
-                            <label for="thoughtful">Thoughtful</label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        
-            <!-- Feedback Templates content -->
-            <div id="box-template" class="box-container box-two hidden">
-                <div class="box-inner">
-                    <h2>Structure of Feedback Response</h2>
-                    <p>* Enter section titles for reply text items, such as "improvement". <br>
-                       * Use parentheses for additional notes, e.g., "improvement (suggestions on how to enhance mathematical abilities)". <br>
-                       * For hierarchical categories, use colons to separate levels, e.g., "improvement: knowledge to review" & "improvement: take-away question".</p>
-                    <div class="template-section">
-                        <button class="btn btn-info" id="add-template-btn">Add One</button>
-                        <div class="template-container" id="template-container">
-                            <div class="template-row">
-                                <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="strength">
-                                <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                            </div>
-                            <div class="template-row">
-                                <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="weakness">
-                                <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                            </div>
-                            <div class="template-row">
-                                <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="improvement">
-                                <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Component 1: Style Keywords -->
+            <div class="content-section" id="style-keywords-section">
+                <h2>Select Teaching Style Characteristics</h2>
+                <p>Choose descriptors that match your preferred approach:</p>
+                <div id="feedback-function-1-container"></div>
             </div>
 
-            <!-- Back button -->
-            <div class="action-button-wrapper">
-                <button class="action-button" id="back-btn" onclick="goBack()">Previous</button>
+            <hr style="margin: 2rem 0; border: 1px solid #ddd;">
+
+            <!-- Component 2: Feedback Templates -->
+            <div class="content-section" id="feedback-templates-section">
+                <h2>Structure of Feedback Response</h2>
+                <div id="feedback-function-2-container"></div>
             </div>
         </div>
     </div>
     
-    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
     <script>
-        // User authentication check for 4-page system
+        // User authentication check
         function checkAuthentication() {
             const user = localStorage.getItem('user');
             if (!user) {
@@ -172,74 +53,37 @@
         
         // Initialize authentication check on page load
         if (!checkAuthentication()) {
-            // Exit if not authenticated
             throw new Error('Authentication required');
         }
         
-        // DOM element references
-        const addTemplateBtn = document.getElementById('add-template-btn');
-        const resetStylesBtn = document.getElementById('reset-styles-btn');
-        
-        // Page initialization
-        updateAddButtonState();
-        
-        // Event listeners
-        resetStylesBtn.addEventListener('click', resetStyles);
-        addTemplateBtn.addEventListener('click', addTemplate);
-        
-        // Box switching functionality
-        function showBox(boxType) {
-            // Hide all boxes
-            document.getElementById('box-style').classList.add('hidden');
-            document.getElementById('box-template').classList.add('hidden');
-            
-            // Show selected box
-            if (boxType === 'style') {
-                document.getElementById('box-style').classList.remove('hidden');
-            } else if (boxType === 'template') {
-                document.getElementById('box-template').classList.remove('hidden');
+        // Load components
+        async function loadComponents() {
+            try {
+                // Load component 1
+                const response1 = await fetch("{{ url_for('static', filename='templates/feedback_function_1.html') }}");
+                const html1 = await response1.text();
+                document.getElementById('feedback-function-1-container').innerHTML = html1;
+                
+                // Load component 2
+                const response2 = await fetch("{{ url_for('static', filename='templates/feedback_function_2.html') }}");
+                const html2 = await response2.text();
+                document.getElementById('feedback-function-2-container').innerHTML = html2;
+                
+                // Initialize components after loading
+                setTimeout(() => {
+                    window.feedbackInputFunctions.initStyleKeywordsComponent();
+                    window.feedbackInputFunctions.initFeedbackTemplatesComponent();
+                }, 100);
+                
+            } catch (error) {
+                console.error('Failed to load components:', error);
             }
         }
         
-        // Navigation functions
-        function proceedNext() {
-            // Validate before proceeding
-            const selectedStyles = getSelectedStyles();
-            const templateTexts = getTemplateTexts();
-            
-            if (selectedStyles.length === 0) {
-                alert("❗ Please select at least one style descriptor before proceeding.");
-                return;
-            }
-            if (templateTexts.length === 0) {
-                alert("❗ Please enter at least one feedback template item before proceeding.");
-                return;
-            }
-            
-            // Navigate to step2
-            window.location.href = '/step2';
-        }
-        
-        function goBack() {
-            // Navigate back to login (or show confirmation)
-            if (confirm('Are you sure you want to go back to login? Unsaved changes will be lost.')) {
-                // Clear session data if needed
-                sessionStorage.removeItem('tid');
-                window.location.href = '/login';
-            }
-        }
-        
-        // Save and reset functions adapted for this page
-        function saveSection() {
-            const selectedStyles = getSelectedStyles();
-            const templateTexts = getTemplateTexts();
-            let tid = sessionStorage.getItem('tid');
-            
-            // Create session ID if it doesn't exist (for 4-page system compatibility)
-            if (!tid) {
-                tid = crypto.randomUUID();
-                sessionStorage.setItem('tid', tid);
-            }
+        // Save and proceed to next step
+        function saveAndProceed() {
+            const selectedStyles = window.feedbackInputFunctions.getSelectedStyles();
+            const templateTexts = window.feedbackInputFunctions.getTemplateTexts();
             
             if (selectedStyles.length === 0) {
                 alert("❗ Please select at least one style descriptor.");
@@ -250,65 +94,56 @@
                 return;
             }
             
-            const sectInfo = {
-                'tid': tid, 
-                'base_style': {
-                    'styles': selectedStyles, 
-                    'templates': templateTexts
-                }
-            };
+            // Show saving status
+            const status = document.getElementById('save-status');
+            status.textContent = '💾 Saved to local storage';
+            status.style.color = 'green';
             
-            fetch(`/api/section/save`, {
-                method: 'POST', 
-                headers: {
-                    'Content-Type': 'application/json'
-                }, 
-                body: JSON.stringify(sectInfo)
-            }).then(response => {
-                if (!response.ok) {
-                    throw Error('Save failed! Please try again.');
-                }
-                return response.json()
-            }).then(result => {
-                if (result.success) {
-                    const status = document.getElementById('save-status');
-                    status.textContent = '✔️ Saved';
-                    status.style.color = 'green';
-                    
-                    // Clear status when user makes changes
-                    const clearStatus = () => {
-                        status.textContent = '';
-                        status.style.color = '';
-                    };
-                    
-                    document.querySelectorAll('input[type="checkbox"], .template-input').forEach(input => {
-                        input.addEventListener('change', clearStatus, {once: true});
-                    });
-                } else {
-                    throw Error('Save failed! Please try again.');
-                }
-            }).catch(error => {
-                console.error(error)
-                alert(error)
-            })
+            // Navigate to step2 after a brief delay
+            setTimeout(() => {
+                window.location.href = '/step2';
+            }, 1000);
         }
         
+        // Reset all selections
         function resetSection() {
-            // Reset style descriptors
-            document.querySelectorAll('#style-grid input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            // Reset template inputs
-            document.querySelectorAll('.template-input').forEach(input => {
-                input.value = '';
-            });
+            // Reset components
+            window.feedbackInputFunctions.resetStyles();
+            
+            // Reset templates to default
+            const templateContainer = document.getElementById('template-container');
+            if (templateContainer) {
+                templateContainer.innerHTML = `
+                    <div class="template-row">
+                        <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="strength">
+                        <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+                    </div>
+                    <div class="template-row">
+                        <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="weakness">
+                        <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+                    </div>
+                    <div class="template-row">
+                        <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="improvement">
+                        <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+                    </div>
+                `;
+                
+                // Re-initialize templates component
+                window.feedbackInputFunctions.initFeedbackTemplatesComponent();
+            }
+            
+            // Clear localStorage
+            localStorage.removeItem('step1_style_keywords');
+            localStorage.removeItem('step1_feedback_templates');
+            
+            // Clear status
+            const status = document.getElementById('save-status');
+            status.textContent = '';
+            status.style.color = '';
         }
         
-        // Monitor changes for debugging
-        document.addEventListener('change', function() {
-            console.log('Selected styles:', getSelectedStyles());
-            console.log('Template texts:', getTemplateTexts());
-        });
+        // Initialize page
+        window.addEventListener('load', loadComponents);
     </script>
 </body>
 </html>

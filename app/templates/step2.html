@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Teaching Style and Personalization</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
 </head>
 <body>
 
     <div class="container">
-        <!-- Left section: instructions and navigation -->
         <div class="left-section">
             <h2 style="text-decoration: underline;">Configure Teaching Approach</h2>
             <p id="save-status"></p>
@@ -22,106 +21,29 @@
             </ul>
 
             <div class="traverse-buttons">
-                <!--save session called onclick here-->
                 <button class="t-button" onclick="goBack()">Back</button>
-                <button class="t-button" onclick="saveSection()">Save</button>
-            </div>
-            
-            <div class="traverse-buttons" style="margin-top: 1rem;">
-                <button class="t-button" onclick="proceedNext()">Next</button>
+                <button class="t-button" onclick="saveAndProceed()">Save</button>
             </div>
         </div>
 
-        <!-- Right section, content based on stage -->
-        <div class="right-section stage-1" id="stage-box">
-            <button id="stage-back" onclick="switchStage('back')">Back Stage</button>
-            <button id="stage-next" onclick="switchStage('next')">Next Stage</button>
-            
-            <!-- Stage 1 content: Teaching Style Selection -->
-            <div id="stage-content">
-                <h3 style="color: black;">Select Your Primary Teaching Style</h3>
-                <p>Choose the teaching approach that best matches your feedback philosophy:</p>
-                <div class="radio-group" id="teaching-style-group">
-                    <div class="radio-item">
-                        <input type="radio" id="authoritative" name="teaching-style" value="AUTHORITATIVE">
-                        <label for="authoritative">AUTHORITATIVE - Clear, direct guidance with expert knowledge</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="socratic" name="teaching-style" value="SOCRATIC">
-                        <label for="socratic">SOCRATIC - Question-based learning to guide discovery</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="nurturing" name="teaching-style" value="NURTURING">
-                        <label for="nurturing">NURTURING - Supportive, encouraging, and patient approach</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="constructive" name="teaching-style" value="CONSTRUCTIVE">
-                        <label for="constructive">CONSTRUCTIVE - Focus on building understanding step by step</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="direct" name="teaching-style" value="DIRECT" checked>
-                        <label for="direct">DIRECT - Straightforward, efficient communication</label>
-                    </div>
-                    <div class="radio-item">
-                        <input type="radio" id="plain" name="teaching-style" value="PLAIN">
-                        <label for="plain">PLAIN - Simple, unadorned feedback style</label>
-                    </div>
-                </div>
+        <div class="right-section">
+            <!-- Component 3: Teaching Style -->
+            <div class="content-section" id="teaching-style-section">
+                <div id="feedback-function-3-container"></div>
             </div>
 
-            <!-- Stage 2 content: Personalized Examples -->
-            <div id="stage2-content" style="display: block;">
-                <div class="field-group">
-                    <h3 style="color: black;">Enter Your Personalized Response Examples</h3>
-                    <p>Provide examples of how you typically give feedback or your preferred tone:</p>
-                    
-                    <div style="margin: 1rem 0;">
-                        <button class="btn btn-info" id="reset-responses-btn">Reset Personalized Responses</button>
-                        <button class="btn btn-info" id="add-responses-btn" style="margin-left: 0.5rem;">Add My Example Responses</button>
-                    </div>
-                    
-                    <div style="margin: 0.5rem 0;">
-                        <p style="color: red; font-size: 0.9rem; margin: 0;">If added, teaching style will be locked and cannot be modified in real-time during generation phase.</p>
-                    </div>
-                    
-                    <div id="textarea-container" style="display: none;">
-                        <textarea class="feedback-textarea" id="additional-instructions" placeholder="Enter additional instructions or example responses here...
+            <hr style="margin: 2rem 0; border: 1px solid #ddd;">
 
-For example:
-- I always start with something positive
-- I prefer to ask guiding questions
-- I like to relate concepts to real-world applications
-- I emphasize growth mindset language"></textarea>
-                    </div>
-                </div>
-                
-                <div class="action-buttons">
-                    <button class="btn btn-primary" id="set-btn">Lock Settings</button>
-                    <button class="btn btn-success" id="edit-btn" style="display: none;">Edit Settings</button>
-                </div>
-            </div>
-
-            <!-- Stage 3 content: Review -->
-            <div id="stage3-content" style="display: none;">
-                <div class="field-group">
-                    <h3 style="color: black;">Review Your Configuration</h3>
-                    <div id="review-content">
-                        <p><strong>Selected Teaching Style:</strong> <span id="review-style">None selected</span></p>
-                        <p><strong>Personalized Instructions:</strong></p>
-                        <div id="review-instructions" style="border: 1px solid #ccc; padding: 0.75rem; border-radius: 4px; background: #f9f9f9; min-height: 100px;">
-                            No additional instructions provided
-                        </div>
-                    </div>
-                    <br>
-                    <p style="color: #666;">Your feedback generation system is ready. Click "Next" to proceed to the final step.</p>
-                </div>
+            <!-- Component 4: Teaching Example -->
+            <div class="content-section" id="teaching-example-section">
+                <div id="feedback-function-4-container"></div>
             </div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
     <script>
-        // User authentication check for 4-page system
+        // User authentication check
         function checkAuthentication() {
             const user = localStorage.getItem('user');
             if (!user) {
@@ -134,120 +56,45 @@ For example:
         
         // Initialize authentication check on page load
         if (!checkAuthentication()) {
-            // Exit if not authenticated
             throw new Error('Authentication required');
         }
         
-        let currentStage = 2;
-        const maxStages = 3;
-        let locked_style = false; // Track if personalized style is locked
-        
-        // DOM element references
-        const setBtn = document.getElementById('set-btn');
-        const editBtn = document.getElementById('edit-btn');
-        const resetResponsesBtn = document.getElementById('reset-responses-btn');
-        const addResponsesBtn = document.getElementById('add-responses-btn');
-        const textareaContainer = document.getElementById('textarea-container');
-        const additionalInstructions = document.getElementById('additional-instructions');
-        
-        // Event listeners
-        setBtn.addEventListener('click', setTeachingStyle);
-        editBtn.addEventListener('click', editTeachingStyle);
-        
-        // New button event listeners
-        resetResponsesBtn.addEventListener('click', function() {
-            // Reset to default state
-            locked_style = false;
-            additionalInstructions.value = '';
-            textareaContainer.style.display = 'none';
-            console.log('Personalized responses reset. locked_style:', locked_style);
-        });
-        
-        addResponsesBtn.addEventListener('click', function() {
-            // Show textarea and lock style
-            locked_style = true;
-            textareaContainer.style.display = 'block';
-            console.log('Personalized responses enabled. locked_style:', locked_style);
-        });
-        
-        // Event listeners
-        setBtn.addEventListener('click', setTeachingStyle);
-        editBtn.addEventListener('click', editTeachingStyle);
-        
-        // Stage switching functionality
-        function switchStage(direction) {
-            if (direction === 'next' && currentStage < maxStages) {
-                currentStage++;
-            } else if (direction === 'back' && currentStage > 1) {
-                currentStage--;
+        // Load components
+        async function loadComponents() {
+            try {
+                // Load component 3
+                const response3 = await fetch("{{ url_for('static', filename='templates/feedback_function_3.html') }}");
+                const html3 = await response3.text();
+                document.getElementById('feedback-function-3-container').innerHTML = html3;
+                
+                // Load component 4
+                const response4 = await fetch("{{ url_for('static', filename='templates/feedback_function_4.html') }}");
+                const html4 = await response4.text();
+                document.getElementById('feedback-function-4-container').innerHTML = html4;
+                
+                // Initialize components after loading
+                setTimeout(() => {
+                    window.feedbackInputFunctions.initTeachingStyleComponent();
+                    window.feedbackInputFunctions.initTeachingExampleComponent();
+                }, 100);
+                
+            } catch (error) {
+                console.error('Failed to load components:', error);
             }
-            
-            updateStageDisplay();
-            updateStageNavigation();
-            
-            if (currentStage === 3) {
-                updateReviewContent();
-            }
-        }
-        
-        function updateStageDisplay() {
-            // Hide all stage content
-            document.getElementById('stage-content').style.display = 'none';
-            document.getElementById('stage2-content').style.display = 'none';
-            document.getElementById('stage3-content').style.display = 'none';
-            
-            // Show current stage content
-            if (currentStage === 1) {
-                document.getElementById('stage-content').style.display = 'block';
-            } else if (currentStage === 2) {
-                document.getElementById('stage2-content').style.display = 'block';
-            } else if (currentStage === 3) {
-                document.getElementById('stage3-content').style.display = 'block';
-            }
-        }
-        
-        function updateStageNavigation() {
-            const backBtn = document.getElementById('stage-back');
-            const nextBtn = document.getElementById('stage-next');
-            
-            backBtn.style.display = currentStage > 1 ? 'block' : 'none';
-            nextBtn.style.display = currentStage < maxStages ? 'block' : 'none';
-        }
-        
-        function updateReviewContent() {
-            const selectedStyle = getSelectedTeachingStyle();
-            const additionalInstructions = getAdditionalInstructions();
-            
-            document.getElementById('review-style').textContent = selectedStyle || 'None selected';
-            document.getElementById('review-instructions').textContent = additionalInstructions || 'No additional instructions provided';
         }
         
         // Navigation functions
-        function proceedNext() {
-            // Validate before proceeding
-            const teachingStyle = getSelectedTeachingStyle();
-            
-            if (!teachingStyle) {
-                alert("❗ Please select a teaching style before completing setup.");
-                return;
-            }
-            
-            // Navigate to step_final
-            window.location.href = '/step_final';
-        }
-        
         function goBack() {
-            // Navigate back to step1
             window.location.href = '/step1';
         }
         
-        // Save function adapted for this page
-        function saveSection() {
-            const teachingStyle = getSelectedTeachingStyle();
-            const additionalInstructions = getAdditionalInstructions();
+        // Save and proceed to step_final
+        function saveAndProceed() {
+            const teachingStyle = window.feedbackInputFunctions.getSelectedTeachingStyle();
+            const additionalInstructions = window.feedbackInputFunctions.getAdditionalInstructions();
             let tid = sessionStorage.getItem('tid');
             
-            // Create session ID if it doesn't exist (for 4-page system compatibility)
+            // Create session ID if it doesn't exist
             if (!tid) {
                 tid = crypto.randomUUID();
                 sessionStorage.setItem('tid', tid);
@@ -258,21 +105,31 @@ For example:
                 return;
             }
             
-            const sectInfo = {
-                'tid': tid, 
-                'macro_feedback': {
-                    'teaching_style': teachingStyle, 
-                    'instructions': additionalInstructions,
-                    'locked_style': locked_style
-                }
+            // Get step1 data from localStorage
+            const configData = window.feedbackInputFunctions.getStoredConfigData();
+            
+            // Prepare data for backend
+            const styleData = {
+                'tid': tid,
+                'style_keywords': configData.style_keywords,
+                'feedback_templates': configData.feedback_templates,
+                'teach_style': teachingStyle,
+                'teach_example': additionalInstructions || ''
             };
             
-            fetch(`/api/section/save`, {
+            console.log('Sending styleData to backend:', styleData);
+            
+            // Show saving status
+            const status = document.getElementById('save-status');
+            status.textContent = '💾 Saving...';
+            status.style.color = 'blue';
+            
+            fetch('/api/comment/update_style', {
                 method: 'POST', 
                 headers: {
                     'Content-Type': 'application/json'
                 }, 
-                body: JSON.stringify(sectInfo)
+                body: JSON.stringify(styleData)
             }).then(response => {
                 if (!response.ok) {
                     throw Error('Save failed! Please try again.');
@@ -280,37 +137,35 @@ For example:
                 return response.json()
             }).then(result => {
                 if (result.success) {
-                    const status = document.getElementById('save-status');
                     status.textContent = '✔️ Saved';
                     status.style.color = 'green';
                     
-                    // Clear status when user makes changes
-                    const clearStatus = () => {
-                        status.textContent = '';
-                        status.style.color = '';
-                    };
-                    
-                    document.querySelectorAll('input[type="radio"], #additional-instructions').forEach(input => {
-                        input.addEventListener('change', clearStatus, {once: true});
-                    });
+                    // Redirect to step_final after successful save
+                    setTimeout(() => {
+                        window.location.href = '/step_final';
+                    }, 1000);
                 } else {
+                    console.log("Failed result is", result);
                     throw Error('Save failed! Please try again.');
                 }
             }).catch(error => {
-                console.error(error)
-                alert(error)
-            })
+                console.error(error);
+                status.textContent = '❌ Save failed';
+                status.style.color = 'red';
+                alert(error);
+            });
         }
         
         // Initialize page
-        updateStageDisplay();
-        updateStageNavigation();
+        window.addEventListener('load', loadComponents);
         
-        // Monitor changes for debugging and review updates
+        // Auto-clear save status when user makes changes
         document.addEventListener('change', function() {
-            console.log('Selected teaching style:', getSelectedTeachingStyle());
-            console.log('Additional instructions:', getAdditionalInstructions());
-            console.log('Locked style:', locked_style);
+            const status = document.getElementById('save-status');
+            if (status.textContent) {
+                status.textContent = '';
+                status.style.color = '';
+            }
         });
     </script>
 </body>

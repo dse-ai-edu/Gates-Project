@@ -349,12 +349,16 @@ Below are requirements for your feedback response: {} \n"""
 FEEDBACK_INPUT_BASE = """
 # Input Data
 ## Question: {question}. 
-## Student Answer: {answer}.
-## Teacher Response: \n"""
+## Student Answer: {answer}. \n"""
 
-
+FEEDBACK_OUTPUT_INSTRUCTION = """
+Start your reply immediately with the feedback itself.  
+Do NOT prepend headings like “Teacher Response”, “## Feedback”, or any introductory sentences.  
+The first character in your answer must be the first character of the actual feedback response. \n
+"""
 ## Feedback Promopt as Requirements
-FEEDBACK_REQUIREMENT = """# KSMT (Knowledge of Students' Mathematical Thinking) Rubric
+FEEDBACK_REQUIREMENT = """
+** KSMT (Knowledge of Students' Mathematical Thinking) Rubric **
 
 ## Overview
 The KSMT rubric for evaluating teacher responses aims to differentiate responses based on how well they address students' mathematical understanding of the key concepts underlying their solutions or strategies.
@@ -414,4 +418,5 @@ Responses focusing on Amy's understanding of:
 - Multiplicative relationships
 - Specific details from her mathematical work
 
-Should receive higher scores when they demonstrate analysis of **thinking and understanding** rather than just describing **what Amy did**."""
+Should receive higher scores when they demonstrate analysis of **thinking and understanding** rather than just describing **what Amy did**.
+"""

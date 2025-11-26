@@ -5,18 +5,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Final Step - Feedback Generation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            margin: 0;
-            padding: 2rem;
-            overflow-x: hidden;
-        }
-
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
+            padding: 2rem;
         }
 
         .section {
@@ -30,12 +25,6 @@
         .section h2 {
             margin-bottom: 1rem;
             font-size: 1.5rem;
-        }
-
-        .section h3 {
-            margin-bottom: 0.5rem;
-            font-size: 1.2rem;
-            color: #333;
         }
 
         select,
@@ -90,41 +79,152 @@
             background-color: #218838;
         }
 
-        .details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-            margin-top: 1rem;
-        }
-
-        .detail-item {
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            padding: 1rem;
-            background-color: #fafafa;
-        }
-
-        .detail-content {
-            margin-top: 0.5rem;
-            font-size: 0.9rem;
-            line-height: 1.4;
-            color: #666;
-        }
-
-        .bullet-point {
-            margin-left: 1rem;
-            line-height: 1.6;
-        }
-
         .navigation-buttons {
             margin-bottom: 2rem;
             text-align: center;
         }
+
+        /* Four panel display improvements */
+        .four-panel-layout {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            position: relative;
+            margin-top: 1rem;
+        }
+
+        .panel-display {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #fafafa;
+            min-height: 150px;
+        }
+
+        .panel-display h3 {
+            margin-top: 0;
+            font-size: 1rem;
+            color: #333;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .panel-content-display {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .unlock-button {
+            position: absolute;
+            top: -3rem;
+            right: 0;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .unlock-button:hover {
+            background-color: #545b62;
+        }
+
+        .unlock-button.unlocked {
+            background-color: #28a745;
+        }
+
+        .unlock-button:disabled {
+            background-color: #adb5bd;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .four-panel-layout {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .four-panel-layout {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
-    <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Navigation Buttons -->
+        <div class="navigation-buttons">
+            <button class="back-button" onclick="goBack()">Back</button>
+            <button class="save-button" onclick="saveConfiguration()">Save & Complete</button>
+        </div>
+
+        <!-- System Configuration Display -->
+        <div class="section" id="details-display">
+            <h2>Your Feedback System Configuration</h2>
+            <div class="four-panel-layout">
+                <!-- Unlock/Lock button for all panels -->
+                <button class="unlock-button" id="unlock-settings-btn" onclick="toggleLockSettings()">---</button>
+                
+                <!-- Panel 1: Style Keywords -->
+                <div class="panel-display" id="panel-style-keywords">
+                    <h3>Style Keywords</h3>
+                    <div class="panel-content-display" id="style-keywords-display"></div>
+                </div>
+
+                <!-- Panel 2: Feedback Templates -->
+                <div class="panel-display" id="panel-feedback-templates">
+                    <h3>Feedback Templates</h3>
+                    <div class="panel-content-display" id="feedback-templates-display"></div>
+                </div>
+
+                <!-- Panel 3: Teaching Style -->
+                <div class="panel-display" id="panel-teach-style">
+                    <h3>Teaching Style</h3>
+                    <div class="panel-content-display" id="teach-style-display"></div>
+                </div>
+
+                <!-- Panel 4: Teaching Example -->
+                <div class="panel-display" id="panel-teach-example">
+                    <h3>Teaching Example</h3>
+                    <div class="panel-content-display" id="teach-example-display"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Student Answer Input -->
+        <div class="section" id="student-input">
+            <h2>Student Answer Input</h2>
+            <div id="textInputArea">
+                <textarea id="student-answer" placeholder="Write the student answer here..."></textarea>
+            </div>
+            <br>
+            <button id="generateFeedbackBtn">Generate Feedback</button>
+        </div>
+
+        <!-- Feedback Result Display -->
+        <div class="section" id="feedback-display" style="display: none;">
+            <h2>Generated Feedback</h2>
+            <div id="result-textarea"
+                style="white-space: pre-line;
+                        border: 1px solid #ccc;
+                        padding: 8px;
+                        min-height: 120px;
+                        font-family: inherit;
+                        background-color: #f9f9f9;
+                        overflow-y: auto;">
+                Generating Feedback...
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
     <script>
-        // User authentication check for 4-page system
+        // User authentication check
         function checkAuthentication() {
             const user = localStorage.getItem('user');
             if (!user) {
@@ -137,113 +237,29 @@
         
         // Initialize authentication check on page load
         if (!checkAuthentication()) {
-            // Exit if not authenticated
             throw new Error('Authentication required');
         }
         
-        localStorage['userId'] = 'test'
-        window.onload = function () {
-            loadSession();
-            loadConfiguredSystem();
-        }
-    </script>
-</head>
-
-<body>
-    <div class="container">
-
-        <!-- Navigation Buttons -->
-        <div class="navigation-buttons">
-            <button class="back-button" onclick="goBack()">Back</button>
-            <button class="save-button" onclick="saveConfiguration()">Save & Complete</button>
-        </div>
-
-        <!-- System Configuration Display (Read-only) -->
-        <div class="section" id="details-display">
-            <h2>Your Feedback System Configuration</h2>
-            <div class="details-grid">
-                <div class="detail-item">
-                    <h3>Keywords</h3>
-                    <div class="detail-content" id="keywords-content">
-                        Loading keywords...
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <h3>Structure</h3>
-                    <div class="detail-content" id="structure-content">
-                        Loading structure...
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <h3>Base Style</h3>
-                    <div class="detail-content" id="base-style-content">
-                        <select id="base-style-select" onchange="updateBaseStyle()">
-                            <option value="warm">Warm</option>
-                            <option value="humor">Humor</option>
-                            <option value="encouraging">Encouraging</option>
-                            <option value="patient">Patient</option>
-                            <option value="clear">Clear</option>
-                            <option value="supportive">Supportive</option>
-                            <option value="detailed">Detailed</option>
-                            <option value="constructive">Constructive</option>
-                            <option value="motivating">Motivating</option>
-                            <option value="gentle">Gentle</option>
-                            <option value="thorough">Thorough</option>
-                            <option value="empathetic">Empathetic</option>
-                            <option value="precise">Precise</option>
-                            <option value="positive">Positive</option>
-                            <option value="professional">Professional</option>
-                            <option value="creative">Creative</option>
-                            <option value="analytical">Analytical</option>
-                            <option value="inspiring">Inspiring</option>
-                            <option value="balanced">Balanced</option>
-                            <option value="thoughtful">Thoughtful</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="detail-item">
-                    <h3>Personalization</h3>
-                    <div class="detail-content" id="personalization-content">
-                        Loading personalization...
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Student Answer Input -->
-        <div class="section" id="student-input">
-            <h2>Student Answer Input</h2>
-            <div style="margin-bottom: 1rem;">
-                <button id="inputTextBtn">Input Text</button>
-            </div>
-            <div id="textInputArea" style="display: none;">
-                <textarea id="student-answer" placeholder="Write the student answer here..."></textarea>
-            </div>
-            <br>
-            <button id="generateFeedbackBtn" style="display: none;">Generate Feedback</button>
-        </div>
-
-        <!-- Feedback Result Display -->
-        <div class="section" id="feedback-display" style="display: none;">
-            <h2>Generated Feedback</h2>
-            <textarea id="result-textarea" readonly>Generating Feedback...</textarea>
-        </div>
-
-    </div>
-    <script>
-        let lockedStyle = false;
-        let currentBaseStyle = '';
+        // Global variables - avoid redeclaration conflict with feedback_input_function.js
+        let isStyleLocked = false;  // From backend data (renamed to avoid conflict)
+        let lockedStyleTmp = true;  // Local variable for UI control (renamed to avoid conflict)
+        let currentConfig = {
+            style_keywords: [],
+            feedback_templates: [],
+            teach_style: '',
+            teach_example: ''
+        };
         
-        // Navigation functions for 4-page system
+        localStorage['userId'] = 'test';
+        
+        // Navigation functions
         function goBack() {
-            // Navigate back to step2
             window.location.href = '/step2';
         }
         
         function saveConfiguration() {
-            // Save final configuration and complete the setup
             const finalConfig = {
-                'tid': sessionStorage.getItem('tid'),
+                'tid': sessionStorage.getItem('tid') || crypto.randomUUID(),
                 'finalConfiguration': {
                     'timestamp': new Date().toISOString(),
                     'completed': true
@@ -260,7 +276,6 @@
             .then(result => {
                 if (result.success) {
                     alert('✅ Configuration saved successfully! Your feedback system is ready to use.');
-                    // Could redirect to a dashboard or keep on same page
                 } else {
                     alert('❗ Save failed. Please try again.');
                 }
@@ -270,180 +285,235 @@
             });
         }
         
-        // Load configured system details from previous steps
-        function loadConfiguredSystem() {
-            const tid = sessionStorage.getItem('tid');
-            if (!tid) {
-                console.error('No session ID found');
-                return;
+        // Lock/Unlock functionality
+        function toggleLockSettings() {
+            if (isStyleLocked) return; // Cannot toggle if locked from backend
+            
+            lockedStyleTmp = !lockedStyleTmp;
+            
+            if (!lockedStyleTmp) {
+                // Unlocking - switch to edit mode
+                loadEditableComponents();
+            } else {
+                // Locking - save current state and switch to display mode
+                updateCurrentConfigFromUI();
+                saveCurrentConfiguration();
+                displayConfigurationAsText();
             }
             
-            // Load data from both step1 and step2
-            Promise.all([
-                loadStepData('base_style'),
-                loadStepData('macro_feedback')
-            ]).then(([baseData, macroData]) => {
-                displayConfiguration(baseData, macroData);
-            }).catch(error => {
-                console.error('Failed to load configuration:', error);
-                displayDefaultConfiguration();
-            });
+            updateLockButtonState();
         }
         
-        function loadStepData(section) {
-            return fetch('/api/section/load', {
+        function updateLockButtonState() {
+            const button = document.getElementById('unlock-settings-btn');
+            
+            if (isStyleLocked) {
+                button.textContent = 'Locked';
+                button.disabled = true;
+                button.classList.remove('unlocked');
+                lockedStyleTmp = true;
+            } else {
+                button.textContent = lockedStyleTmp ? 'Unlock Setting' : 'Lock Setting';
+                button.disabled = false;
+                button.classList.toggle('unlocked', !lockedStyleTmp);
+            }
+        }
+        
+        // Load configuration data from stored sources
+        function loadConfiguredSystem() {
+            const configData = window.feedbackInputFunctions.getStoredConfigData();
+            
+            currentConfig = {
+                style_keywords: configData.style_keywords,
+                feedback_templates: configData.feedback_templates,
+                teach_style: configData.teach_style || 'DIRECT',
+                teach_example: configData.teach_example
+            };
+            
+            // Check if style is locked from previous steps
+            isStyleLocked = configData.locked_style;
+            
+            // Initialize UI state
+            updateLockButtonState();
+            
+            console.log('Loaded configuration:', currentConfig);
+            
+            // Display configuration
+            displayConfigurationAsText();
+        }
+        
+        // Display configuration as text in four panels
+        function displayConfigurationAsText() {
+            // Style Keywords
+            const styleDisplay = document.getElementById('style-keywords-display');
+            const styleText = currentConfig.style_keywords.length > 0 
+                ? currentConfig.style_keywords.join(', ') 
+                : 'N/A';
+            styleDisplay.textContent = styleText;
+            
+            // Feedback Templates  
+            const templateDisplay = document.getElementById('feedback-templates-display');
+            const templateText = currentConfig.feedback_templates.length > 0
+                ? currentConfig.feedback_templates.map((t, i) => `${i+1}. ${t}`).join('\n')
+                : 'N/A';
+            templateDisplay.style.whiteSpace = 'pre-line';
+            templateDisplay.textContent = templateText;
+            
+            // Teaching Style
+            const styleDisplay2 = document.getElementById('teach-style-display');
+            styleDisplay2.textContent = currentConfig.teach_style || 'N/A';
+            
+            // Teaching Example
+            const exampleDisplay = document.getElementById('teach-example-display');
+            exampleDisplay.style.whiteSpace = 'pre-line';
+            exampleDisplay.textContent = currentConfig.teach_example || 'N/A';
+        }
+        
+        // Load editable components (when unlocked)
+        async function loadEditableComponents() {
+            try {
+                // This is a placeholder - in practice, you'd load the component HTML files
+                // and initialize them for editing
+                console.log('Loading editable components...');
+                
+                // For now, just switch back to display mode
+                displayConfigurationAsText();
+                
+            } catch (error) {
+                console.error('Failed to load editable components:', error);
+            }
+        }
+        
+        function updateCurrentConfigFromUI() {
+            // This would update currentConfig with current UI values when in edit mode
+            // For now, keep existing values
+            console.log('Updating config from UI...');
+        }
+        
+        // Save current configuration to backend
+        function saveCurrentConfiguration() {
+            const tid = sessionStorage.getItem('tid') || crypto.randomUUID();
+            
+            const styleData = {
+                'tid': tid,
+                'style_keywords': currentConfig.style_keywords,
+                'feedback_templates': currentConfig.feedback_templates,
+                'teach_style': currentConfig.teach_style,
+                'teach_example': currentConfig.teach_example
+            };
+            
+            console.log('Saving configuration:', styleData);
+            
+            fetch('/api/comment/update_style', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    'tid': sessionStorage.getItem('tid'),
-                    'section': section
-                })
-            }).then(response => response.json());
-        }
-        
-        function displayConfiguration(baseData, macroData) {
-            // Display Keywords (from step1 styles)
-            const keywords = baseData.info?.styles || [];
-            document.getElementById('keywords-content').textContent = 
-                keywords.length > 0 ? keywords.join(', ') : 'N/A';
-            
-            // Display Structure (from step1 templates)
-            const templates = baseData.info?.templates || [];
-            const structureHtml = templates.length > 0 
-                ? templates.map(template => `<div class="bullet-point">* ${template}</div>`).join('')
-                : '<div class="bullet-point">N/A</div>';
-            document.getElementById('structure-content').innerHTML = structureHtml;
-            
-            // Display Base Style (from step2 teaching style)
-            const teachingStyle = macroData.info?.teaching_style || '';
-            currentBaseStyle = teachingStyle.toLowerCase();
-            const baseStyleSelect = document.getElementById('base-style-select');
-            if (teachingStyle) {
-                baseStyleSelect.value = currentBaseStyle;
-            }
-            
-            // Check if style is locked
-            lockedStyle = macroData.info?.locked_style || false;
-            baseStyleSelect.disabled = lockedStyle;
-            if (lockedStyle) {
-                baseStyleSelect.style.backgroundColor = '#e9ecef';
-                baseStyleSelect.style.cursor = 'not-allowed';
-            }
-            
-            // Display Personalization (from step2 instructions)
-            const personalization = macroData.info?.instructions || '';
-            document.getElementById('personalization-content').textContent = 
-                personalization.trim() ? personalization : 'N/A';
-        }
-        
-        function displayDefaultConfiguration() {
-            // Fallback display when data loading fails
-            document.getElementById('keywords-content').textContent = 'N/A';
-            document.getElementById('structure-content').innerHTML = '<div class="bullet-point">N/A</div>';
-            document.getElementById('base-style-select').value = 'direct';
-            document.getElementById('personalization-content').textContent = 'N/A';
-        }
-        
-        function updateBaseStyle() {
-            if (!lockedStyle) {
-                const selectedStyle = document.getElementById('base-style-select').value;
-                currentBaseStyle = selectedStyle;
-                
-                // Update backend with new style selection
-                const updateData = {
-                    'tid': sessionStorage.getItem('tid'),
-                    'macro_feedback': {
-                        'teaching_style': selectedStyle.toUpperCase(),
-                        'instructions': document.getElementById('personalization-content').textContent,
-                        'locked_style': false
-                    }
-                };
-                
-                fetch('/api/section/save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updateData)
-                }).then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        console.log('Base style updated to:', selectedStyle);
-                    }
-                }).catch(error => {
-                    console.error('Failed to update base style:', error);
-                });
-            }
+                body: JSON.stringify(styleData)
+            }).then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    console.log('Configuration saved successfully');
+                } else {
+                    console.error('Failed to save configuration:', result);
+                }
+            }).catch(error => {
+                console.error('Error saving configuration:', error);
+            });
         }
         
         // Student input and feedback generation functionality
-        const inputTextBtn = document.getElementById('inputTextBtn');
-        const generateFeedbackBtn = document.getElementById('generateFeedbackBtn');
-        const textInputArea = document.getElementById('textInputArea');
-        const feedbackDisplay = document.getElementById("feedback-display");
-        
-        inputTextBtn.addEventListener('click', function () {
-            textInputArea.style.display = 'block';
-            generateFeedbackBtn.style.display = 'block';
-            feedbackDisplay.style.display = 'none';
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateFeedbackBtn = document.getElementById('generateFeedbackBtn');
+            const feedbackDisplay = document.getElementById("feedback-display");
+            
+            generateFeedbackBtn.addEventListener('click', function () {
+                const studentAnswer = document.getElementById('student-answer').value.trim();
+                if (!studentAnswer) {
+                    alert('Please enter a student answer before generating feedback.');
+                    return;
+                }
+                
+                feedbackDisplay.style.display = 'block';
+                document.getElementById('result-textarea').value = 'Generating Feedback...';
+                generatePersonalizedFeedback();
+            });
+            
+            // Load configuration when page loads
+            loadConfiguredSystem();
         });
         
-        generateFeedbackBtn.addEventListener('click', function () {
-            const studentAnswer = document.getElementById('student-answer').value.trim();
-            if (!studentAnswer) {
-                alert('Please enter a student answer before generating feedback.');
-                return;
-            }
-            
-            feedbackDisplay.style.display = 'block';
-            document.getElementById('result-textarea').value = 'Generating Feedback...';
-            
-            // Trigger the feedback generation
-            generatePersonalizedFeedback();
-        });
-        
-        // Function to generate personalized feedback using current configuration
         function generatePersonalizedFeedback() {
             const studentAnswer = document.getElementById('student-answer').value;
-            const resultTextarea = document.getElementById('result-textarea');
+            const resultBox = document.getElementById('result-textarea');
+            const tid = sessionStorage.getItem('tid') || crypto.randomUUID();
             
-            // Use current configuration to generate feedback
-            const config = {
-                baseStyle: currentBaseStyle,
-                keywords: document.getElementById('keywords-content').textContent,
-                structure: document.getElementById('structure-content').textContent,
-                personalization: document.getElementById('personalization-content').textContent
+            // 准备提交数据
+            const submitData = {
+                'tid': tid,
+                'student_answer': studentAnswer,
+                'style_keywords': currentConfig.style_keywords,
+                'feedback_templates': currentConfig.feedback_templates,
+                'teach_style': currentConfig.teach_style,
+                'teach_example': currentConfig.teach_example
             };
             
-            // Mock API call with configuration-aware feedback
-            setTimeout(() => {
-                const mockFeedback = `Based on your configured ${config.baseStyle} teaching style, here's personalized feedback for the student:
+            console.log('Submitting feedback request:', submitData);
+            
+            // 第一步：调用 /api/comment/submit 生成反馈
+            fetch('/api/comment/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(submitData)
+            })
+            .then(response => response.json())
+            .then(submitResult => {
+                if (submitResult.success) {
+                    console.log('Feedback generation submitted successfully');
+                    let attempt_id=submitResult.attempt_id
+                    // 第二步：调用 /api/comment/load 获取格式化的反馈文本
+                    return fetch(`/api/comment/load?tid=${tid}&attempt_id=${attempt_id}`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                } else {
+                    throw new Error(submitResult.error || 'Feedback generation failed');
+                }
+            })
+            .then(response => response.json())
+            .then(loadResult => {
+                if (loadResult.success) {
+                    console.log('Feedback loaded successfully');
 
-**Strengths:**
-- You demonstrate understanding of the key concepts
-- Your response shows thoughtful consideration
-- Good use of examples to support your points
+                    const htmlText  = loadResult.response;  
+                    // 1. 先渲染主体（带 <strong>、<span color>、<br> 等）
+                    resultBox.innerHTML = htmlText;
 
-**Areas for Development:**
-- Consider expanding on your main arguments with more detail
-- Try to connect your ideas more explicitly to the broader context
-- Include additional evidence to strengthen your position
+                    // 2. 尾部追加配置信息（用 <hr> 做 15 横线，样式更简洁）
+                    resultBox.innerHTML += `
+                    <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
+                    <div style="color:#666;font-size:0.9rem;">
+                    Generated using: ${currentConfig.teach_style} style<br>
+                    Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: General academic feedback'}<br>
+                    Templates: ${currentConfig.feedback_templates.join(', ') || 'DEV: Standard structure'}
+                    </div>`;
+                    
+                } else {
+                    throw new Error(loadResult.error || 'Failed to load formatted feedback');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating feedback:', error);
+                
+                // 如果API调用失败，显示错误信息
+                resultTextarea.value = `❌ Error generating feedback: ${error.message}
 
-**Suggestions:**
-- Review related materials to deepen your understanding
-- Practice articulating your thoughts more systematically
-- Consider alternative perspectives on this topic
-
-Your engagement with the material is evident and appreciated. Keep building on these foundations!
-
----
-Generated using: ${config.baseStyle.charAt(0).toUpperCase() + config.baseStyle.slice(1)} style
-Keywords: ${config.keywords !== 'N/A' ? config.keywords : 'General academic feedback'}`;
-
-                resultTextarea.value = mockFeedback;
-            }, 2000);
+Please try again or check your configuration.`;
+            });
         }
     </script>
 </body>

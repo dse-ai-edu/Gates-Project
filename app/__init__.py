@@ -19,7 +19,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 mongo_client = MongoClient(os.getenv('MONGODB_URI'))
-database = mongo_client['auto_grade'] 
+database = mongo_client['auto_feedback'] 
 
 s3_client = boto3.client(
     's3',
