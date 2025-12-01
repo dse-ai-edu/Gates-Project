@@ -3,7 +3,7 @@ from app import app
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='main')
-    parser.add_argument('--port', type=int, default=5000)
+    parser.add_argument('--port', type=int, default=8200)
     parser.add_argument('--mode', type=str, default='dev')
     args = parser.parse_args()
     
