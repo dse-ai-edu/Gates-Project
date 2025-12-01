@@ -360,17 +360,26 @@
         function displayConfigurationAsText() {
             // Style Keywords
             const styleDisplay = document.getElementById('style-keywords-display');
-            const defaults = ['- Strength', '- Weakness', '- Improvement'];
+            const styleText = currentConfig.style_keywords.length > 0 
+                ? currentConfig.style_keywords.join(', ') 
+                : 'N/A';
+            styleDisplay.textContent = styleText;
+
+            // Feedback Templates  
+            const templateDisplay = document.getElementById('feedback-templates-display');
+            const templateDefault = ['- Strength', '- Weakness', '- Improvement'];
 
             let lines;
             if (currentConfig.feedback_templates.length > 0) {
                 lines = currentConfig.feedback_templates.map((t, i) => `${i + 1}. ${t}`);
             } else {
-                lines = ['[Default Template]', ...defaults.map((t, i) => `${i + 1}. ${t}`)];
+                const defaultLines = templateDefault.map((t, i) => `${i + 1}. ${t}`);
+                lines = ['[Default Template]', ...defaultLines];
             }
 
+            const templateText = lines.join('\n');
             templateDisplay.style.whiteSpace = 'pre-line';
-            templateDisplay.textContent = lines.join('\n');
+            templateDisplay.textContent = templateText;
             
             // Teaching Style
             const styleDisplay2 = document.getElementById('teach-style-display');
