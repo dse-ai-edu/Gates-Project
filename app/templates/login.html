@@ -93,6 +93,14 @@
     </div>
   </div>
   <script>
+    window.addEventListener('load', function() {
+      localStorage.removeItem('step1_style_keywords');
+      localStorage.removeItem('step1_feedback_templates');
+      sessionStorage.removeItem('selected_teach_style');
+      sessionStorage.removeItem('teach_example');
+      sessionStorage.removeItem('locked_style');
+    });
+
     document.getElementById('loginForm').addEventListener('submit', async function (e) {
       e.preventDefault();
       const username = document.getElementById('username').value;
