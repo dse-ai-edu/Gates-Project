@@ -347,20 +347,13 @@
         function displayConfigurationAsText() {
             // Style Keywords
             const styleDisplay = document.getElementById('style-keywords-display');
-            const styleText = currentConfig.style_keywords.length > 0 
-                ? currentConfig.style_keywords.join(', ') 
-                : 'N/A';
-            styleDisplay.textContent = styleText;
-            
-            // Feedback Templates  
-            const templateDisplay = document.getElementById('feedback-templates-display');
             const defaults = ['- Strength', '- Weakness', '- Improvement'];
 
             let lines;
             if (currentConfig.feedback_templates.length > 0) {
                 lines = currentConfig.feedback_templates.map((t, i) => `${i + 1}. ${t}`);
             } else {
-                lines = ['(Default Template)', ...defaults.map((t, i) => `${i + 1}. ${t}`)];
+                lines = ['[Default Template]', ...defaults.map((t, i) => `${i + 1}. ${t}`)];
             }
 
             templateDisplay.style.whiteSpace = 'pre-line';
