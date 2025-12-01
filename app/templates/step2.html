@@ -92,6 +92,7 @@
         function saveAndProceed() {
             const teachingStyle = window.feedbackInputFunctions.getSelectedTeachingStyle();
             const additionalInstructions = window.feedbackInputFunctions.getAdditionalInstructions();
+            const feedbackTemplates = window.feedbackInputFunctions.getTemplateTexts();
             let tid = sessionStorage.getItem('tid');
             
             // Create session ID if it doesn't exist
@@ -101,7 +102,22 @@
             }
             
             if (!teachingStyle) {
-                alert("❗ Please select a teaching style. // Personalized Feedback Style");
+                alert("❗ Please select at least Personalized Feedback Style. // ");
+                return;
+            }
+            
+            // Validate feedback templates
+            if (!feedbackTemplates || feedbackTemplates.length === 0) {
+                alert("❗ Please enter at least one item for Feedback Template.");
+                return;
+            }
+            
+            const hasValidTemplate = feedbackTemplates.some(template => {
+                return /[a-zA-Z]/.test(template);
+            });
+            
+            if (!hasValidTemplate) {
+                alert("❗ Template is not valid; you could press the button \"DEFAULT Template\" if you do not want to set.");
                 return;
             }
             
