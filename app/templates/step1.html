@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Step 1/2: Base Style and Feedback Template</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
 </head>
@@ -103,7 +104,7 @@
                 alert("❗ Template is not valid; you could press the button \"DEFAULT Template\" if you do not want to set.");
                 return;
             }
-            
+
             // Show saving status
             const status = document.getElementById('save-status');
             status.textContent = '💾 Saved to local storage';
