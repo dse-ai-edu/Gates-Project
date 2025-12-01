@@ -204,13 +204,13 @@ function initTeachingStyleComponent() {
 
 // ==================== Component 4: Teaching Example Functions ====================
 
-function getAdditionalInstructions() {
-    const additionalInstructions = document.getElementById('additional-instructions');
-    return additionalInstructions ? additionalInstructions.value : '';
+function getAdditionalExamples() {
+    const additionalExamples = document.getElementById('additional-instructions');
+    return additionalExamples ? additionalExamples.value : '';
 }
 
 function saveTeachingExampleToStorage() {
-    const example = getAdditionalInstructions();
+    const example = getAdditionalExamples();
     sessionStorage.setItem('teach_example', example);
     console.log('Teaching example saved:', example);
 }
@@ -230,14 +230,14 @@ function initTeachingExampleComponent() {
     // DOM element references
     const resetResponsesBtn = document.getElementById('reset-responses-btn');
     const addResponsesBtn = document.getElementById('add-responses-btn');
-    const additionalInstructions = document.getElementById('additional-instructions');
+    const additionalExamples = document.getElementById('additional-instructions');
     
     // Button event listeners
     if (resetResponsesBtn) {
         resetResponsesBtn.addEventListener('click', function() {
             locked_style = false;
-            additionalInstructions.value = '';
-            additionalInstructions.disabled = true;
+            additionalExamples.value = '';
+            additionalExamples.disabled = true;
             saveTeachingExampleToStorage();
             sessionStorage.setItem('locked_style', 'false');
             console.log('Personalized responses reset. locked_style:', locked_style);
@@ -247,24 +247,24 @@ function initTeachingExampleComponent() {
     if (addResponsesBtn) {
         addResponsesBtn.addEventListener('click', function() {
             locked_style = true;
-            additionalInstructions.disabled = false;
-            additionalInstructions.focus();
+            additionalExamples.disabled = false;
+            additionalExamples.focus();
             sessionStorage.setItem('locked_style', 'true');
             console.log('Personalized responses enabled. locked_style:', locked_style);
         });
     }
     
     // Auto-save on textarea changes
-    if (additionalInstructions) {
-        additionalInstructions.addEventListener('input', saveTeachingExampleToStorage);
+    if (additionalExamples) {
+        additionalExamples.addEventListener('input', saveTeachingExampleToStorage);
     }
     
     // Load locked state
     const storedLockedStyle = sessionStorage.getItem('locked_style');
     if (storedLockedStyle === 'true') {
         locked_style = true;
-        if (additionalInstructions) {
-            additionalInstructions.disabled = false;
+        if (additionalExamples) {
+            additionalExamples.disabled = false;
         }
     }
 }
@@ -320,7 +320,7 @@ function getAllFormData() {
         selectedStyles: getSelectedStyles(),
         templateTexts: getTemplateTexts(),
         teachingStyle: getSelectedTeachingStyle(),
-        additionalInstructions: getAdditionalInstructions()
+        additionalExamples: getAdditionalExamples()
     };
 }
 
@@ -392,7 +392,7 @@ window.feedbackInputFunctions = {
     initTeachingStyleComponent,
     
     // Component 4
-    getAdditionalInstructions,
+    getAdditionalExamples,
     initTeachingExampleComponent,
     
     // Display functions

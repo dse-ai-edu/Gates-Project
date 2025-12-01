@@ -16,7 +16,7 @@
             <p id="save-status"></p>
             
             <div class="traverse-buttons">
-                <button class="t-button" onclick="saveAndProceed()">Save</button>
+                <button class="t-button" onclick="saveAndProceed_step1()">Save</button>
                 <!-- <button class="t-button" onclick="resetSection()">Reset</button> -->
             </div>
         </div>
@@ -82,16 +82,25 @@
         }
         
         // Save and proceed to next step
-        function saveAndProceed() {
+        function saveAndProceed_step1() {
             const selectedStyles = window.feedbackInputFunctions.getSelectedStyles();
             const templateTexts = window.feedbackInputFunctions.getTemplateTexts();
             
             if (selectedStyles.length === 0) {
-                alert("❗ Please select at least one style descriptor.");
+                alert("❗ Please select at least one Keywords of Feedback Style.");
                 return;
             }
             if (templateTexts.length === 0) {
-                alert("❗ Please enter at least one feedback template item.");
+                alert("❗ Please enter at least one Feedback Template Item; you could press the button \"Default Template\" if you do not want to set.");
+                return;
+            }
+            // Validate feedback templates contain at least one English letter
+            const hasValidTemplate = templateTexts.some(template => {
+                return /[a-zA-Z]/.test(template);
+            });
+            
+            if (!hasValidTemplate) {
+                alert("❗ Template is not valid; you could press the button \"DEFAULT Template\" if you do not want to set.");
                 return;
             }
             

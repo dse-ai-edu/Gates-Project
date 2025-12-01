@@ -22,7 +22,7 @@
 
             <div class="traverse-buttons">
                 <button class="t-button" onclick="goBack()">Back</button>
-                <button class="t-button" onclick="saveAndProceed()">Save</button>
+                <button class="t-button" onclick="saveAndProceed_step2()">Save</button>
             </div>
         </div>
 
@@ -89,10 +89,9 @@
         }
         
         // Save and proceed to step_final
-        function saveAndProceed() {
+        function saveAndProceed_step2() {
             const teachingStyle = window.feedbackInputFunctions.getSelectedTeachingStyle();
-            const additionalInstructions = window.feedbackInputFunctions.getAdditionalInstructions();
-            const feedbackTemplates = window.feedbackInputFunctions.getTemplateTexts();
+            const additionalExamples = window.feedbackInputFunctions.getAdditionalExamples();
             let tid = sessionStorage.getItem('tid');
             
             // Create session ID if it doesn't exist
@@ -102,22 +101,7 @@
             }
             
             if (!teachingStyle) {
-                alert("❗ Please select at least Personalized Feedback Style. // ");
-                return;
-            }
-            
-            // Validate feedback templates
-            if (!feedbackTemplates || feedbackTemplates.length === 0) {
-                alert("❗ Please enter at least one item for Feedback Template.");
-                return;
-            }
-            
-            const hasValidTemplate = feedbackTemplates.some(template => {
-                return /[a-zA-Z]/.test(template);
-            });
-            
-            if (!hasValidTemplate) {
-                alert("❗ Template is not valid; you could press the button \"DEFAULT Template\" if you do not want to set.");
+                alert("❗ Please select a Primary Feedback Pattern");
                 return;
             }
             
@@ -130,7 +114,7 @@
                 'style_keywords': configData.style_keywords,
                 'feedback_templates': configData.feedback_templates,
                 'teach_style': teachingStyle,
-                'teach_example': additionalInstructions || ''
+                'teach_example': additionalExamples || ''
             };
             
             console.log('Sending styleData to backend:', styleData);

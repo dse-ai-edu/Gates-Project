@@ -49,19 +49,19 @@ function resetStyles() {
 // Teaching style management functions (from original script)
 function setTeachingStyle() {
     const teachingStyleGroup = document.getElementById('teaching-style-group');
-    const additionalInstructions = document.getElementById('additional-instructions');
+    const additionalExamples = document.getElementById('additional-instructions');
     const setBtn = document.getElementById('set-btn');
     const editBtn = document.getElementById('edit-btn');
     
     teachingStyleGroup.classList.add('disabled');
-    additionalInstructions.disabled = true;
-    additionalInstructions.classList.add('disabled');
+    additionalExamples.disabled = true;
+    additionalExamples.classList.add('disabled');
     
     setBtn.style.display = 'none';
     editBtn.style.display = 'inline-block';
     
     const selectedStyle = document.querySelector('input[name="teaching-style"]:checked').value;
-    const instructions = additionalInstructions.value;
+    const instructions = additionalExamples.value;
     
     console.log('Selected Teaching Style:', selectedStyle);
     console.log('Additional Instructions:', instructions);
@@ -69,13 +69,13 @@ function setTeachingStyle() {
 
 function editTeachingStyle() {
     const teachingStyleGroup = document.getElementById('teaching-style-group');
-    const additionalInstructions = document.getElementById('additional-instructions');
+    const additionalExamples = document.getElementById('additional-instructions');
     const setBtn = document.getElementById('set-btn');
     const editBtn = document.getElementById('edit-btn');
     
     teachingStyleGroup.classList.remove('disabled');
-    additionalInstructions.disabled = false;
-    additionalInstructions.classList.remove('disabled');
+    additionalExamples.disabled = false;
+    additionalExamples.classList.remove('disabled');
     
     setBtn.style.display = 'inline-block';
     editBtn.style.display = 'none';
@@ -97,9 +97,9 @@ function getSelectedTeachingStyle() {
     return selectedRadio ? selectedRadio.value : null;
 }
 
-function getAdditionalInstructions() {
-    const additionalInstructions = document.getElementById('additional-instructions');
-    return additionalInstructions ? additionalInstructions.value : '';
+function getAdditionalExamples() {
+    const additionalExamples = document.getElementById('additional-instructions');
+    return additionalExamples ? additionalExamples.value : '';
 }
 
 // Utility function to get all form data
@@ -108,6 +108,6 @@ function getAllFormData() {
         selectedStyles: getSelectedStyles(),
         templateTexts: getTemplateTexts(),
         teachingStyle: getSelectedTeachingStyle(),
-        additionalInstructions: getAdditionalInstructions()
+        additionalExamples: getAdditionalExamples()
     };
 }
