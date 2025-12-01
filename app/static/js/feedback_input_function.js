@@ -167,24 +167,35 @@ function initFeedbackTemplatesComponent() {
 }
 
 function resetToDefaultTemplate() {
+   // Clear localStorage first to prevent loading old data
+    localStorage.removeItem('step1_feedback_templates');
+    
     const templateContainer = document.getElementById('template-container');
     templateContainer.innerHTML = `
         <div class="template-row">
             <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="strength">
-            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+            <button class="delete-btn" onclick="window.feedbackInputFunctions.deleteTemplate(this)">×</button>
         </div>
         <div class="template-row">
             <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="weakness">
-            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+            <button class="delete-btn" onclick="window.feedbackInputFunctions.deleteTemplate(this)">×</button>
         </div>
         <div class="template-row">
             <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="improvement">
-            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+            <button class="delete-btn" onclick="window.feedbackInputFunctions.deleteTemplate(this)">×</button>
         </div>
     `;
-   // Re-initialize the component
-    initFeedbackTemplatesComponent();
-   // Clear localStorage to sync with UI
+   // Reset template count and update button state
+    templateCount = 3;
+    updateAddButtonState();
+    
+   // Add event listeners to new inputs
+    const inputs = templateContainer.querySelectorAll('.template-input');
+    inputs.forEach(input => {
+        input.addEventListener('input', saveFeedbackTemplatesToLocalStorage);
+    });
+    
+   // Save the default state to localStorage
     saveFeedbackTemplatesToLocalStorage();
 }
 // ==================== Component 3: Teaching Style Functions ====================
