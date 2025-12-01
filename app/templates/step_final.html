@@ -198,8 +198,21 @@
         </div>
 
         <!-- Student Answer Input -->
+        <div class="section" id="question-display">
+            <p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
+            <p>(a) f(x) = x<sup>ln(x)</sup></p>
+        </div>
+
+        <!-- Student Answer Input -->
         <div class="section" id="student-input">
             <h2>Student Answer Input</h2>
+            <div id="sampleAnswerButtons" style="margin-bottom: 15px;">
+                <button class="sample-btn" data-index="0">ans1</button>
+                <button class="sample-btn" data-index="1">ans2</button>
+                <button class="sample-btn" data-index="2">ans3</button>
+                <button class="sample-btn" data-index="3">ans4</button>
+                <button class="sample-btn" data-index="4">ans5</button>
+            </div>
             <div id="textInputArea">
                 <textarea id="student-answer" placeholder="Write the student answer here..."></textarea>
             </div>
@@ -448,7 +461,7 @@
             const resultBox = document.getElementById('result-textarea');
             const tid = sessionStorage.getItem('tid') || crypto.randomUUID();
             
-            // 准备提交数据
+            // Preparing to submit data
             const submitData = {
                 'tid': tid,
                 'student_answer': studentAnswer,
@@ -460,7 +473,7 @@
             
             console.log('Submitting feedback request:', submitData);
             
-            // 第一步：调用 /api/comment/submit 生成反馈
+            // Step 1: Call /api/comment/submit to generate feedback.
             fetch('/api/comment/submit', {
                 method: 'POST',
                 headers: {
@@ -473,7 +486,7 @@
                 if (submitResult.success) {
                     console.log('Feedback generation submitted successfully');
                     let attempt_id=submitResult.attempt_id
-                    // 第二步：调用 /api/comment/load 获取格式化的反馈文本
+                    // Step 2: Call /api/comment/load to retrieve the formatted feedback text.
                     return fetch(`/api/comment/load?tid=${tid}&attempt_id=${attempt_id}`, {
                         method: 'GET',
                         headers: {
@@ -493,7 +506,7 @@
                     // 1. 先渲染主体（带 <strong>、<span color>、<br> 等）
                     resultBox.innerHTML = htmlText;
 
-                    // 2. 尾部追加配置信息（用 <hr> 做 15 横线，样式更简洁）
+                    // 2. Add configuration information at the end (use <hr> with 15 horizontal lines for a simpler style)
                     resultBox.innerHTML += `
                     <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
                     <div style="color:#666;font-size:0.9rem;">
@@ -509,12 +522,28 @@
             .catch(error => {
                 console.error('Error generating feedback:', error);
                 
-                // 如果API调用失败，显示错误信息
+                // If the API call fails, display an error message.
                 resultTextarea.value = `❌ Error generating feedback: ${error.message}
 
 Please try again or check your configuration.`;
             });
         }
+
+        // Tmp: give pre-defined answers for demo
+        const sampleAnswers = [
+            "Take ln on both sides, differentiate: f′(x) = x^(ln x + 1). Easy!",
+            "Oops, I forgot the chain bit: f′(x) = x^·ln x. Still looks neat.",
+            "Power rule only, right? f′(x) = ln x·x^. Voilà!",
+            "Wait, derivative of ln x is 1/x, so f′(x) = x^·(1/x). Done.",
+            "Mixed up everything: f′(x) = ln x·x^ + x^. Whatever, close enough."
+        ];
+
+        document.querySelectorAll('.sample-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const index = parseInt(this.dataset.index);
+                document.getElementById('student-answer').value = sampleAnswers[index];
+            });
+        });
     </script>
 </body>
 </html>
