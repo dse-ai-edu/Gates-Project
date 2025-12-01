@@ -167,33 +167,25 @@ function initFeedbackTemplatesComponent() {
 }
 
 function resetToDefaultTemplate() {
-    const templateContent = document.getElementById('feedback-templates-content');
-    templateContent.innerHTML = `
-        <button class="default-template-btn" id="default-template-btn" onclick="resetToDefaultTemplate()">Default Template</button>
-        <p>* Enter section titles for reply text items, such as "improvement". <br>
-           * Use parentheses for additional notes, e.g., "improvement (suggestions on how to enhance mathematical abilities)". <br>
-           * For hierarchical categories, use colons to separate levels, e.g., "improvement: knowledge to review" & "improvement: take-away question".<br>
-           * If no template is set, the default is "Strength + Weakness + Improvement." </p>
-        <div class="template-section">
-            <button class="add-template-btn" id="add-template-btn">Add One</button>
-            <div class="template-container" id="template-container">
-                <div class="template-row">
-                    <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="strength">
-                    <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                </div>
-                <div class="template-row">
-                    <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="weakness">
-                    <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                </div>
-                <div class="template-row">
-                    <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="improvement">
-                    <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                </div>
-            </div>
+    const templateContainer = document.getElementById('template-container');
+    templateContainer.innerHTML = `
+        <div class="template-row">
+            <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="strength">
+            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+        </div>
+        <div class="template-row">
+            <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="weakness">
+            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
+        </div>
+        <div class="template-row">
+            <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="improvement">
+            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
         </div>
     `;
    // Re-initialize the component
     initFeedbackTemplatesComponent();
+   // Clear localStorage to sync with UI
+    saveFeedbackTemplatesToLocalStorage();
 }
 // ==================== Component 3: Teaching Style Functions ====================
 
