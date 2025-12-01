@@ -165,7 +165,7 @@
 
         <!-- System Configuration Display -->
         <div class="section" id="details-display">
-            <h2>Your Feedback System Configuration</h2>
+            <h2>Your Feedback System Configuration:</h2>
             <div class="four-panel-layout">
                 <!-- Unlock/Lock button for all panels -->
                 <button class="unlock-button" id="unlock-settings-btn" onclick="toggleLockSettings()">---</button>
@@ -178,19 +178,19 @@
 
                 <!-- Panel 2: Feedback Templates -->
                 <div class="panel-display" id="panel-feedback-templates">
-                    <h3>Feedback Templates</h3>
+                    <h3>Feedback Template</h3>
                     <div class="panel-content-display" id="feedback-templates-display"></div>
                 </div>
 
                 <!-- Panel 3: Teaching Style -->
                 <div class="panel-display" id="panel-teach-style">
-                    <h3>Teaching Style</h3>
+                    <h3>Feedback Pattern</h3>
                     <div class="panel-content-display" id="teach-style-display"></div>
                 </div>
 
                 <!-- Panel 4: Teaching Example -->
                 <div class="panel-display" id="panel-teach-example">
-                    <h3>Teaching Example</h3>
+                    <h3>Your Feedback Example</h3>
                     <div class="panel-content-display" id="teach-example-display"></div>
                 </div>
             </div>
@@ -353,11 +353,17 @@
             
             // Feedback Templates  
             const templateDisplay = document.getElementById('feedback-templates-display');
-            const templateText = currentConfig.feedback_templates.length > 0
-                ? currentConfig.feedback_templates.map((t, i) => `${i+1}. ${t}`).join('\n')
-                : 'N/A';
+            const defaults = ['- Strength', '- Weakness', '- Improvement'];
+
+            let lines;
+            if (currentConfig.feedback_templates.length > 0) {
+                lines = currentConfig.feedback_templates.map((t, i) => `${i + 1}. ${t}`);
+            } else {
+                lines = ['(Default Template)', ...defaults.map((t, i) => `${i + 1}. ${t}`)];
+            }
+
             templateDisplay.style.whiteSpace = 'pre-line';
-            templateDisplay.textContent = templateText;
+            templateDisplay.textContent = lines.join('\n');
             
             // Teaching Style
             const styleDisplay2 = document.getElementById('teach-style-display');
