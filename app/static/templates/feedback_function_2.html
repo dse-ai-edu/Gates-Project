@@ -1,11 +1,9 @@
 <!-- Feedback Templates Component -->
 <div class="feedback-input-component" id="feedback-templates-component">
-    <h3>
-        Feedback Templates 
-        <button class="default-template-btn" id="default-template-btn" onclick="resetToDefaultTemplate()">Default Template</button>
-    </h3>
-
+    <h3>Feedback Templates </h3>
+    
     <div class="component-content" id="feedback-templates-content">
+        <button class="default-template-btn" id="default-template-btn" onclick="initFeedbackTemplatesComponent()">Default Template</button>
         <p>* Enter section titles for reply text items, such as "improvement". <br>
            * Use parentheses for additional notes, e.g., "improvement (suggestions on how to enhance mathematical abilities)". <br>
            * For hierarchical categories, use colons to separate levels, e.g., "improvement: knowledge to review" & "improvement: take-away question".<br>
@@ -29,23 +27,3 @@
         </div>
     </div>
 </div>
-
-<script>
-function resetToDefaultTemplate() {
-    const templateContainer = document.getElementById('template-container');
-    templateContainer.innerHTML = `
-        <div class="template-row">
-            <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="strength">
-            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-        </div>
-        <div class="template-row">
-            <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="weakness">
-            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-        </div>
-        <div class="template-row">
-            <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="improvement">
-            <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-        </div>
-    `;
-}
-</script>
