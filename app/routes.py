@@ -35,6 +35,9 @@ reference_this = """
 # ==================== Page Route (returns HTML) ==================== #
 
 @app.route('/')
+def home():
+    return render_template('login.html')
+
 @app.route('/login')
 def login():
     return render_template('login.html')
