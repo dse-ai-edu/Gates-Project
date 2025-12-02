@@ -220,6 +220,47 @@ def update_style_config():
         response = {'success': False, 'error': str(e)}
     return jsonify(response)
 
+@app.route('/api/comment/retrieve_style', methods=['POST'])
+def retrieve_style_config():
+    data = request.get_json()
+    tid = data.get('tid')
+    try:
+        if not tid:
+            raise ValueError('Missing required field: tid')
+        
+       # Find the record with matching tid
+        existing_record = database['comment_config'].find_one({'tid': tid})
+        
+        if existing_record:
+           # Extract the config list
+            config_list = existing_record.get('config', [])
+            
+            if config_list and len(config_list) > 0:
+               # Get the last config element
+                last_config = config_list[-1]
+                response = {
+                    'success': True,
+                    'config': last_config,
+                    'message': f'Retrieved {len(config_list)} configurations'
+                }
+            else:
+                response = {
+                    'success': False,
+                    'error': 'No configurations found for this tid'
+                }
+        else:
+            response = {
+                'success': False,
+                'error': f'No record found for tid: {tid}'
+            }
+        
+    except Exception as e:
+        print(f"Error in retrieve_style_config: {str(e)}")
+        traceback.print_exc()
+        response = {'success': False, 'error': str(e)}
+    
+    return jsonify(response)
+
 @app.route('/api/comment/submit', methods=['POST'])
 def comment_submit():
     """Generate personalized feedback response for student answer (no scoring involved)"""
