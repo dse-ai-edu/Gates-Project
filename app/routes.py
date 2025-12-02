@@ -64,7 +64,7 @@ def api_login():
             response = {
                 'success': True,
                 'user': username,
-                'token': str(uuid.uuid4())  # Generate demo token
+                'token': str(uuid.uuid4())  # Generate demo token // tid
             }
         else:
             response = {'success': False, 'message': 'Invalid credentials'}

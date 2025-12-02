@@ -144,9 +144,9 @@
                 window.feedbackInputFunctions.initFeedbackTemplatesComponent();
             }
             
-            // Clear localStorage
-            localStorage.removeItem('step1_style_keywords');
-            localStorage.removeItem('step1_feedback_templates');
+            // Clear sessionStorage
+            sessionStorage.removeItem('step1_style_keywords');
+            sessionStorage.removeItem('step1_feedback_templates');
             
             // Clear status
             const status = document.getElementById('save-status');

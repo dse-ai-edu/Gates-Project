@@ -16,19 +16,19 @@ function resetStyles() {
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
     });
-    // Update localStorage
-    saveStyleKeywordsToLocalStorage();
+    // Update sessionStorage
+    saveStyleKeywordsToSessionStorage();
 }
 
-function saveStyleKeywordsToLocalStorage() {
+function saveStyleKeywordsToSessionStorage() {
     const selectedStyles = getSelectedStyles();
     const styleKeywords = selectedStyles.join('\n');
-    localStorage.setItem('step1_style_keywords', styleKeywords);
+    sessionStorage.setItem('step1_style_keywords', styleKeywords);
     console.log('Style keywords saved:', styleKeywords);
 }
 
-function loadStyleKeywordsFromLocalStorage() {
-    const storedStyles = localStorage.getItem('step1_style_keywords') || '';
+function loadStyleKeywordsFromSessionStorage() {
+    const storedStyles = sessionStorage.getItem('step1_style_keywords') || '';
     if (storedStyles) {
         const styleArray = storedStyles.split('\n');
         styleArray.forEach(style => {
@@ -42,7 +42,7 @@ function loadStyleKeywordsFromLocalStorage() {
 
 function initStyleKeywordsComponent() {
     // Load stored data
-    loadStyleKeywordsFromLocalStorage();
+    loadStyleKeywordsFromSessionStorage();
     
     // Add event listeners
     const resetBtn = document.getElementById('reset-styles-btn');
@@ -53,7 +53,7 @@ function initStyleKeywordsComponent() {
     // Add change listeners to checkboxes
     const checkboxes = document.querySelectorAll('#style-grid input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', saveStyleKeywordsToLocalStorage);
+        checkbox.addEventListener('change', saveStyleKeywordsToSessionStorage);
     });
 }
 
@@ -81,7 +81,7 @@ function addTemplate() {
         
         // Add event listener to new input
         const newInput = templateRow.querySelector('.template-input');
-        newInput.addEventListener('input', saveFeedbackTemplatesToLocalStorage);
+        newInput.addEventListener('input', saveFeedbackTemplatesToSessionStorage);
     }
 }
 
@@ -90,7 +90,7 @@ function deleteTemplate(button) {
     templateRow.remove();
     templateCount--;
     updateAddButtonState();
-    saveFeedbackTemplatesToLocalStorage();
+    saveFeedbackTemplatesToSessionStorage();
 }
 
 function updateAddButtonState() {
@@ -106,15 +106,15 @@ function updateAddButtonState() {
     }
 }
 
-function saveFeedbackTemplatesToLocalStorage() {
+function saveFeedbackTemplatesToSessionStorage() {
     const templateTexts = getTemplateTexts();
     const feedbackTemplates = templateTexts.join('\n');
-    localStorage.setItem('step1_feedback_templates', feedbackTemplates);
+    sessionStorage.setItem('step1_feedback_templates', feedbackTemplates);
     console.log('Feedback templates saved:', feedbackTemplates);
 }
 
-function loadFeedbackTemplatesFromLocalStorage() {
-    const storedTemplates = localStorage.getItem('step1_feedback_templates') || '';
+function loadFeedbackTemplatesFromSessionStorage() {
+    const storedTemplates = sessionStorage.getItem('step1_feedback_templates') || '';
     if (storedTemplates) {
         const templateArray = storedTemplates.split('\n').filter(t => t.trim());
         const templateContainer = document.getElementById('template-container');
@@ -137,7 +137,7 @@ function loadFeedbackTemplatesFromLocalStorage() {
                 
                 // Add event listener to input
                 const input = templateRow.querySelector('.template-input');
-                input.addEventListener('input', saveFeedbackTemplatesToLocalStorage);
+                input.addEventListener('input', saveFeedbackTemplatesToSessionStorage);
             }
         });
         
@@ -147,7 +147,7 @@ function loadFeedbackTemplatesFromLocalStorage() {
 
 function initFeedbackTemplatesComponent() {
     // Load stored data
-    loadFeedbackTemplatesFromLocalStorage();
+    loadFeedbackTemplatesFromSessionStorage();
     
     // Add event listeners
     const addBtn = document.getElementById('add-template-btn');
@@ -158,7 +158,7 @@ function initFeedbackTemplatesComponent() {
     // Add event listeners to existing inputs
     const existingInputs = document.querySelectorAll('.template-input');
     existingInputs.forEach(input => {
-        input.addEventListener('input', saveFeedbackTemplatesToLocalStorage);
+        input.addEventListener('input', saveFeedbackTemplatesToSessionStorage);
     });
     
     // Update template count
@@ -167,8 +167,8 @@ function initFeedbackTemplatesComponent() {
 }
 
 function resetToDefaultTemplate() {
-   // Clear localStorage first to prevent loading old data
-    localStorage.removeItem('step1_feedback_templates');
+   // Clear sessionStorage first to prevent loading old data
+    sessionStorage.removeItem('step1_feedback_templates');
     
     const templateContainer = document.getElementById('template-container');
     templateContainer.innerHTML = `
@@ -192,11 +192,11 @@ function resetToDefaultTemplate() {
    // Add event listeners to new inputs
     const inputs = templateContainer.querySelectorAll('.template-input');
     inputs.forEach(input => {
-        input.addEventListener('input', saveFeedbackTemplatesToLocalStorage);
+        input.addEventListener('input', saveFeedbackTemplatesToSessionStorage);
     });
     
-   // Save the default state to localStorage
-    saveFeedbackTemplatesToLocalStorage();
+   // Save the default state to sessionStorage
+    saveFeedbackTemplatesToSessionStorage();
 }
 // ==================== Component 3: Teaching Style Functions ====================
 
@@ -207,7 +207,7 @@ function getSelectedTeachingStyle() {
     }
     
    // Check if teaching style was set from sessionStorage
-    const storedStyle = sessionStorage.getItem('selected_teach_style');
+    const storedStyle = sessionStorage.getItem('step2_selected_teach_style');
     if (storedStyle && storedStyle.trim()) {
         return storedStyle;
     }
@@ -218,13 +218,13 @@ function getSelectedTeachingStyle() {
 function saveTeachingStyleToStorage() {
     const selectedStyle = getSelectedTeachingStyle();
     if (selectedStyle) {
-        sessionStorage.setItem('selected_teach_style', selectedStyle);
+        sessionStorage.setItem('step2_selected_teach_style', selectedStyle);
         console.log('Teaching style saved:', selectedStyle);
     }
 }
 
 function loadTeachingStyleFromStorage() {
-    const storedStyle = sessionStorage.getItem('selected_teach_style');
+    const storedStyle = sessionStorage.getItem('step2_selected_teach_style');
     if (storedStyle) {
         const radio = document.querySelector(`input[name="teaching-style"][value="${storedStyle}"]`);
         if (radio) {
@@ -253,12 +253,12 @@ function getAdditionalExamples() {
 
 function saveTeachingExampleToStorage() {
     const example = getAdditionalExamples();
-    sessionStorage.setItem('teach_example', example);
+    sessionStorage.setItem('step2_teach_example', example);
     console.log('Teaching example saved:', example);
 }
 
 function loadTeachingExampleFromStorage() {
-    const storedExample = sessionStorage.getItem('teach_example') || '';
+    const storedExample = sessionStorage.getItem('step2_teach_example') || '';
     const textarea = document.getElementById('additional-instructions');
     if (textarea && storedExample) {
         textarea.value = storedExample;
@@ -367,19 +367,19 @@ function getAllFormData() {
 }
 
 function clearAllStoredData() {
-    localStorage.removeItem('step1_style_keywords');
-    localStorage.removeItem('step1_feedback_templates');
-    sessionStorage.removeItem('selected_teach_style');
-    sessionStorage.removeItem('teach_example');
+    sessionStorage.removeItem('step1_style_keywords');
+    sessionStorage.removeItem('step1_feedback_templates');
+    sessionStorage.removeItem('step2_selected_teach_style');
+    sessionStorage.removeItem('step2_teach_example');
     sessionStorage.removeItem('locked_style');
     console.log('All stored feedback data cleared');
 }
 
 function getStoredConfigData() {
-    const styleKeywords = localStorage.getItem('step1_style_keywords') || '';
-    const feedbackTemplates = localStorage.getItem('step1_feedback_templates') || '';
-    const teachStyle = sessionStorage.getItem('selected_teach_style') || '';
-    const teachExample = sessionStorage.getItem('teach_example') || '';
+    const styleKeywords = sessionStorage.getItem('step1_style_keywords') || '';
+    const feedbackTemplates = sessionStorage.getItem('step1_feedback_templates') || '';
+    const teachStyle = sessionStorage.getItem('step2_selected_teach_style') || '';
+    const teachExample = sessionStorage.getItem('step2_teach_example') || '';
     const lockedStyle = sessionStorage.getItem('locked_style') === 'true';
     
     return {
@@ -428,11 +428,11 @@ function loadPriorSetting() {
            // Get the last config element
             const lastConfig = result.config;
             
-           // Save to localStorage
-            localStorage.setItem('step1_style_keywords', lastConfig.style_keywords.join('\n'));
-            localStorage.setItem('step1_feedback_templates', lastConfig.feedback_templates.join('\n'));
-            sessionStorage.setItem('selected_teach_style', lastConfig.teach_style);
-            sessionStorage.setItem('teach_example', lastConfig.teach_example);
+           // Save to sessionStorage
+            sessionStorage.setItem('step1_style_keywords', lastConfig.style_keywords.join('\n'));
+            sessionStorage.setItem('step1_feedback_templates', lastConfig.feedback_templates.join('\n'));
+            sessionStorage.setItem('step2_selected_teach_style', lastConfig.teach_style);
+            sessionStorage.setItem('step2_teach_example', lastConfig.step2_teach_example);
 
            // Set archive_tid to the retrieved history session ID
             sessionStorage.setItem('archive_tid', archive_tid_local.trim());
@@ -507,7 +507,7 @@ function saveAndProceed_step2() {
         return;
     }
     
-    // Get step1 data from localStorage
+    // Get step1 data from sessionStorage
     const configData = window.feedbackInputFunctions.getStoredConfigData();
     
     // Prepare data for backend

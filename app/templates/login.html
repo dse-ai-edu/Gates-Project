@@ -94,11 +94,13 @@
   </div>
   <script>
     window.addEventListener('load', function() {
-      localStorage.removeItem('archive_tid');
-      localStorage.removeItem('step1_style_keywords');
-      localStorage.removeItem('step1_feedback_templates');
-      sessionStorage.removeItem('selected_teach_style');
-      sessionStorage.removeItem('teach_example');
+      localStorage.removeItem('tid');
+      localStorage.setItem('user');
+      sessionStorage.removeItem('archive_tid');
+      sessionStorage.removeItem('step1_style_keywords');
+      sessionStorage.removeItem('step1_feedback_templates');
+      sessionStorage.removeItem('step2_selected_teach_style');
+      sessionStorage.removeItem('step2_teach_example');
       sessionStorage.removeItem('locked_style');
       console.log("Clear System-related Vars.")
     });
@@ -118,7 +120,8 @@
         const result = await response.json();
         if (result.success) {
           await createSession();
-          localStorage.setItem('user', username);
+          localStorage.setItem('user', result.user);
+          localStorage.setItem('tid', result.token);
           window.location.href = '/step1';
         } else {
           const errorDiv = document.getElementById('error');
