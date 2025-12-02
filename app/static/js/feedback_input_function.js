@@ -381,6 +381,76 @@ function getStoredConfigData() {
     };
 }
 
+// Load prior setting from database
+function loadPriorSetting() {
+    const tid = prompt("Please enter the Transaction ID (tid) to retrieve your prior settings:");
+    
+    if (tid === null) {
+        // User cancelled the prompt
+        return;
+    }
+    
+    if (!tid.trim()) {
+        alert("Transaction ID cannot be empty");
+        return;
+    }
+    
+    const status = document.getElementById('save-status');
+    status.textContent = '🔄 Loading...';
+    status.style.color = 'blue';
+    
+    fetch('/api/comment/retrieve_style', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tid: tid.trim() })
+    }).then(response => {
+        if (!response.ok) {
+            throw Error('Retrieve failed! Please try again.');
+        }
+        return response.json();
+    }).then(result => {
+        if (result.success && result.config) {
+            // Get the last config element
+            const lastConfig = result.config[result.config.length - 1];
+            
+            // Save to localStorage
+            localStorage.setItem('step1_style_keywords', lastConfig.style_keywords.join('\n'));
+            localStorage.setItem('step1_feedback_templates', lastConfig.feedback_templates.join('\n'));
+            sessionStorage.setItem('selected_teach_style', lastConfig.teach_style);
+            sessionStorage.setItem('teach_example', lastConfig.teach_example);
+            
+            // Keep the original tid in sessionStorage
+            sessionStorage.setItem('tid', tid.trim());
+            
+            status.textContent = '✔️ Settings Loaded Successfully';
+            status.style.color = 'green';
+            
+            // Reload components to reflect loaded data
+            setTimeout(() => {
+                window.feedbackInputFunctions.initTeachingStyleComponent();
+                window.feedbackInputFunctions.initTeachingExampleComponent();
+            }, 500);
+            
+            // Auto-save after loading
+            setTimeout(() => {
+                saveAndProceed_step2();
+            }, 1500);
+        } else {
+            status.textContent = '❌ Load failed';
+            status.style.color = 'red';
+            alert("No Setting Found in our Records...");
+        }
+    }).catch(error => {
+        console.error(error);
+        status.textContent = '❌ Load failed';
+        status.style.color = 'red';
+        alert("No Setting Found in our Records...");
+    });
+}
+
+
 // ==================== Auto-initialization ====================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -437,5 +507,6 @@ window.feedbackInputFunctions = {
     // Utility functions
     getAllFormData,
     clearAllStoredData,
-    getStoredConfigData
+    getStoredConfigData,
+    loadPriorSetting
 };
