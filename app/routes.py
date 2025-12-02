@@ -14,7 +14,21 @@ from datetime import datetime, timedelta
 from pymongo import DESCENDING
 
 question_this = """
-What store offers the best deal? How do you know? Explain your decision. Options: SaveMore (5 count box, $1.25), BargainHut (12 count box, $2.40), CostLess (24 count box, $3.75).
+<p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
+<p>(a) f(x) = x<sup>ln(x)</sup></p>
+"""
+reference_this = """
+<p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
+<p>(a) f(x) = x<sup>ln(x)</sup></p>
+<p><strong>Solution:</strong></p>
+<p>To find the derivative of f(x) = x<sup>ln(x)</sup>, we use logarithmic differentiation.</p>
+<p>Take the natural logarithm of both sides:</p>
+<p>ln(f(x)) = ln(x) · ln(x) = (ln(x))<sup>2</sup></p>
+<p>Differentiate both sides with respect to x:</p>
+<p>f'(x)/f(x) = 2ln(x) · (1/x)</p>
+<p>Solve for f'(x):</p>
+<p>f'(x) = f(x) · 2ln(x)/x = x<sup>ln(x)</sup> · 2ln(x)/x</p>
+<p><strong>Answer: f'(x) = x<sup>ln(x)</sup> · 2ln(x)/x</strong> or equivalently <strong>f'(x) = 2x<sup>ln(x)-1</sup>ln(x)</strong></p>
 """
 # ==================== Page Route (returns HTML) ==================== #
 
@@ -248,7 +262,7 @@ def comment_submit():
             
             # Build user prompt with student answer (no scoring)
             user_prompt = utils.parse_teaching_text(
-                question=question_this,
+                question=question_this + "\n ## Refernce Answer is: " + reference_this,
                 answer=answer_text,
                 style_keywords=style_keywords,
                 feedback_templates=feedback_templates,

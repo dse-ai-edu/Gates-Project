@@ -145,7 +145,8 @@ def parse_teaching_text(
     
     # Step 3: final user text
     final_respond_prompt = macro_trait_prompt
-    final_respond_prompt += FEEDBACK_BASE.format(FEEDBACK_REQUIREMENT)
+    final_respond_prompt += FEEDBACK_BASE
+    # final_respond_prompt += "Below are requirements for your feedback response: {} \n".format(FEEDBACK_REQUIREMENT)
     final_respond_prompt += FEEDBACK_INPUT_BASE.format(question=question, answer=answer)
     if grading_prompt: final_respond_prompt += grading_prompt
     final_respond_prompt += macro_template_prompt

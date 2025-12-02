@@ -343,8 +343,7 @@ Here is the grading result of the same question and student answer for your refe
 FEEDBACK_BASE = """
 # Task
 Based on the given question and student answer, please generate a response to the student.
-
-Below are requirements for your feedback response: {} \n"""
+"""
 
 FEEDBACK_INPUT_BASE = """
 # Input Data
