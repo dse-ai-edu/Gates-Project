@@ -158,6 +158,11 @@
 
 <body>
     <h1 class="page-title">Auto Feedback Generation</h1>
+   <!-- Display current tid at top right -->
+    <div id="tid-display" style="position: absolute; top: 1rem; right: 2rem; color: #999; font-size: 0.9rem;">
+        Current tid is: <span id="tid-value">N/A</span>
+    </div>
+
     <div class="container">
         <!-- Navigation Buttons -->
         <div class="navigation-buttons">
@@ -449,6 +454,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             const generateFeedbackBtn = document.getElementById('generateFeedbackBtn');
             const feedbackDisplay = document.getElementById("feedback-display");
+            const tid = sessionStorage.getItem('tid') || 'N/A';
+            
+            document.getElementById('tid-value').textContent = tid;
             
             generateFeedbackBtn.addEventListener('click', function () {
                 const studentAnswer = document.getElementById('student-answer').value.trim();
