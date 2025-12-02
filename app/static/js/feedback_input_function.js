@@ -383,15 +383,18 @@ function getStoredConfigData() {
 
 // Load prior setting from database
 function loadPriorSetting() {
-    const tid = prompt("Please enter the Transaction ID (tid) to retrieve your prior settings:");
+   // Initialize archive_tid as empty string
+    sessionStorage.setItem('archive_tid', '');
     
-    if (tid === null) {
-        // User cancelled the prompt
+    const archive_tid_local = prompt("Please enter the History Session ID (archive_tid) to retrieve your prior settings:");
+    
+    if (archive_tid_local === null) {
+       // User cancelled the prompt
         return;
     }
     
-    if (!tid.trim()) {
-        alert("Transaction ID cannot be empty");
+    if (!archive_tid_local.trim()) {
+        alert("History Session ID cannot be empty");
         return;
     }
     
@@ -404,7 +407,7 @@ function loadPriorSetting() {
         headers: {
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ tid: tid.trim() })
+        body: JSON.stringify({ tid: archive_tid_local.trim() })
     }).then(response => {
         if (!response.ok) {
             throw Error('Retrieve failed! Please try again.');
@@ -412,28 +415,28 @@ function loadPriorSetting() {
         return response.json();
     }).then(result => {
         if (result.success && result.config) {
-            // Get the last config element
-            const lastConfig = result.config[result.config.length - 1];
+           // Get the last config element
+            const lastConfig = result.config;
             
-            // Save to localStorage
+           // Save to localStorage
             localStorage.setItem('step1_style_keywords', lastConfig.style_keywords.join('\n'));
             localStorage.setItem('step1_feedback_templates', lastConfig.feedback_templates.join('\n'));
             sessionStorage.setItem('selected_teach_style', lastConfig.teach_style);
             sessionStorage.setItem('teach_example', lastConfig.teach_example);
             
-            // Keep the original tid in sessionStorage
-            sessionStorage.setItem('tid', tid.trim());
+           // Set archive_tid to the retrieved history session ID
+            sessionStorage.setItem('archive_tid', archive_tid_local.trim());
             
             status.textContent = '✔️ Settings Loaded Successfully';
             status.style.color = 'green';
             
-            // Reload components to reflect loaded data
+           // Reload components to reflect loaded data
             setTimeout(() => {
                 window.feedbackInputFunctions.initTeachingStyleComponent();
                 window.feedbackInputFunctions.initTeachingExampleComponent();
             }, 500);
             
-            // Auto-save after loading
+           // Auto-save after loading
             setTimeout(() => {
                 saveAndProceed_step2();
             }, 1500);
@@ -441,12 +444,14 @@ function loadPriorSetting() {
             status.textContent = '❌ Load failed';
             status.style.color = 'red';
             alert("No Setting Found in our Records...");
+           // Keep archive_tid as empty string if retrieve failed
         }
     }).catch(error => {
         console.error(error);
         status.textContent = '❌ Load failed';
         status.style.color = 'red';
         alert("No Setting Found in our Records...");
+       // Keep archive_tid as empty string if retrieve failed
     });
 }
 
