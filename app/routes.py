@@ -338,6 +338,7 @@ def comment_submit():
     answer_text = data.get("student_answer", "")
     question_this = data.get("question", "")
     reference_this = data.get("reference", "")
+    history_prompt_dict = None
     
     try:
        # Determine which system_info to use
