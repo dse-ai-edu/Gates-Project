@@ -172,6 +172,6 @@ def format_response_html(response_text: str = "Placeholder of Response.", confid
             processed_confidence = float(number_str)
             processed_confidence = round(processed_confidence, 4)
     
-    confidence_display = f'<span style="color:#666;font-size:0.85em;">[conf: {processed_confidence:.4f}]</span>'
+    confidence_display =f'<span style="color:#fb827a;font-weight:bold;">[conf: {processed_confidence:.4f}]</span>'
     formatted_html = f"{html_text} <br> ----- <br> {confidence_display}"
     return formatted_html
