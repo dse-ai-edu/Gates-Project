@@ -325,6 +325,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
         
     except Exception as e:
         traceback.print_exc()
+        print(system_prompts_raw)
         return {'success': False, 'error': str(e)}
 
 @app.route('/api/comment/submit', methods=['POST'])
