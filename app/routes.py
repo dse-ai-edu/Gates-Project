@@ -9,7 +9,8 @@ from flask import render_template, request, jsonify
 
 import app.utils as utils
 import app.prompts as prompts
-from app import app, database, s3_client
+from app import app, database
+# from app import s3_client
 from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
