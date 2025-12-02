@@ -202,7 +202,17 @@ function resetToDefaultTemplate() {
 
 function getSelectedTeachingStyle() {
     const selectedRadio = document.querySelector('input[name="teaching-style"]:checked');
-    return selectedRadio ? selectedRadio.value : null;
+    if (selectedRadio) {
+        return selectedRadio.value;
+    }
+    
+   // Check if teaching style was set from sessionStorage
+    const storedStyle = sessionStorage.getItem('selected_teach_style');
+    if (storedStyle && storedStyle.trim()) {
+        return storedStyle;
+    }
+    
+    return null;
 }
 
 function saveTeachingStyleToStorage() {
@@ -423,7 +433,7 @@ function loadPriorSetting() {
             localStorage.setItem('step1_feedback_templates', lastConfig.feedback_templates.join('\n'));
             sessionStorage.setItem('selected_teach_style', lastConfig.teach_style);
             sessionStorage.setItem('teach_example', lastConfig.teach_example);
-            
+
            // Set archive_tid to the retrieved history session ID
             sessionStorage.setItem('archive_tid', archive_tid_local.trim());
             
