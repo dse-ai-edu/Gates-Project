@@ -23,7 +23,7 @@
 
             <div class="traverse-buttons">
                 <button class="t-button" onclick="goBack()">Back</button>
-                <button class="t-button" onclick="saveAndProceed_step2()">Save</button>
+                <button class="t-button" onclick="window.feedbackInputFunctions.saveAndProceed_step2()">Save</button>
                 <button class="t-button" style="background-color: #ff9800;" onclick="window.feedbackInputFunctions.loadPriorSetting()">Load Prior Setting</button>
             </div>
         </div>
@@ -91,73 +91,6 @@
             window.location.href = '/step1';
         }
         
-        // Save and proceed to step_final
-        function saveAndProceed_step2() {
-            const teachingStyle = window.feedbackInputFunctions.getSelectedTeachingStyle();
-            const additionalExamples = window.feedbackInputFunctions.getAdditionalExamples();
-            let tid = sessionStorage.getItem('tid');
-            
-            // Create session ID if it doesn't exist
-            if (!tid) {
-                tid = crypto.randomUUID();
-                sessionStorage.setItem('tid', tid);
-            }
-            
-            if (!teachingStyle) {
-                alert("❗ Please select a Primary Feedback Pattern");
-                return;
-            }
-            
-            // Get step1 data from localStorage
-            const configData = window.feedbackInputFunctions.getStoredConfigData();
-            
-            // Prepare data for backend
-            const styleData = {
-                'tid': tid,
-                'style_keywords': configData.style_keywords,
-                'feedback_templates': configData.feedback_templates,
-                'teach_style': teachingStyle,
-                'teach_example': additionalExamples || ''
-            };
-            
-            console.log('Sending styleData to backend:', styleData);
-            
-            // Show saving status
-            const status = document.getElementById('save-status');
-            status.textContent = '💾 Saving...';
-            status.style.color = 'blue';
-            
-            fetch('/api/comment/update_style', {
-                method: 'POST', 
-                headers: {
-                    'Content-Type': 'application/json'
-                }, 
-                body: JSON.stringify(styleData)
-            }).then(response => {
-                if (!response.ok) {
-                    throw Error('Save failed! Please try again.');
-                }
-                return response.json()
-            }).then(result => {
-                if (result.success) {
-                    status.textContent = '✔️ Saved';
-                    status.style.color = 'green';
-                    
-                    // Redirect to step_final after successful save
-                    setTimeout(() => {
-                        window.location.href = '/step_final';
-                    }, 1000);
-                } else {
-                    console.log("Failed result is", result);
-                    throw Error('Save failed! Please try again.');
-                }
-            }).catch(error => {
-                console.error(error);
-                status.textContent = '❌ Save failed';
-                status.style.color = 'red';
-                alert(error);
-            });
-        }
         
         // Initialize page
         window.addEventListener('load', loadComponents);
