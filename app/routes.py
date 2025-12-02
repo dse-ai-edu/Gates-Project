@@ -1,5 +1,6 @@
 import re
 import os
+import json
 import uuid
 import time
 import traceback
@@ -159,7 +160,7 @@ def configuration_final():
     data = request.get_json()
     tid = data.get('tid')
     try:
-        database['comment'].find_one_and_update(
+        database['comment_status'].find_one_and_update(
             {'tid': tid},
             {'$set': {
                 'completed': True,
@@ -261,9 +262,16 @@ def retrieve_style_config():
     
     return jsonify(response)
 
-def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict):
+def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
     """Generate personalized feedback response for student answer"""
-    if history_prompt_dict:
+    if predefined_flag:
+        import predefined_conf
+        predefined_data = predefined_conf.predefined_data
+        system_prompts_raw = {
+            "final": predefined_data[predefined_flag]["final"], 
+            "selected": predefined_data[predefined_flag]["selected"], 
+            "custom": predefined_data[predefined_flag]["custom"], }
+    elif history_prompt_dict:
         system_prompts_raw = history_prompt_dict
     else:
         try:
@@ -328,6 +336,17 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
         print(system_prompts_raw)
         return {'success': False, 'error': str(e)}
 
+# def predefined_comment_generate(flag, question_this, reference_this, answer_text):
+#     system_info = ""
+#     generate_result = comment_generate(
+#             system_info=system_info,
+#             answer_text=answer_text,
+#             question_text=question_this,
+#             reference_text=reference_this,
+#             history_prompt_dict = None
+#         )
+#     return generate_result
+
 @app.route('/api/comment/submit', methods=['POST'])
 def comment_submit():
     """Generate personalized feedback response for student answer (no scoring involved)"""
@@ -339,6 +358,7 @@ def comment_submit():
     answer_text = data.get("student_answer", "")
     question_this = data.get("question", "")
     reference_this = data.get("reference", "")
+    predefined_flag = data.get("predefined_flag", "")
     history_prompt_dict = None
     
     try:
@@ -371,7 +391,8 @@ def comment_submit():
             answer_text=answer_text,
             question_text=question_this,
             reference_text=reference_this,
-            history_prompt_dict = history_prompt_dict
+            history_prompt_dict = history_prompt_dict,
+            predefined_flag = predefined_flag
         )
         
         if not generate_result['success']:

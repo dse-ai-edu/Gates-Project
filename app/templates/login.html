@@ -109,6 +109,7 @@
       e.preventDefault();
       const username = document.getElementById('username').value;
       const password = document.getElementById('password').value;
+      console.log("receive username and password.")
       try {
         const response = await fetch('/api/login', {
           method: 'POST',
@@ -119,9 +120,11 @@
         });
         const result = await response.json();
         if (result.success) {
-          await createSession();
+          console.log("receive success signal.")
+          // await createSession();
           localStorage.setItem('user', result.user);
           localStorage.setItem('tid', result.token);
+          console.log("complete local set.")
           window.location.href = '/step1';
         } else {
           const errorDiv = document.getElementById('error');

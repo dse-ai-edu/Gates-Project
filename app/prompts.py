@@ -329,8 +329,8 @@ MACRO_TEMPLATE_BASE = """
  - 1. Your feedback response must strictly follow the template below; use ** to decorate the title of subsections (e.g., **title**).
  - 2. If there are comments in parentheses, e.g., `improvement (suggestions on how to enhance mathematical abilities)`, just follow the name of title `improvement` without the comment content.
  - 3. If there are colons, they indicate the hierarchical categories. 
-E.g., `improvement: knowledge to review & improvement: take-away question`,
-which indicates level-1 title `improvement` with two subsections `knowledge to review` and `take-away question`. 
+E.g., `A: X & A: Y`,
+which indicates level-1 title `A` with two subsections `X` and Y`. 
 
 The template is: {}.\n"""
 

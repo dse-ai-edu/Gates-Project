@@ -63,6 +63,7 @@
         
         // Load components
         async function loadComponents() {
+            sessionStorage.removeItem('predefined_conf')
             try {
                 // Load component 3
                 const response3 = await fetch("{{ url_for('static', filename='templates/feedback_function_3.html') }}");

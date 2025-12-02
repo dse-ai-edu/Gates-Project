@@ -155,7 +155,10 @@
         }
         
         // Initialize page
-        window.addEventListener('load', loadComponents);
+        window.addEventListener('load', function() {
+            sessionStorage.removeItem('predefined_conf');
+            loadComponents();
+        });
     </script>
 </body>
 </html>
