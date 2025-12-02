@@ -457,7 +457,7 @@
             const tid = sessionStorage.getItem('tid') || 'N/A';
             
             document.getElementById('tid-value').textContent = tid;
-            
+
             generateFeedbackBtn.addEventListener('click', function () {
                 const studentAnswer = document.getElementById('student-answer').value.trim();
                 if (!studentAnswer) {
@@ -478,10 +478,12 @@
             const studentAnswer = document.getElementById('student-answer').value;
             const resultBox = document.getElementById('result-textarea');
             const tid = sessionStorage.getItem('tid') || crypto.randomUUID();
+            const archive_tid = sessionStorage.getItem('archive_tid') || '';
             
             // Preparing to submit data
             const submitData = {
                 'tid': tid,
+                'archive_tid': archive_tid,
                 'student_answer': studentAnswer,
                 'style_keywords': currentConfig.style_keywords,
                 'feedback_templates': currentConfig.feedback_templates,
@@ -521,7 +523,7 @@
                     console.log('Feedback loaded successfully');
 
                     const htmlText  = loadResult.response;  
-                    // 1. 先渲染主体（带 <strong>、<span color>、<br> 等）
+                    // 1. First render the main body (with <strong>, <span color>, <br>, etc.).
                     resultBox.innerHTML = htmlText;
 
                     // 2. Add configuration information at the end (use <hr> with 15 horizontal lines for a simpler style)

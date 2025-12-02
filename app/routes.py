@@ -261,105 +261,265 @@ def retrieve_style_config():
     
     return jsonify(response)
 
+def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict):
+    """Generate personalized feedback response for student answer"""
+    if history_prompt_dict:
+        system_prompts_raw = history_prompt_dict
+    else:
+        try:
+            # Extract configuration from system
+            micro_feedback = system_info.get('micro_style', {})
+            macro_feedback = system_info.get('macro_style', {})
+            
+        # Get style descriptors and templates
+            style_keywords = macro_feedback.get('keywords', [])
+            feedback_templates = macro_feedback.get('templates', [])
+            
+        # Get teaching style and personalization
+            teach_style = micro_feedback.get('teach_style', 'DIRECT')
+            teach_example = micro_feedback.get('examples', '')
+            locked_style = macro_feedback.get('locked_style', False)
+            
+        # Build system prompt for feedback generation
+            system_prompts_raw = utils.parse_teaching_style(
+                teach_style=teach_style,
+                teach_example=teach_example,
+            )
+        except Exception as e:
+            traceback.print_exc()
+            return {'success': False, 'error': str(e)}
+
+    try:
+        # Build user prompt with student answer
+        system_prompt = system_prompts_raw['final']
+        custom_prompt = system_prompts_raw['custom'] if system_prompts_raw.get('custom', '') else None
+        user_prompt = utils.parse_teaching_text(
+            question=question_text + "\n ## Reference Answer is: " + reference_text,
+            answer=answer_text,
+            style_keywords=style_keywords,
+            feedback_templates=feedback_templates,
+            )
+        
+       # Generate feedback using LLM
+        feedback_text, feedback_prob = utils.llm_generate(
+            input_text=user_prompt,
+            system_text=system_prompt,
+            model='gpt-4o',
+            temperature=0.7, 
+            max_tokens=750,
+            logprobs=True
+        )
+        
+        return {
+            'success': True,
+            'feedback_text': feedback_text,
+            'feedback_prob': feedback_prob,
+            'style_keywords': style_keywords,
+            'feedback_templates': feedback_templates,
+            'teach_style': teach_style,
+            'teach_example': teach_example,
+            'system_prompt': system_prompt,
+            'selected_prompt': system_prompts_raw.get('selected', ""),
+            'custom_prompt': custom_prompt
+        }
+        
+    except Exception as e:
+        traceback.print_exc()
+        return {'success': False, 'error': str(e)}
+
 @app.route('/api/comment/submit', methods=['POST'])
 def comment_submit():
     """Generate personalized feedback response for student answer (no scoring involved)"""
     data = request.get_json()
     tid = data.get('tid')
+    archive_tid = data.get('archive_tid', "").strip()
     aid = data.get('aid', str(uuid.uuid4()))
     qid = data.get('qid')
     answer_text = data.get("student_answer", "")
-    model_name = 'gpt-4o'
+    question_this = data.get("question", "")
+    reference_this = data.get("reference", "")
     
     try:
-        system_info = database['comment_config'].find_one({'tid': tid})
-        if not system_info:
-            raise ValueError('Feedback system not found: {}'.format(tid))
-        
-        if answer_text.strip():
-            system_info = system_info['config']
-            system_info = system_info[-1] if isinstance(system_info, list) else system_info
-            # Extract configuration from system
-            micro_feedback = system_info.get('micro_style', {})
-            macro_feedback = system_info.get('macro_style', {})
-            
-            # Get style descriptors and templates
-            style_keywords = macro_feedback.get('keywords', [])
-            feedback_templates = macro_feedback.get('templates', [])
-            
-            # Get teaching style and personalization
-            teach_style = micro_feedback.get('teach_style', 'DIRECT')
-            teach_example = micro_feedback.get('examples', '')
-            locked_style = macro_feedback.get('locked_style', False)
-            
-            # Build system prompt for feedback generation (no scoring)
-            system_prompts = utils.parse_teaching_style(
-                teach_style=teach_style,
-                teach_example=teach_example,
-            )
+       # Determine which system_info to use
+        if archive_tid:
+            history_record = database['comment_config'].find_one({'tid': archive_tid})
+            if not history_record:
+                raise ValueError(f'Archive system not found: {archive_tid}')
+            history_system_info = history_record['config']
+            system_info = history_system_info[-1] if isinstance(history_system_info, list) else history_system_info
 
-            system_prompt = system_prompts['final']
-            custom_prompt = system_prompts['custom'] if system_prompts.get('custom', '') else None
-            
-            # Build user prompt with student answer (no scoring)
-            user_prompt = utils.parse_teaching_text(
-                question=question_this + "\n ## Refernce Answer is: " + reference_this,
-                answer=answer_text,
-                style_keywords=style_keywords,
-                feedback_templates=feedback_templates,
-            )
-            
-            # Generate feedback using LLM (no scoring)
-            model_name = 'gpt-4o'
-            feedback_text, feedback_prob = utils.llm_generate(
-                input_text=user_prompt,
-                system_text=system_prompt,
-                model=model_name,
-                temperature=0.7, 
-                max_tokens = 750,
-                logprobs=True
-            )
-            
-            # Store feedback in database (no scoring)
-            max_attempt_record = database['comment'].find_one(
-                {'tid': tid},
-                sort=[('attempt_id', -1)]
-                )
-            print(f">>>6>>> {max_attempt_record}")
-            next_attempt_id = (max_attempt_record.get('attempt_id', -1) + 1) if max_attempt_record else 0
-
-            database['comment'].insert_one({
-                'tid': tid,
-                'aid': aid,
-                'question': qid,
-                'attempt_id': next_attempt_id,
-                'student_answer': answer_text,
-                'generated_response': feedback_text,  # Changed from 'generated_feedback'
-                'system_config': {
-                    'style_keywords': style_keywords,
-                    'feedback_templates': feedback_templates,
-                    'teach_style': teach_style,
-                    'teach_example': teach_example,
-                    'final_prompt': system_prompt,
-                    'selected_prompt': system_prompts['selected'],
-                    'custom_prompt': custom_prompt
-                },
-                'confidence': feedback_prob,
-                'generated_at': datetime.utcnow()
-            })
-            print(f"insert one record with tid {tid} and atmp_id {next_attempt_id}")
-            print(f">>>8>>>{feedback_text}")
-            print(f">>>9>>>{feedback_prob}")
-            response = {'success': True, 'tid': tid, 'aid': aid, 'attempt_id': next_attempt_id}
+            try:
+                history_prompt_record = database['comment'].find_one({'tid': archive_tid}, sort=[('_id', -1)])
+                history_prompt_dict = history_prompt_record['system_config']
+            except:
+                history_prompt_dict = None
         else:
-            response = {'success': False, 'tid': tid, 'aid': aid}
+            current_record = database['comment_config'].find_one({'tid': tid})
+            if not current_record:
+                raise ValueError(f'Feedback system not found: {tid}')
+            current_system_info = current_record['config']
+            system_info = current_system_info[-1] if isinstance(current_system_info, list) else current_system_info
+        
+        if not answer_text.strip():
+            return jsonify({'success': False, 'error': 'Student answer cannot be empty'})
+        
+       # Generate feedback
+        generate_result = comment_generate(
+            system_info=system_info,
+            answer_text=answer_text,
+            question_text=question_this,
+            reference_text=reference_this,
+            history_prompt_dict = history_prompt_dict
+        )
+        
+        if not generate_result['success']:
+            return jsonify(generate_result)
+        
+       # Store feedback in database
+        max_attempt_record = database['comment'].find_one(
+            {'tid': tid},
+            sort=[('attempt_id', -1)]
+        )
+        
+        next_attempt_id = (max_attempt_record.get('attempt_id', -1) + 1) if max_attempt_record else 0
+
+        database['comment'].insert_one({
+            'tid': tid,
+            'aid': aid,
+            'question': qid,
+            'attempt_id': next_attempt_id,
+            'student_answer': answer_text,
+            'generated_response': generate_result['feedback_text'],
+            'system_config': {
+                'style_keywords': generate_result['style_keywords'],
+                'feedback_templates': generate_result['feedback_templates'],
+                'teach_style': generate_result['teach_style'],
+                'teach_example': generate_result['teach_example'],
+                'final_prompt': generate_result['system_prompt'],
+                'selected_prompt': generate_result['selected_prompt'],
+                'custom_prompt': generate_result['custom_prompt']
+            },
+            'confidence': generate_result['feedback_prob'],
+            'generated_at': datetime.utcnow()
+        })
+        
+        response = {'success': True, 'tid': tid, 'aid': aid, 'attempt_id': next_attempt_id}
             
     except Exception as e:
         traceback.print_exc()
         response = {'success': False, 'error': str(e)}
 
-    print(">>>1>>>", aid, next_attempt_id)
     return jsonify(response)
+
+# @app.route('/api/comment/submit', methods=['POST'])
+# def comment_submit():
+#     """Generate personalized feedback response for student answer (no scoring involved)"""
+#     data = request.get_json()
+#     tid = data.get('tid')
+#     archive_tid = data.get('archive_tid', "").strip()
+#     aid = data.get('aid', str(uuid.uuid4()))
+#     qid = data.get('qid')
+#     answer_text = data.get("student_answer", "")
+#     model_name = 'gpt-4o'
+    
+#     if archive_tid:
+#         try:
+#             history_system_info = database['comment_config'].find_one({'tid': archive_tid})
+#             history_system_info = history_system_info['config']
+#             system_info = history_system_info[-1] if isinstance(history_system_info, list) else history_system_info
+#         except Exception as e:
+#             traceback.print_exc()
+#             response = {'success': False, 'error': str(e)}
+#     else:
+#         try:
+#             system_info = database['comment_config'].find_one({'tid': tid})
+#             if not system_info:
+#                 raise ValueError('Feedback system not found: {}'.format(tid))
+            
+#             if answer_text.strip():
+#                 system_info = system_info['config']
+#                 system_info = system_info[-1] if isinstance(system_info, list) else system_info
+#                 # Extract configuration from system
+#                 micro_feedback = system_info.get('micro_style', {})
+#                 macro_feedback = system_info.get('macro_style', {})
+                
+#                 # Get style descriptors and templates
+#                 style_keywords = macro_feedback.get('keywords', [])
+#                 feedback_templates = macro_feedback.get('templates', [])
+                
+#                 # Get teaching style and personalization
+#                 teach_style = micro_feedback.get('teach_style', 'DIRECT')
+#                 teach_example = micro_feedback.get('examples', '')
+#                 locked_style = macro_feedback.get('locked_style', False)
+                
+#                 # Build system prompt for feedback generation (no scoring)
+#                 system_prompts = utils.parse_teaching_style(
+#                     teach_style=teach_style,
+#                     teach_example=teach_example,
+#                 )
+
+#                 system_prompt = system_prompts['final']
+#                 custom_prompt = system_prompts['custom'] if system_prompts.get('custom', '') else None
+                
+#                 # Build user prompt with student answer (no scoring)
+#                 user_prompt = utils.parse_teaching_text(
+#                     question=question_this + "\n ## Refernce Answer is: " + reference_this,
+#                     answer=answer_text,
+#                     style_keywords=style_keywords,
+#                     feedback_templates=feedback_templates,
+#                 )
+                
+#                 # Generate feedback using LLM (no scoring)
+#                 model_name = 'gpt-4o'
+#                 feedback_text, feedback_prob = utils.llm_generate(
+#                     input_text=user_prompt,
+#                     system_text=system_prompt,
+#                     model=model_name,
+#                     temperature=0.7, 
+#                     max_tokens = 750,
+#                     logprobs=True
+#                 )
+                
+#                 # Store feedback in database (no scoring)
+#                 max_attempt_record = database['comment'].find_one(
+#                     {'tid': tid},
+#                     sort=[('attempt_id', -1)]
+#                     )
+#                 print(f">>>6>>> {max_attempt_record}")
+#                 next_attempt_id = (max_attempt_record.get('attempt_id', -1) + 1) if max_attempt_record else 0
+
+#                 database['comment'].insert_one({
+#                     'tid': tid,
+#                     'aid': aid,
+#                     'question': qid,
+#                     'attempt_id': next_attempt_id,
+#                     'student_answer': answer_text,
+#                     'generated_response': feedback_text,  # Changed from 'generated_feedback'
+#                     'system_config': {
+#                         'style_keywords': style_keywords,
+#                         'feedback_templates': feedback_templates,
+#                         'teach_style': teach_style,
+#                         'teach_example': teach_example,
+#                         'final_prompt': system_prompt,
+#                         'selected_prompt': system_prompts['selected'],
+#                         'custom_prompt': custom_prompt
+#                     },
+#                     'confidence': feedback_prob,
+#                     'generated_at': datetime.utcnow()
+#                 })
+#                 print(f"insert one record with tid {tid} and atmp_id {next_attempt_id}")
+#                 print(f">>>8>>>{feedback_text}")
+#                 print(f">>>9>>>{feedback_prob}")
+#                 response = {'success': True, 'tid': tid, 'aid': aid, 'attempt_id': next_attempt_id}
+#             else:
+#                 response = {'success': False, 'tid': tid, 'aid': aid}
+                
+#         except Exception as e:
+#             traceback.print_exc()
+#             response = {'success': False, 'error': str(e)}
+
+#     print(">>>1>>>", aid, next_attempt_id)
+#     return jsonify(response)
 
 @app.route('/api/comment/load', methods=['GET'])
 def comment_load():
