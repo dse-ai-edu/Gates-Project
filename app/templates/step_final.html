@@ -271,8 +271,8 @@
         let isStyleLocked = false;  // From backend data (renamed to avoid conflict)
         let lockedStyleTmp = true;  // Local variable for UI control (renamed to avoid conflict)
         let currentConfig = {
-            style_keywords: [],
-            feedback_templates: [],
+            style_keywords: ['calculas teacher'],
+            feedback_templates: ['strength', 'weakness', 'improvement'],
             teach_style: '',
             teach_example: ''
         };
@@ -540,8 +540,8 @@
                     <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
                     <div style="color:#fb827a;">
                     Generated using: ${currentConfig.teach_style} style<br>
-                    Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: General academic feedback'}<br>
-                    Templates: ${currentConfig.feedback_templates.join(', ') || 'DEV: Standard structure'}
+                    Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: Default Traits'}<br>
+                    Templates: ${currentConfig.feedback_templates.join(', ') || 'DEV: Default Structure'}
                     </div>`;
                     
                 } else {

@@ -334,6 +334,12 @@ which indicates level-1 title `A` with two subsections `X` and Y`.
 
 The template is: {}.\n"""
 
+## remove personalization for template
+## focus on weakness, how to improve to meet the expectations --> how to improve to the weakness points
+## do not leak the solution directly
+## for learning purpose
+## remove step 1 and step 2. Write new content for step 3.
+
 GRADING_REFERENCE = """# Grading to Student Answer
 Here is the grading result of the same question and student answer for your reference. 
 ## Rubric for Student Answer: {grading_rubric}. 

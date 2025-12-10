@@ -125,7 +125,7 @@
           localStorage.setItem('user', result.user);
           localStorage.setItem('tid', result.token);
           console.log("complete local set.")
-          window.location.href = '/step1';
+          window.location.href = '/step2';
         } else {
           const errorDiv = document.getElementById('error');
           errorDiv.textContent = 'Invalid username or password';
