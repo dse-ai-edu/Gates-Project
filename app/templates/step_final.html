@@ -552,9 +552,7 @@
                 console.error('Error generating feedback:', error);
                 
                 // If the API call fails, display an error message.
-                resultTextarea.value = `❌ Error generating feedback: ${error.message}
-
-Please try again or check your configuration.`;
+                resultTextarea.value = `❌ Error generating feedback: ${error.message}. Please try again or check your configuration.`;
             });
         }
 
