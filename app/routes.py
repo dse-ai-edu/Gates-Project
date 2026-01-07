@@ -104,17 +104,36 @@ def configuration_final():
 @app.route('/api/demo/calculas', methods=['POST'])
 def catch_demo_answer():
     data = request.get_json()
-    q_index = data.get('question_index')
+    q_index = data.get('question_index') if data else None
+
+    if q_index is None:
+        return jsonify({'success': False, 'error': 'Missing question_index'}), 400
+
     with open("./static/data/calculas_qa_example.json", "r") as f:
         demo_data = json.load(f)
-    
-    q_index_str = f"q{str(int(q_index)+1)}"
-    demo_data_this = demo_data.get(q_index_str, "")
+
+    q_index_str = f"q{int(q_index) + 1}"
+    demo_data_this = demo_data.get(q_index_str)
+
     if not demo_data_this:
-        return jsonify({'success': False, 'answer_code_list': []})
-    answer_code_list = [demo_data_this[f"a{a_idx}"]["answer_code"] for a_idx in range(1, 6)]
-    response = {'success': True, 'answer_code_list': answer_code_list, "question_code": demo_data_this["content"]}
+        return jsonify({
+            'success': False,
+            'answer_code_list': [],
+            'error': f'Question {q_index_str} not found'
+        })
+
+    answer_code_list = [
+        demo_data_this[f"a{a_idx}"]["answer_code"]
+        for a_idx in range(1, 6)
+    ]
+
+    response = {
+        'success': True,
+        'answer_code_list': answer_code_list,
+        'question_code': demo_data_this["content"]
+    }
     return jsonify(response)
+
     
 
 # ==================== API Route (Style Setting) ==================== #
