@@ -63,12 +63,12 @@
         async function loadComponents() {
             try {
                 // Load component 1
-                const response1 = await fetch("{{ url_for('static', filename='templates/feedback_function_1.html') }}");
+                const response1 = await fetch("{{ url_for('static', filename='components/feedback_function_1.html') }}");
                 const html1 = await response1.text();
                 document.getElementById('feedback-function-1-container').innerHTML = html1;
                 
                 // Load component 2
-                const response2 = await fetch("{{ url_for('static', filename='templates/feedback_function_2.html') }}");
+                const response2 = await fetch("{{ url_for('static', filename='components/feedback_function_2.html') }}");
                 const html2 = await response2.text();
                 document.getElementById('feedback-function-2-container').innerHTML = html2;
                 

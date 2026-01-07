@@ -66,12 +66,12 @@
             sessionStorage.removeItem('predefined_conf')
             try {
                 // Load component 3
-                const response3 = await fetch("{{ url_for('static', filename='templates/feedback_function_3.html') }}");
+                const response3 = await fetch("{{ url_for('static', filename='components/feedback_function_3.html') }}");
                 const html3 = await response3.text();
                 document.getElementById('feedback-function-3-container').innerHTML = html3;
                 
                 // Load component 4
-                const response4 = await fetch("{{ url_for('static', filename='templates/feedback_function_4.html') }}");
+                const response4 = await fetch("{{ url_for('static', filename='components/feedback_function_4.html') }}");
                 const html4 = await response4.text();
                 document.getElementById('feedback-function-4-container').innerHTML = html4;
                 

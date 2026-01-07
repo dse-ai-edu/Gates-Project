@@ -78,6 +78,85 @@ def api_login():
         response = {'success': False, 'message': 'Authentication error'}
     return jsonify(response)
 
+# @app.route('/api/task/create', methods=['POST'])
+# def task_create():
+#     """Create or update feedback system configuration"""
+#     data = request.get_json()
+#     tid = data.get('tid')
+#     name = data.get('name')
+#     desc = data.get('desc')
+#     try:
+#         if not database['feedback_system'].find_one({'tid': tid}):
+#             database['feedback_system'].insert_one({
+#                 'tid': tid, 
+#                 'name': name, 
+#                 'desc': desc,
+#                 'created_at': datetime.utcnow(),
+#                 'updated_at': datetime.utcnow()
+#             })
+#         else:
+#             database['feedback_system'].find_one_and_update(
+#                 {'tid': tid}, 
+#                 {'$set': {
+#                     'name': name, 
+#                     'desc': desc,
+#                     'updated_at': datetime.utcnow()
+#                 }}
+#             )    
+#         response = {'success': True}
+#     except:
+#         traceback.print_exc()
+#         response = {'success': False}
+#     return jsonify(response)
+
+# @app.route('/api/task/show', methods=['POST'])
+# def task_show():
+#     """Show available feedback systems"""
+#     data = request.get_json()
+#     user = data.get('user')
+#     try:
+#         task_list = database['feedback_system'].find(
+#             {'tid': {'$exists': True}}, 
+#             {'tid': 1, 'name': 1, 'desc': 1, '_id': 0}
+#         ).to_list()
+#         response = {'task_list': task_list}
+#     except:
+#         traceback.print_exc()
+#         response = {}
+#     return jsonify(response)
+
+# @app.route('/api/section/save', methods=['POST'])
+# def section_save():
+#     """Save configuration data from step1 and step2"""
+#     data = request.get_json()
+#     try:
+#         database['feedback_system'].find_one_and_update(
+#             {'tid': data.get('tid')}, 
+#             {'$set': {**data, 'updated_at': datetime.utcnow()}},
+#             upsert=True
+#         )
+#         response = {'success': True}
+#     except:
+#         traceback.print_exc()
+#         response = {'success': False}
+#     return jsonify(response)
+
+# @app.route('/api/section/load', methods=['POST'])
+# def section_load():
+#     """Load configuration data for step1 and step2"""
+#     data = request.get_json()
+#     section = data.get('section')
+#     response = {}
+#     try:
+#         system_info = database['feedback_system'].find_one({'tid': data.get('tid')})
+#         if system_info:
+#             if section in ['base_style', 'macro_feedback']:
+#                 response = {'info': system_info.get(section, {})}
+#             else:
+#                 response = {'info': {}}
+#     except:
+#         traceback.print_exc()
+#     return jsonify(response)
 
 @app.route('/api/configuration/final', methods=['POST'])
 def configuration_final():
@@ -209,7 +288,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             feedback_templates = macro_feedback.get('templates', [])
             
         # Get teaching style and personalization
-            teach_style = micro_feedback.get('teach_style', '')
+            teach_style = micro_feedback.get('teach_style', 'tprl')
             teach_example = micro_feedback.get('examples', '')
             locked_style = macro_feedback.get('locked_style', False)
             
@@ -261,6 +340,16 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
         print(system_prompts_raw)
         return {'success': False, 'error': str(e)}
 
+# def predefined_comment_generate(flag, question_this, reference_this, answer_text):
+#     system_info = ""
+#     generate_result = comment_generate(
+#             system_info=system_info,
+#             answer_text=answer_text,
+#             question_text=question_this,
+#             reference_text=reference_this,
+#             history_prompt_dict = None
+#         )
+#     return generate_result
 
 @app.route('/api/comment/submit', methods=['POST'])
 def comment_submit():
@@ -349,6 +438,115 @@ def comment_submit():
 
     return jsonify(response)
 
+# @app.route('/api/comment/submit', methods=['POST'])
+# def comment_submit():
+#     """Generate personalized feedback response for student answer (no scoring involved)"""
+#     data = request.get_json()
+#     tid = data.get('tid')
+#     archive_tid = data.get('archive_tid', "").strip()
+#     aid = data.get('aid', str(uuid.uuid4()))
+#     qid = data.get('qid')
+#     answer_text = data.get("student_answer", "")
+#     model_name = 'gpt-4o'
+    
+#     if archive_tid:
+#         try:
+#             history_system_info = database['comment_config'].find_one({'tid': archive_tid})
+#             history_system_info = history_system_info['config']
+#             system_info = history_system_info[-1] if isinstance(history_system_info, list) else history_system_info
+#         except Exception as e:
+#             traceback.print_exc()
+#             response = {'success': False, 'error': str(e)}
+#     else:
+#         try:
+#             system_info = database['comment_config'].find_one({'tid': tid})
+#             if not system_info:
+#                 raise ValueError('Feedback system not found: {}'.format(tid))
+            
+#             if answer_text.strip():
+#                 system_info = system_info['config']
+#                 system_info = system_info[-1] if isinstance(system_info, list) else system_info
+#                 # Extract configuration from system
+#                 micro_feedback = system_info.get('micro_style', {})
+#                 macro_feedback = system_info.get('macro_style', {})
+                
+#                 # Get style descriptors and templates
+#                 style_keywords = macro_feedback.get('keywords', [])
+#                 feedback_templates = macro_feedback.get('templates', [])
+                
+#                 # Get teaching style and personalization
+#                 teach_style = micro_feedback.get('teach_style', 'DIRECT')
+#                 teach_example = micro_feedback.get('examples', '')
+#                 locked_style = macro_feedback.get('locked_style', False)
+                
+#                 # Build system prompt for feedback generation (no scoring)
+#                 system_prompts = utils.parse_teaching_style(
+#                     teach_style=teach_style,
+#                     teach_example=teach_example,
+#                 )
+
+#                 system_prompt = system_prompts['final']
+#                 custom_prompt = system_prompts['custom'] if system_prompts.get('custom', '') else None
+                
+#                 # Build user prompt with student answer (no scoring)
+#                 user_prompt = utils.parse_teaching_text(
+#                     question=question_this + "\n ## Refernce Answer is: " + reference_this,
+#                     answer=answer_text,
+#                     style_keywords=style_keywords,
+#                     feedback_templates=feedback_templates,
+#                 )
+                
+#                 # Generate feedback using LLM (no scoring)
+#                 model_name = 'gpt-4o'
+#                 feedback_text, feedback_prob = utils.llm_generate(
+#                     input_text=user_prompt,
+#                     system_text=system_prompt,
+#                     model=model_name,
+#                     temperature=0.7, 
+#                     max_tokens = 750,
+#                     logprobs=True
+#                 )
+                
+#                 # Store feedback in database (no scoring)
+#                 max_attempt_record = database['comment'].find_one(
+#                     {'tid': tid},
+#                     sort=[('attempt_id', -1)]
+#                     )
+#                 print(f">>>6>>> {max_attempt_record}")
+#                 next_attempt_id = (max_attempt_record.get('attempt_id', -1) + 1) if max_attempt_record else 0
+
+#                 database['comment'].insert_one({
+#                     'tid': tid,
+#                     'aid': aid,
+#                     'question': qid,
+#                     'attempt_id': next_attempt_id,
+#                     'student_answer': answer_text,
+#                     'generated_response': feedback_text,  # Changed from 'generated_feedback'
+#                     'system_config': {
+#                         'style_keywords': style_keywords,
+#                         'feedback_templates': feedback_templates,
+#                         'teach_style': teach_style,
+#                         'teach_example': teach_example,
+#                         'final_prompt': system_prompt,
+#                         'selected_prompt': system_prompts['selected'],
+#                         'custom_prompt': custom_prompt
+#                     },
+#                     'confidence': feedback_prob,
+#                     'generated_at': datetime.utcnow()
+#                 })
+#                 print(f"insert one record with tid {tid} and atmp_id {next_attempt_id}")
+#                 print(f">>>8>>>{feedback_text}")
+#                 print(f">>>9>>>{feedback_prob}")
+#                 response = {'success': True, 'tid': tid, 'aid': aid, 'attempt_id': next_attempt_id}
+#             else:
+#                 response = {'success': False, 'tid': tid, 'aid': aid}
+                
+#         except Exception as e:
+#             traceback.print_exc()
+#             response = {'success': False, 'error': str(e)}
+
+#     print(">>>1>>>", aid, next_attempt_id)
+#     return jsonify(response)
 
 @app.route('/api/comment/load', methods=['GET'])
 def comment_load():

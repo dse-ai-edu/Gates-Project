@@ -88,9 +88,8 @@ def parse_teaching_style(
         **kwarg) -> str:
 
     # Step 1: Process teach_style
-    standard_template = str(PLAIN)
-    teach_style_lower = teach_style.lower()
-
+    standard_template = str(TP_PLAIN) # default = plain style
+    teach_style_lower = teach_style.lower().strip()
     match teach_style_lower:
         case "tpha":
             standard_template = str(TP_HUMOROUS_ACTIVE)
