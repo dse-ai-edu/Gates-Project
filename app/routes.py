@@ -107,7 +107,9 @@ def catch_demo_answer():
     q_index = data.get('question_index')
     with open("./static/data/calculas_qa_example.json", "r") as f:
         demo_data = json.load(f)
-    demo_data_this = demo_data.get("q"+str(int(q_index)+1), "")
+    
+    q_index_str = f"q{str(int(q_index)+1)}"
+    demo_data_this = demo_data.get(q_index_str, "")
     if not demo_data_this:
         return jsonify({'success': False, 'answer_code_list': []})
     answer_code_list = [demo_data_this[f"a{a_idx}"]["answer_code"] for a_idx in range(1, 6)]
