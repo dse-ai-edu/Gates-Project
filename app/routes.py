@@ -109,7 +109,7 @@ def catch_demo_answer():
     if q_index is None:
         return jsonify({'success': False, 'error': 'Missing question_index'}), 400
 
-    with open("./static/data/calculas_qa_example.json", "r") as f:
+    with open("app/static/data/calculas_qa_example.json", "r") as f:
         demo_data = json.load(f)
 
     q_index_str = f"q{int(q_index) + 1}"
