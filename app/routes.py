@@ -288,7 +288,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             feedback_templates = macro_feedback.get('templates', [])
             
         # Get teaching style and personalization
-            teach_style = micro_feedback.get('teach_style', 'DIRECT')
+            teach_style = micro_feedback.get('teach_style', 'tprl')
             teach_example = micro_feedback.get('examples', '')
             locked_style = macro_feedback.get('locked_style', False)
             

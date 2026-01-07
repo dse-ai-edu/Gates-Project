@@ -10,6 +10,7 @@ import re
 from app import key_iter
 
 from app.prompts import *
+from app.pattern_prompt import *
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -88,21 +89,15 @@ def parse_teaching_style(
 
     # Step 1: Process teach_style
     standard_template = str(PLAIN)
-    teach_style_upper = teach_style.upper()
+    teach_style_lower = teach_style.lower()
 
-    match teach_style_upper:
-        case "AUTHORITATIVE":
-            standard_template = str(AUTHORITATIVE)
-        case "SOCRATIC":
-            standard_template = str(SOCRATIC)
-        case "NURTURING":
-            standard_template = str(NURTURING)
-        case "CONSTRUCTIVE":
-            standard_template = str(CONSTRUCTIVE)
-        case "DIRECT":
-            standard_template = str(DIRECT)
-        case "PLAIN":
-            standard_template = str(PLAIN)
+    match teach_style_lower:
+        case "tpha":
+            standard_template = str(TP_HUMOROUS_ACTIVE)
+        case "tprl":
+            standard_template = str(TP_RIGOROUS_LOGICAL)
+        case "tpcs":
+            standard_template = str(TP_CARING_SHARING)
     #  
     # Step 2: Generate personal template
     personal_template = ""
