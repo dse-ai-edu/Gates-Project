@@ -598,6 +598,16 @@
 
                     // 4. Clear student answer box
                     document.getElementById('student-answer').value = '';
+
+                    // 5. Reset answer image area (IMPORTANT)
+                    const imgWrapper = document.getElementById('answer-image-wrapper');
+                    const imgElem = document.getElementById('answer-image');
+
+                    if (imgWrapper && imgElem) {
+                        imgElem.src = '';
+                        imgWrapper.style.display = 'none';
+                    }
+
                 })
                 .catch(error => {
                     console.error('Error loading demo question:', error);
