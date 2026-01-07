@@ -173,9 +173,17 @@
         <!-- System Configuration Display -->
         <div class="section" id="details-display">
             <h2>Your Feedback System Configuration:</h2>
-
+            <!-- <div style="margin-bottom: 1.5rem;">
+                <button class="conf-btn" style="background-color: #ff9800;" data-index="0">conf 1</button>
+                <button class="conf-btn" style="background-color: #ff9800;" data-index="1">conf 2</button>
+                <button class="conf-btn" style="background-color: #ff9800;" data-index="2">conf 3</button>
+                <button class="conf-btn" style="background-color: #ff9800;" data-index="3">conf 4</button>
+            </div> -->
             <div class="four-panel-layout">
+                <!-- Unlock/Lock button for all panels -->
+                <!-- <button class="unlock-button" id="unlock-settings-btn" onclick="toggleLockSettings()">---</button> -->
                 
+
                 <!-- Panel 1: Style Keywords -->
                 <div class="panel-display" id="panel-style-keywords">
                     <h3>Style Keywords</h3>
@@ -203,29 +211,20 @@
         </div>
 
         <!-- Student Answer Input -->
-        <div class="section" id="question-input">
-            <h2>Question</h2>
-            <div id="sampleQuestionButtons" style="margin-bottom: 15px;">
-                <button class="sample-q-btn" data-index="0">Q1</button>
-                <button class="sample-q-btn" data-index="1">Q2</button>
-                <button class="sample-q-btn" data-index="2">Q3</button>
-                <button class="sample-q-btn" data-index="3">Q4</button>
-                <button class="sample-q-btn" data-index="4">Q5</button>
-            </div>
-            <div id="questionTextArea">
-                <textarea id="question-text" placeholder="Question content will appear here..."></textarea>
-            </div>
+        <div class="section" id="question-display">
+            <p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
+            <p>(a) f(x) = x<sup>ln(x)</sup></p>
         </div>
 
         <!-- Student Answer Input -->
         <div class="section" id="student-input">
             <h2>Student Answer Input</h2>
             <div id="sampleAnswerButtons" style="margin-bottom: 15px;">
-                <button class="sample-a-btn" data-index="0">Answer1</button>
-                <button class="sample-a-btn" data-index="1">Answer2</button>
-                <button class="sample-a-btn" data-index="2">Answer3</button>
-                <button class="sample-a-btn" data-index="3">Answer4</button>
-                <button class="sample-a-btn" data-index="4">Answer5</button>
+                <button class="sample-btn" data-index="0">ans1</button>
+                <button class="sample-btn" data-index="1">ans2</button>
+                <button class="sample-btn" data-index="2">ans3</button>
+                <button class="sample-btn" data-index="3">ans4</button>
+                <button class="sample-btn" data-index="4">ans5</button>
             </div>
             <div id="textInputArea">
                 <textarea id="student-answer" placeholder="Write the student answer here..."></textarea>
@@ -313,7 +312,40 @@
             });
         }
         
-
+        // Lock/Unlock functionality
+        // function toggleLockSettings() {
+        //     if (isStyleLocked) return; // Cannot toggle if locked from backend
+            
+        //     lockedStyleTmp = !lockedStyleTmp;
+            
+        //     if (!lockedStyleTmp) {
+        //         // Unlocking - switch to edit mode
+        //         loadEditableComponents();
+        //     } else {
+        //         // Locking - save current state and switch to display mode
+        //         updateCurrentConfigFromUI();
+        //         saveCurrentConfiguration();
+        //         displayConfigurationAsText();
+        //     }
+            
+        //     updateLockButtonState();
+        // }
+        
+        // function updateLockButtonState() {
+        //     const button = document.getElementById('unlock-settings-btn');
+            
+        //     if (isStyleLocked) {
+        //         button.textContent = 'Locked';
+        //         button.disabled = true;
+        //         button.classList.remove('unlocked');
+        //         lockedStyleTmp = true;
+        //     } else {
+        //         button.textContent = lockedStyleTmp ? 'Setting O' : 'Setting L';
+        //         button.disabled = false;
+        //         button.classList.toggle('unlocked', !lockedStyleTmp);
+        //     }
+        // }
+        
         // Load configuration data from stored sources
         function loadConfiguredSystem() {
             const configData = window.feedbackInputFunctions.getStoredConfigData();
@@ -321,7 +353,7 @@
             currentConfig = {
                 style_keywords: configData.style_keywords,
                 feedback_templates: configData.feedback_templates,
-                teach_style: configData.teach_style || 'tp0',
+                teach_style: configData.teach_style || 'DIRECT',
                 teach_example: configData.teach_example
             };
             
@@ -525,83 +557,73 @@
         }
 
 
-        // Tmp: give pre-defined answers for demo
-        // const sampleAnswers = [
-        //     "Take ln on both sides, differentiate: f′(x) = x^(ln x + 1). Easy!",
-        //     "Oops, I forgot the chain bit: f′(x) = x^·ln x. Still looks neat.",
-        //     "Power rule only, right? f′(x) = ln x·x^. Voilà!",
-        //     "Wait, derivative of ln x is 1/x, so f′(x) = x^·(1/x). Done.",
-        //     "Mixed up everything: f′(x) = ln x·x^ + x^. Whatever, close enough."
+        // Pre-defined configuration sets for demo
+        // const predefinedConfigs = [
+        //     {
+        //         style_keywords: ['Motivating', 'Positive'],
+        //         feedback_templates: ['strength', 'weakness', 'improvement'],
+        //         teach_style: 'SOCRATIC',
+        //         teach_example: ''
+        //     },
+        //     {
+        //         style_keywords: ['Humor', 'Creative'],
+        //         feedback_templates: ['Answer Analysis', 'Suggestion', 'Follow-up Question'],
+        //         teach_style: 'NURTURING ',
+        //         teach_example: ''
+        //     },
+        //     {
+        //         style_keywords: ['Motivating', 'Positive'],
+        //         feedback_templates: ['strength', 'weakness', 'improvement'],
+        //         teach_style: 'SOCRATIC',
+        //         teach_example: '- INCREDIBLE! Your u-substitution EXPLODED that integral into pure pi/2 ELEGANCE. Keep riding that WAVE of algebraic LIGHTNING!; // - WOW! You TAMED the Taylor series; the terms lined up like a rocket launch and BLASTED toward e^x PERFECTION—stay in this ORBIT! // - FANTASTIC! Your epsilon-delta BALLET DANCED the limit right into zero\'s arms—let this ENERGY FUEL every proof ahead! %% [HIGH ENERGY EXCITEMENT STYLE]'
+        //     },
+        //     {
+        //         style_keywords: ['Motivating', 'Positive'],
+        //         feedback_templates: ['strength', 'weakness', 'improvement'],
+        //         teach_style: 'SOCRATIC',
+        //         teach_example: '- PICTURE your Riemann sum as tiny LEGO bricks—SNAP, they stack into a smooth curved ramp under your pencil! // - IMAGINE the derivative as a zoom lens—your focus TWISTED and the slope POPPED into crystal-clear view! // - VISUALIZE the volume integral as onion layers—your integral PEELS each ring and stacks them into a perfect SPHERE of area! %% [VISUAL METAPHOS ANALOGY STYLE]'
+        //     }
         // ];
 
-        // document.querySelectorAll('.sample-btn').forEach(btn => {
+        // // Load configuration from predefined set
+        // function loadPredefinedConfig(index) {
+        //     if (index < 0 || index >= predefinedConfigs.length) {
+        //         return;
+        //     }
+            
+        //     const config = predefinedConfigs[index];
+        //    // Set new configuration to sessionStorage
+        //     sessionStorage.setItem('step1_style_keywords', config.style_keywords.join('\n'));
+        //     sessionStorage.setItem('step1_feedback_templates', config.feedback_templates.join('\n'));
+        //     sessionStorage.setItem('step2_selected_teach_style', config.teach_style);
+        //     sessionStorage.setItem('step2_teach_example', config.teach_example);
+            
+        //    // Reload configuration to update page display
+        //     loadConfiguredSystem();
+        //     sessionStorage.setItem('predefined_conf', index)
+        // }
+
+        // // Add event listeners to configuration buttons
+        // document.querySelectorAll('.conf-btn').forEach(btn => {
         //     btn.addEventListener('click', function() {
         //         const index = parseInt(this.dataset.index);
-        //         document.getElementById('student-answer').value = sampleAnswers[index];
+        //         loadPredefinedConfig(index);
         //     });
-        // };
-    
-        // Store answers loaded from backend
-        let currentSampleAnswers = [];
+        // });
 
-        // -------------------------------------
-        // Step 1: Click Q button → load question + answers
-        // -------------------------------------
-        document.querySelectorAll('.sample-q-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
-                const qIndex = parseInt(this.dataset.index);
+        // Tmp: give pre-defined answers for demo
+        const sampleAnswers = [
+            "Take ln on both sides, differentiate: f′(x) = x^(ln x + 1). Easy!",
+            "Oops, I forgot the chain bit: f′(x) = x^·ln x. Still looks neat.",
+            "Power rule only, right? f′(x) = ln x·x^. Voilà!",
+            "Wait, derivative of ln x is 1/x, so f′(x) = x^·(1/x). Done.",
+            "Mixed up everything: f′(x) = ln x·x^ + x^. Whatever, close enough."
+        ];
 
-                fetch('/api/demo/calculas', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        question_index: qIndex
-                    })
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (!result.success) {
-                        throw new Error(result.error || 'Failed to load demo question');
-                    }
-
-                    // 1. Fill question textarea
-                    document.getElementById('question-text').value = result.question || '';
-
-                    // 2. Cache answers
-                    currentSampleAnswers = Array.isArray(result.answers)
-                        ? result.answers
-                        : [];
-
-                    // 3. Update sample-a button labels (optional but useful UX)
-                    document.querySelectorAll('.sample-a-btn').forEach((btn, i) => {
-                        btn.textContent = `Answer${i + 1}`;
-                    });
-
-                    // 4. Clear student answer box
-                    document.getElementById('student-answer').value = '';
-                })
-                .catch(error => {
-                    console.error('Error loading demo question:', error);
-                    alert('Failed to load demo question.');
-                });
-            });
-        });
-
-
-        // -------------------------------------
-        // Step 2: Click Answer button → fill student answer
-        // -------------------------------------
-        document.querySelectorAll('.sample-a-btn').forEach(btn => {
-            btn.addEventListener('click', function () {
+        document.querySelectorAll('.sample-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
                 const index = parseInt(this.dataset.index);
-                // Guard: no question loaded yet
-                if (!currentSampleAnswers.length) {
-                    return;
-                }
-                document.getElementById('student-answer').value =
-                    currentSampleAnswers[index] || '';
+                document.getElementById('student-answer').value = sampleAnswers[index];
             });
         });
     </script>
