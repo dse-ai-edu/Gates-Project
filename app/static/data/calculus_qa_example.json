@@ -102,7 +102,7 @@
     "a3": {
       "content": "",
       "image": "./img/q4_a3.png",
-      "answer_code": "I’m having trouble reading the handwritten content clearly enough to transcribe it faithfully. Could you provide a higher-resolution image or a crop of the handwritten area? Once I can see the lines more clearly, I’ll extract the student answers exactly as written."
+      "answer_code": "[MKP] \\[\\sin\\!\\left(\\cot^{-1}\\!\\left(\\frac{2\\sec(\\tan^{-1}(x))}{x^2}\\right)\\right)\n= \\sin\\!\\left(\\frac{2\\sec(\\tan^{-1}(x))}{\\cot^{-1}(x^2)}\\right)\n= \\sin\\!\\left(2\\cot^{-1}(\\tan^{-1}(x))\\right)\n= \\frac{\\sin\\!\\left(2\\cot^{-1}(\\tan^{-1}(x))\\right)}{\\sin\\!\\left(\\cos\\!\\left(\\cot^{-1}(x^2)\\right)\\right)}\n= \\frac{\\tan\\!\\left(2\\cot^{-1}(\\tan^{-1}(x))\\right)}{\\sin\\!\\left(\\cot^{-1}(x^2)\\right)}\\]"
     },
     "a4": {
       "content": "",
