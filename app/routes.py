@@ -101,7 +101,7 @@ def configuration_final():
 
 
 # ==================== API Route (QA demo) ==================== #
-@app.route('/api/demo/calculas', methods=['POST'])
+@app.route('/api/demo/calculus ', methods=['POST'])
 def catch_demo_answer():
     data = request.get_json()
     q_index = data.get('question_index') if data else None
@@ -109,7 +109,7 @@ def catch_demo_answer():
     if q_index is None:
         return jsonify({'success': False, 'error': 'Missing question_index'}), 400
 
-    with open("app/static/data/calculas_qa_example.json", "r") as f:
+    with open("app/static/data/calculus _qa_example.json", "r") as f:
         demo_data = json.load(f)
 
     q_index_str = f"q{int(q_index) + 1}"

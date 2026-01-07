@@ -284,7 +284,7 @@
         let isStyleLocked = false;  // From backend data (renamed to avoid conflict)
         let lockedStyleTmp = true;  // Local variable for UI control (renamed to avoid conflict)
         let currentConfig = {
-            style_keywords: ['calculas teacher'],
+            style_keywords: ['calculus  teacher'],
             feedback_templates: ['strength', 'weakness', 'improvement'],
             teach_style: '',
             teach_example: ''
@@ -564,7 +564,7 @@
             btn.addEventListener('click', function () {
                 const qIndex = parseInt(this.dataset.index);
 
-                fetch('/api/demo/calculas', {
+                fetch('/api/demo/calculus ', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
