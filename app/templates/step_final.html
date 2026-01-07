@@ -228,7 +228,19 @@
                 <button class="sample-a-btn" data-index="4">Answer5</button>
             </div>
             <div id="textInputArea">
+                <!-- Answer Code Preview -->
                 <textarea id="student-answer" placeholder="Write the student answer here..."></textarea>
+
+                <!-- Answer Image Preview -->
+                <div id="answer-image-wrapper" style="margin-top:10px; display:none;">
+                    <img id="answer-image"
+                        style="
+                            width:100px;
+                            height:75px;
+                            object-fit:contain;
+                            border:1px solid #ccc;
+                        ">
+                </div>
             </div>
             <br>
             <button id="generateFeedbackBtn">Generate Feedback</button>
@@ -543,6 +555,7 @@
     
         // Store answers loaded from backend
         let currentSampleAnswers = [];
+        let currentSampleAnswerImages = [];
 
         // -------------------------------------
         // Step 1: Click Q button → load question + answers
@@ -573,6 +586,10 @@
                     currentSampleAnswers = Array.isArray(result.answer_code_list)
                         ? result.answer_code_list
                         : [];
+                    
+                    currentSampleAnswerImages = Array.isArray(result.answer_img_list)
+                        ? result.answer_img_list
+                        : [];
 
                     // 3. Update sample-a button labels (optional but useful UX)
                     document.querySelectorAll('.sample-a-btn').forEach((btn, i) => {
@@ -600,8 +617,37 @@
                 if (!currentSampleAnswers.length) {
                     return;
                 }
-                document.getElementById('student-answer').value =
-                    currentSampleAnswers[index] || '';
+
+                // Update Cache Student Answer
+                document.querySelectorAll('.sample-a-btn').forEach(btn => {
+                    btn.addEventListener('click', function () {
+                        const index = parseInt(this.dataset.index);
+
+                        if (!currentSampleAnswers.length) {
+                            return;
+                        }
+
+                        // 1 fill ans code
+                        document.getElementById('student-answer').value =
+                            currentSampleAnswers[index] || '';
+
+                        // 2 put img
+                        const imgWrapper = document.getElementById('answer-image-wrapper');
+                        const imgElem = document.getElementById('answer-image');
+
+                        const imgPath = currentSampleAnswerImages[index];
+                        if (imgPath) {
+                            // "./img/q1_a1.png" → "/static/img/Images_aug/q1_a1.png"
+                            const filename = imgPath.split('/').pop();
+                            imgElem.src = `/static/img/Images_aug/${filename}`;
+                            imgWrapper.style.display = 'block';
+                        } else {
+                            imgWrapper.style.display = 'none';
+                            imgElem.src = '';
+                        }
+                    });
+                });
+                // Done Student Answer
             });
         });
     </script>

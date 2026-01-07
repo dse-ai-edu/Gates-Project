@@ -119,6 +119,7 @@ def catch_demo_answer():
         return jsonify({
             'success': False,
             'answer_code_list': [],
+            answer_img_list: [],
             'error': f'Question {q_index_str} not found'
         })
 
@@ -126,10 +127,16 @@ def catch_demo_answer():
         demo_data_this[f"a{a_idx}"]["answer_code"]
         for a_idx in range(1, 6)
     ]
+    
+    answer_img_list = [
+        demo_data_this[f"a{a_idx}"]["image"]
+        for a_idx in range(1, 6)
+    ]
 
     response = {
         'success': True,
         'answer_code_list': answer_code_list,
+        'answer_img_list': answer_img_list,
         'question_code': demo_data_this["content"]
     }
     return jsonify(response)
