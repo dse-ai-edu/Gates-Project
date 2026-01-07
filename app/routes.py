@@ -55,7 +55,7 @@ def step_final():
     return render_template('step_final.html')
 
 
-# ==================== API Route (returns JSON) ==================== #
+# ==================== API Route (System Setting) ==================== #
 
 @app.route('/api/login', methods=['POST'])
 def api_login():
@@ -100,6 +100,22 @@ def configuration_final():
     return jsonify(response)
 
 
+# ==================== API Route (QA demo) ==================== #
+@app.route('/api/demo/calculas', methods=['POST'])
+def catch_demo_answer():
+    data = request.get_json()
+    q_index = data.get('question_index')
+    with open("./static/data/calculas_qa_example.json", "r") as f:
+        demo_data = json.load(f)
+    demo_data_this = demo_data.get(str(int(q_index)+1), "")
+    if not demo_data_this:
+        return jsonify({'success': False, 'answer_code_list': []})
+    answer_code_list = [demo_data_this[f"a{a_idx}"]["answer_code"] for a_idx in range(1, 6)]
+    response = {'success': True, 'answer_code_list': answer_code_list, "question_code": demo_data_this["content"]}
+    return jsonify(response)
+    
+
+# ==================== API Route (Style Setting) ==================== #
 @app.route('/api/comment/update_style', methods=['POST'])
 def update_style_config():
     data = request.get_json()

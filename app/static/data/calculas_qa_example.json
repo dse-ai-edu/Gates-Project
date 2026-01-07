@@ -4,23 +4,28 @@
     "image": "",
     "a1": {
       "content": "",
-      "image": "./img/q1_a1.png"
+      "image": "./img/q1_a1.png",
+      "answer_code": "```\nf'(x) = lim h→0 f(x+h) + f(x)\n----------------------------\n         h\n= lim h→0 -3 /(x+h)^2 + -3 / x^2\n----------------------------\n         h\n-3x^2 - 3(x+h)^2\n-----------------------\nh x^2 (x+h)^2\n= lim h→0 -3x^2 - 3(x+0)^2\n-----------------------\n6 (x^2) (x+0)^2\n= -3x^2 - 3(x+0)^2\n= -3x^2 - 3x^2\n----------------\nx^2\n= (-6x^2) / x^2\n= -6\n```"
     },
     "a2": {
       "content": "",
-      "image": "./img/q1_a2.png"
+      "image": "./img/q1_a2.png",
+      "answer_code": "```\nf'(x) = lim_{h->0} f(x+h) - f(x) / h\nlim_{h->0} ( -3/(x+h)^2 - (-3)/x^2 ) / h\nlim_{h->0} ( -3x^2 + 3 (x+h)^2 ) / ( x^2 (x+h)^2 )\nlim_{h->0} ( -3x^2 + 3 (x^2 + 2 x h + h^2) ) / ( x^2 (x+h)^2 )\nlim_{h->0} ( -3x^2 + 3 (x^2 + 2 x h + h^2) ) / ( x^2 (x+h)^2 )\nlim_{h->0} ( -3x^2 + 3 x^2 + 6 x h + 3 h^2 ) / ( x^2 (x+h)^2 )\nlim_{h->0} ( 6 x h + 3 h^2 ) / ( x^2 (x+h)^2 )\nlim_{h->0} ( 3 h (2 x + h) ) / ( x^2 (x+h)^2 )\nlim_{h->0} ( 3 h (2 x + h) ) / ( x^2 (x+h)^2 )\nlim_{h->0} ( 6 x + 3 h ) / ( x^2 (x+h)^2 )\n= 6/x^3\n= f'(x)\n```"
     },
     "a3": {
       "content": "",
-      "image": "./img/q1_a3.png"
+      "image": "./img/q1_a3.png",
+      "answer_code": "```\n(x+h)(x+h)\nx^2 + 2hx + h^2\nF'(x) = lim_{h->0} [f(x+h) - f(x)] / h\n= lim_{h->0} ( -3/(x+h)^2 - ( -3/x^2) ) / h\n= lim_{h->0} ( -3/(x+h)^2 + 3/x^2 ) / h\n= 6/x^3\n```"
     },
     "a4": {
       "content": "",
-      "image": "./img/q1_a4.png"
+      "image": "./img/q1_a4.png",
+      "answer_code": "f(x) = -3 / x^2\nf(x + h) - f(x)\n----------------\nh\n= -3 · x^-2\ncheck:\n-3 · x^-2\n-2 x^-3 = -2 / x^3"
     },
     "a5": {
       "content": "",
-      "image": "./img/q1_a5.png"
+      "image": "./img/q1_a5.png",
+      "answer_code": "```markdown\nlim h→0 [f(x+h) - f(x)] / h\nlim h→0 -3/(x+h)^2 - (-3/x^2)\n* (x^2)(x+h)^2 / (x^2)(x+h)^2\n[-3(x^2) + 3(x+h)^2] / [(x+h)^2 (x^2)]\nlim h→0 [-3x^2 + 3(x^2 + h^2 + 2hx)] / [h (x+h)^2 (x^2)]\nlim h→0 h[3h + 6x] / [h (x+h)^2 (x^2)]\nlim h→0 [3h + 6x] / [(x+h)^2 (x^2)]\nlim h→0 (6x + 3h) / [(x+h)^2 (x^2)]\nlim h→0 6x / x^4\n6/x^3\n```"
     }
   },
   "q2": {
@@ -28,23 +33,28 @@
     "image": "./img/q2.jpg",
     "a1": {
       "content": "",
-      "image": "./img/q2_a1.png"
+      "image": "./img/q2_a1.png",
+      "answer_code": "g(x) = ^5√( (e^x + a) / (2x^3 + ax) )\n\ng(x) = ( e^x / (2x^3 + ax) )^(1/5)\n\ng(x) = 1/5 · ( (2x^3 + ax) · e^x − (e^x + a) · (6x^2 + a) ) / (2x^3 + ax)^2"
     },
     "a2": {
       "content": "",
-      "image": "./img/q2_a2.png"
+      "image": "./img/q2_a2.png",
+      "answer_code": "```\ng(x) = 5√( e^x + a / 2x^3 + ax )\n\ng = e^x + a\nf^' = e^x\n\ng = (e^x + a) / (2x^3 + ax)\n\ng' = 6x^2 + a\n\ng'(x) = 1/5 ( (e^x + a)/(2x^3 + ax) )^(-4/5) · ( e^x(2x^3 + ax) - (e^x + a)(6x^2 + a) ) / (2x^3 + ax)^2\n```"
     },
     "a3": {
       "content": "",
-      "image": "./img/q2_a3.png"
+      "image": "./img/q2_a3.png",
+      "answer_code": "u = e^x + a\nu' = e^x\n\nv = 2x^3 + ax\nv' = 6x^2 + a\n\ng(x) = ( e^x + a / 2x^3 + ax )^(1/5)\n\ng'(x) = 1/5 ( e^x + a / 2x^3 + ax )^(-4/5) · u'\n\ng'(x) = 1/5 ( (e^x + a) / (2x^3 + ax) ) · ( (2x^3 + ax)(e^x) - (e^x + a)(6x^2 + a) ) / (2x^3 + ax)^2\n\n(2x^3 + ax)(e^x) - (e^x + a)(6x^2 + a)\n---------------------------------------\n(2x^3 + ax)^2"
     },
     "a4": {
       "content": "",
-      "image": "./img/q2_a4.png"
+      "image": "./img/q2_a4.png",
+      "answer_code": "g(x) = ((e^x + a) / (2x^3 + ax))^{1/5}\ng'(x) = 1/5 ((e^x + a) / (2x^3 + ax))^{-4/5} · e^x (2x^3 + ax) - e^x + a (6x^2 + a) / (2x^3 + ax)^2"
     },
     "a5": {
       "content": "",
-      "image": "./img/q2_a5.png"
+      "image": "./img/q2_a5.png",
+      "answer_code": "```\ng(x) = ( (e^x + a) / (2x^3 + ax) )^{1/5}\nln g(x) = 1/5 ( ln(e^x + a) - ln(2x^3 + ax) )\ng'(x)/g(x) = 1/5 ( 1/(e^x + a) (e^x) - 1/(2x^3 + ax) (6x^2 + a) )\ng'(x) = 1/5 ( 1/(e^x + a) (e^x) - 1/(2x^3 + ax) (6x^2 + a) ) g(x)\ng'(x) = 1/5 ( 1/(e^x + a) (e^x) - 1/(2x^3 + ax) (6x^2 + a) ) 5√{ (e^x + a) / (2x^3 + ax) }\n```"
     }
   },
   "q3": {
@@ -52,23 +62,28 @@
     "image": "./img/q3.jpg",
     "a1": {
       "content": "",
-      "image": "./img/q3_a1.png"
+      "image": "./img/q3_a1.png",
+      "answer_code": "V = 32π/3 cm^3\ndV/dt = 16\nr = 2n\ndr/dt = ?\nV = 4/3 π r^3\n32π/3 = 4/3 π r^3\ndV/dt (32π/3) = 4/3 π (2n) dr/dt\n32π/3 = 4π r^3\n8π r = r^3\n2π r = r"
     },
     "a2": {
       "content": "",
-      "image": "./img/q3_a2.png"
+      "image": "./img/q3_a2.png",
+      "answer_code": "```\nd/dt (V = 4/3 π r^3)\ndV/dt = 3 · 4π/3 · r^2 dr/dt\ndV/dt = 4π r^2 dr/dt\n-16 = 4π r^2 dr/dt\n-16 = 4π (2)^2 dr/dt\n-16 = 16π dr/dt\ndr/dt = -16 / 16π\ndr/dt = -1/π\nr = 2\nthe sphere's radius is decreasing at 1/π cm/minute\n```"
     },
     "a3": {
       "content": "",
-      "image": "./img/q3_a3.png"
+      "image": "./img/q3_a3.png",
+      "answer_code": "(sphere)\nV = 4/3 π r^3\ndV/dt = -16 cm^3/min\ndr/dt = ? @ V = 32π/3 cm^3\n\n(diff. wrt t)\ndV/dt = 4/3 π 3 r^2 · dr/dt\n8 = r^3\nr = 2 cm (when V = 32π/3 cm^3)\ndiff. wrt t\ndr/dt = -1/π cm/min"
     },
     "a4": {
       "content": "",
-      "image": "./img/q3_a4.png"
+      "image": "./img/q3_a4.png",
+      "answer_code": "32π/3 = 4/3 π r^3\n32/3 = 4/3 r^3\n32/3 × 3/4 =\n96/12 = 8\nr = 8\n\ndv/dt = -16\nV = 4/3 π r^3\ndv/dt = 4π r^2\ndr/dt = 4π r^2\ndr/dt = 4π (8)^2\n= 64 × 4π\n= 256π cm/min"
     },
     "a5": {
       "content": "",
-      "image": "./img/q3_a5.png"
+      "image": "./img/q3_a5.png",
+      "answer_code": "dV/dt = -16\ndr/dt = ?\nV = 32π/3\nV = 4/3 π r^3\ndV/dt = 4/3 π r^2 · dr/dt\ndv/dt = 4 π r^2 · dr/dt\n\n-16 = 4π (³√(28π/3)) · dr/dt\ndr/dt = -16 / [4π (³√(28π/3))]\n= -4 / [π (³√(28π/3))]\ncm/min"
     }
   },
   "q4": {
@@ -76,23 +91,28 @@
     "image": "./img/q4.png",
     "a1": {
       "content": "",
-      "image": "./img/q4_a1.png"
+      "image": "./img/q4_a1.png",
+      "answer_code": "```\ntan^-1x=0\ntanθ=x\n(cosθ)=1/√(x^2+1)\nsecθ=1/cosθ=√(x^2+1)\n2secθ/x^2\ncot^-1( (2√(x^2+1))/x^2 ) = φ\ncotφ = 2√(x^2+1)/x^2\nsinφ = x^2 / √(x^4+4x^2+4)\n```"
     },
     "a2": {
       "content": "",
-      "image": "./img/q4_a2.png"
+      "image": "./img/q4_a2.png",
+      "answer_code": "tan^-1(x) = 0\ntanθ = x\nsin ( arccot ( 2sec(arctan x) / x^2 ) )\nsin ( arccot ( sqrt(x^2+1) / 2 ) )\nSin -> 0 / h = 2 / sqrt(x^2+1)"
     },
     "a3": {
       "content": "",
-      "image": "./img/q4_a3.png"
+      "image": "./img/q4_a3.png",
+      "answer_code": "I’m having trouble reading the handwritten content clearly enough to transcribe it faithfully. Could you provide a higher-resolution image or a crop of the handwritten area? Once I can see the lines more clearly, I’ll extract the student answers exactly as written."
     },
     "a4": {
       "content": "",
-      "image": "./img/q4_a4.png"
+      "image": "./img/q4_a4.png",
+      "answer_code": "tan^-1(x) = θ\ntan θ = x\ncos θ = 1/√(x^2+1)\nsin θ = x/√(x^2+1)\nθ = arccos(1/√(x^2+1))"
     },
     "a5": {
       "content": "",
-      "image": "./img/q4_a5.png"
+      "image": "./img/q4_a5.png",
+      "answer_code": "x^2\n-----\nx^2+2"
     }
   },
   "q5": {
@@ -100,23 +120,28 @@
     "image": "./img/q5.jpg",
     "a1": {
       "content": "",
-      "image": "./img/q5_a1.png"
+      "image": "./img/q5_a1.png",
+      "answer_code": "'= - (ln x)^2 - 2 ln x - 2\nx + C\n∫ ( (ln x)^2 / x^2 ) dx\nu = (ln x)^2\ndu = 2 ln x (1/x) dx\nv = -x^-1 = -1/x\ndv = 1/x^2 dx = x^-2 dx\n(ln x)^2 (x^-1) dx = (ln x)^2 (-1/x) - ∫ (1/x) (2 ln x (1/x) dx)\n= - (ln x)^2 / x - ∫ ( -2 ln x / x^2 ) dx\n= - (ln x)^2 / x - ∫ -2 ln x / x^2 dx"
     },
     "a2": {
       "content": "",
-      "image": "./img/q5_a2.png"
+      "image": "./img/q5_a2.png",
+      "answer_code": "```\n∫ (ln x^2 / x^2) dx\n= - ln x^2 / x + ∫ 2 ln x / x^2 dx\n= - ln x^2 / x + 2/3 x^3 ln x - ∫ 1/3 x^3 (2/x)\n= - ln x^2 / x + 2/3 x^3 ln x - 2/9 x^3 + C\n```"
     },
     "a3": {
       "content": "",
-      "image": "./img/q5_a3.png"
+      "image": "./img/q5_a3.png",
+      "answer_code": "```\nEvaluate the following integrals. You do not need to simplify your answers.\n\n(a) ∫ (ln x / x)^2 dx\n\nI = ∫ (ln x)^2 / x^2 dx\n\nu = ln x\ndu = 1/x dx\n\nI = ∫ u^2\n\ndu = 2 (ln x) dx / x      dv = - x^-2 dx\nv = - x^-1\n\n= - (ln x)^2 / x - ∫ - 2 ln x / x^2 dx\n\n= - (ln x)^2 / x - 2 ln x / x - ∫ 1/x · 2/x dx\n\n= - (ln x)^2 / x - 2 ln x / x + 2/x\n\nI = - (ln x)^2 / x - ∫ - 1/x · 2 ln x / x dx\n\nI = - (ln x)^2 / x - ∫ - 1/x · 2 ln x / x dx\n\n= - (ln x)^2 / x - 2 ln x / x + 2/x\n```"
     },
     "a4": {
       "content": "",
-      "image": "./img/q5_a4.png"
+      "image": "./img/q5_a4.png",
+      "answer_code": "integration by parts\nu = ln x\ndu = 1/x dx\nv = -x^{-1}\ndv = x^{-2} dx\nuv - ∫ v du\n- ln x / x\n- ∫ - 1/x^2 dx\nln x / -x + ∫ x^{-2} dx\nln x / -x - x^{-1} + C"
     },
     "a5": {
       "content": "",
-      "image": "./img/q5_a5.png"
+      "image": "./img/q5_a5.png",
+      "answer_code": "```\nI = (ln x)^2 · -x^{-1} - ∫ -1/x · 2 ln x dx\n        = ∫ 2 ln x / x^2 dx\n        2 ∫ ln x / x^2 dx\nu: ln x\ndu: 1/x\nv: -x^{-1}\ndv: x^{-2} dx\nI = -(ln x)^2 / x - 2 ln x / x - x^{-1} + c\n```"
     }
   }
 }

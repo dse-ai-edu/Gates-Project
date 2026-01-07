@@ -567,11 +567,11 @@
                     }
 
                     // 1. Fill question textarea
-                    document.getElementById('question-text').value = result.question || '';
+                    document.getElementById('question-text').value = result.question_code || '';
 
                     // 2. Cache answers
-                    currentSampleAnswers = Array.isArray(result.answers)
-                        ? result.answers
+                    currentSampleAnswers = Array.isArray(result.answer_code_list)
+                        ? result.answer_code_list
                         : [];
 
                     // 3. Update sample-a button labels (optional but useful UX)
