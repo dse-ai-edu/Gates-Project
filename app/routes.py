@@ -525,7 +525,7 @@ def segment_pdf():
         if not pdf_path or not os.path.exists(pdf_path):
             return jsonify({"success": False, "msg": "PDF not found"})
 
-        image_paths = process_pdf(pdf_path)
+        image_paths = process_pdf(pdf_path=pdf_path)
 
         return jsonify({
             "success": True,

@@ -172,7 +172,7 @@ def process_single_page(
 
 def process_pdf(
     pdf_path: str,
-    work_dir: str,
+    work_dir: str = "tmp",
     model: str = "gpt-5-nano",
 ):
     pages_dir = Path(work_dir) / f"{model}_pages"
