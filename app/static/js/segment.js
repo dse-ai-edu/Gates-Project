@@ -38,8 +38,11 @@ pdfInput.onchange = async () => {
     imageList = [];
     imagePanel.innerHTML = "";
 
+    // after upload success
+    currentPdfPath = data.pdf_path;
+
     pdfPanel.innerHTML = `
-        <embed src="/tmp/${file.name}" type="application/pdf">
+        <embed src="/${data.pdf_path}" type="application/pdf">
     `;
 };
 
@@ -55,7 +58,7 @@ convertBtn.onclick = async () => {
     });
 
     if (!res.ok) {
-        alert("Upload failed: file too large or server error. Prefer 10 MB or smaller.");
+        alert("Upload failed: file too large or server error. Prefer 1 MB or smaller.");
         return;
     }
 
