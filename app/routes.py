@@ -79,6 +79,19 @@ def serve_tmp(filename):
     return send_from_directory(TMP_DIR, filename)
 
 
+@app.route('/<path:filepath>')
+def serve_uploaded_files(filepath): 
+    full_path = os.path.join(os.getcwd(), filepath)
+
+    if not os.path.isfile(full_path):
+        return "Not Found", 404
+
+    directory = os.path.dirname(full_path)
+    filename = os.path.basename(full_path)
+
+    return send_from_directory(directory, filename)
+
+
 # ==================== API Route (System Setting) ==================== #
 
 @app.route('/api/login', methods=['POST'])
