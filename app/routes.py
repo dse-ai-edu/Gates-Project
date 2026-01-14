@@ -10,7 +10,7 @@ import random
 import string
 import pytz
 
-from flask import Blueprint, render_template, request, jsonify, send_file
+from flask import render_template, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 
 import app.utils as utils
@@ -22,10 +22,7 @@ from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
 
-bp = Blueprint("segment", __name__)
-
-APP_ROOT = os.path.dirname(os.path.abspath(__file__))
-TMP_DIR = os.path.join(APP_ROOT, "tmp")
+TMP_DIR = os.path.join('260114', "tmp")
 
 os.makedirs(TMP_DIR, exist_ok=True)
 
@@ -71,6 +68,10 @@ def step2():
 @app.route('/step_final')
 def step_final():
     return render_template('step_final.html')
+
+@app.route("/segment")
+def segment_page():
+    return render_template("segment.html")
 
 
 # ==================== API Route (System Setting) ==================== #
@@ -473,12 +474,6 @@ def clear_tmp():
             os.remove(path)
         else:
             shutil.rmtree(path)
-
-
-@bp.route("/segment", methods=["GET"])
-def segment_page():
-    return render_template("segment.html")
-
 
 @bp.route("/api/preprocess/upload_pdf", methods=["POST"])
 def upload_pdf():
