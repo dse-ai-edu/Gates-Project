@@ -11,6 +11,7 @@ import string
 import pytz
 
 from flask import render_template, request, jsonify, send_file
+from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
 import app.utils as utils
@@ -72,6 +73,10 @@ def step_final():
 @app.route("/segment")
 def segment_page():
     return render_template("segment.html")
+
+@app.route('/tmp/<path:filename>')
+def serve_tmp(filename):
+    return send_from_directory(TMP_DIR, filename)
 
 
 # ==================== API Route (System Setting) ==================== #

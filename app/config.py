@@ -9,3 +9,5 @@ class Config:
     OPENAI_API_KEY1 = os.getenv('OPENAI_API_KEY1')
     OPENAI_API_KEY2 = os.getenv('OPENAI_API_KEY2')
     OPENAI_API_KEY3 = os.getenv('OPENAI_API_KEY3')
+    
+    MAX_CONTENT_LENGTH = 10 * 1000 * 1000  # 10 MB

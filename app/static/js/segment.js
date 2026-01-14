@@ -39,7 +39,7 @@ pdfInput.onchange = async () => {
     imagePanel.innerHTML = "";
 
     pdfPanel.innerHTML = `
-        <embed src="/app/tmp/${file.name}" type="application/pdf">
+        <embed src="/tmp/${file.name}" type="application/pdf">
     `;
 };
 
@@ -49,13 +49,18 @@ convertBtn.onclick = async () => {
         return;
     }
 
-    const res = await fetch("/api/preprocess/segment", {
+    const res = await fetch("/api/preprocess/upload_pdf", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pdf_path: currentPdfPath })
+        body: formData
     });
 
+    if (!res.ok) {
+        alert("Upload failed: file too large or server error. Prefer 10 MB or smaller.");
+        return;
+    }
+
     const data = await res.json();
+
     if (!data.success) return;
 
     imageList = data.images;
