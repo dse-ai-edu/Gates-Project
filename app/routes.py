@@ -475,7 +475,7 @@ def clear_tmp():
         else:
             shutil.rmtree(path)
 
-@bp.route("/api/preprocess/upload_pdf", methods=["POST"])
+@app.route("/api/preprocess/upload_pdf", methods=["POST"])
 def upload_pdf():
     try:
         if "file" not in request.files:
@@ -498,7 +498,7 @@ def upload_pdf():
         return jsonify({"success": False, "msg": "Upload failed"})
 
 
-@bp.route("/api/preprocess/segment", methods=["POST"])
+@app.route("/api/preprocess/segment", methods=["POST"])
 def segment_pdf():
     try:
         data = request.json
@@ -518,7 +518,7 @@ def segment_pdf():
         return jsonify({"success": False})
 
 
-@bp.route("/api/preprocess/segment_download", methods=["POST"])
+@app.route("/api/preprocess/segment_download", methods=["POST"])
 def download_all():
     try:
         zip_path = os.path.join(TMP_DIR, "figures.zip")
