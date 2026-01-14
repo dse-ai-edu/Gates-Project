@@ -52,18 +52,22 @@ convertBtn.onclick = async () => {
         return;
     }
 
-    const res = await fetch("/api/preprocess/upload_pdf", {
+    const res = await fetch("/api/preprocess/segment", {
         method: "POST",
-        body: formData
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            pdf_path: currentPdfPath
+        })
     });
 
     if (!res.ok) {
-        alert("Upload failed: file too large or server error. Prefer 1 MB or smaller.");
+        alert("Convert failed");
         return;
     }
 
     const data = await res.json();
-
     if (!data.success) return;
 
     imageList = data.images;
@@ -71,7 +75,7 @@ convertBtn.onclick = async () => {
 
     imageList.sort().forEach((img, idx) => {
         const imgEl = document.createElement("img");
-        imgEl.src = img;
+        imgEl.src = "/" + img;
         imgEl.className = "image-item";
         imagePanel.appendChild(imgEl);
 
@@ -82,6 +86,7 @@ convertBtn.onclick = async () => {
         }
     });
 };
+
 
 downloadBtn.onclick = async () => {
     if (imageList.length === 0) {
