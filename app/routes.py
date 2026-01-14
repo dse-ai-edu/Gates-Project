@@ -23,7 +23,8 @@ from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
 
-TMP_DIR = os.path.join('260114', "tmp")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+TMP_DIR = os.path.join(BASE_DIR, "tmp")
 
 os.makedirs(TMP_DIR, exist_ok=True)
 
@@ -79,17 +80,17 @@ def serve_tmp(filename):
     return send_from_directory(TMP_DIR, filename)
 
 
-@app.route('/<path:filepath>')
-def serve_uploaded_files(filepath): 
-    full_path = os.path.join(os.getcwd(), filepath)
+# @app.route('/<path:filepath>')
+# def serve_uploaded_files(filepath): 
+#     full_path = os.path.join(os.getcwd(), filepath)
 
-    if not os.path.isfile(full_path):
-        return "Not Found", 404
+#     if not os.path.isfile(full_path):
+#         return "Not Found", 404
 
-    directory = os.path.dirname(full_path)
-    filename = os.path.basename(full_path)
+#     directory = os.path.dirname(full_path)
+#     filename = os.path.basename(full_path)
 
-    return send_from_directory(directory, filename)
+#     return send_from_directory(directory, filename)
 
 
 # ==================== API Route (System Setting) ==================== #
@@ -526,7 +527,7 @@ def segment_pdf():
             return jsonify({"success": False, "msg": "PDF not found"})
 
         image_paths = process_pdf(pdf_path=pdf_path)
-
+        print(f"[INFO] Generated ``{len(image_paths)}`` crops")
         return jsonify({
             "success": True,
             "images": image_paths
