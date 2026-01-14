@@ -1,4 +1,4 @@
-from img_utils import llm_generate_gpt, llm_generate_gemini
+from app.img_utils import llm_generate_gpt, llm_generate_gemini
 import json
 
 SYSTEM_PROMPT = """You are a document layout analyzer.
