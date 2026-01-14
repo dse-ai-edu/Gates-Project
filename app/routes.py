@@ -2,18 +2,36 @@ import re
 import os
 import json
 import uuid
+import shutil
 import time
 import traceback
+from datetime import datetime
+import random
+import string
+import pytz
 
-from flask import render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, send_file
+from werkzeug.utils import secure_filename
 
 import app.utils as utils
 import app.prompts as prompts
+from app.gates_segment import process_pdf
 from app import app, database
 # from app import s3_client
 from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
+
+bp = Blueprint("segment", __name__)
+
+APP_ROOT = os.path.dirname(os.path.abspath(__file__))
+TMP_DIR = os.path.join(APP_ROOT, "tmp")
+
+os.makedirs(TMP_DIR, exist_ok=True)
+
+#   ==================== MAIN ==================== #
+
+#   ==================== Sample Data for Demo ==================== #
 
 question_this = """
 <p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
@@ -445,3 +463,87 @@ def health_check():
         'timestamp': datetime.utcnow().isoformat(),
         'service': 'feedback-generation-system'
     })
+    
+# ==================== segment ==================== #
+
+def clear_tmp():
+    for f in os.listdir(TMP_DIR):
+        path = os.path.join(TMP_DIR, f)
+        if os.path.isfile(path):
+            os.remove(path)
+        else:
+            shutil.rmtree(path)
+
+
+@bp.route("/segment", methods=["GET"])
+def segment_page():
+    return render_template("segment.html")
+
+
+@bp.route("/api/preprocess/upload_pdf", methods=["POST"])
+def upload_pdf():
+    try:
+        if "file" not in request.files:
+            return jsonify({"success": False, "msg": "No file uploaded"})
+
+        file = request.files["file"]
+        filename = secure_filename(file.filename)
+
+        if not filename.lower().endswith(".pdf"):
+            return jsonify({"success": False, "msg": "Not a PDF file"})
+
+        clear_tmp()
+
+        pdf_path = os.path.join(TMP_DIR, filename)
+        file.save(pdf_path)
+
+        return jsonify({"success": True, "pdf_path": pdf_path})
+    except:
+        traceback.print_exc()
+        return jsonify({"success": False, "msg": "Upload failed"})
+
+
+@bp.route("/api/preprocess/segment", methods=["POST"])
+def segment_pdf():
+    try:
+        data = request.json
+        pdf_path = data.get("pdf_path")
+
+        if not pdf_path or not os.path.exists(pdf_path):
+            return jsonify({"success": False, "msg": "PDF not found"})
+
+        image_paths = process_pdf(pdf_path)
+
+        return jsonify({
+            "success": True,
+            "images": image_paths
+        })
+    except:
+        traceback.print_exc()
+        return jsonify({"success": False})
+
+
+@bp.route("/api/preprocess/segment_download", methods=["POST"])
+def download_all():
+    try:
+        zip_path = os.path.join(TMP_DIR, "figures.zip")
+        if not os.path.exists(zip_path):
+            return jsonify({"success": False})
+
+        # Central Time (US)
+        tz = pytz.timezone("US/Central")
+        now = datetime.now(tz)
+        time_str = now.strftime("%y%m%d_%H%M%S")
+
+        rand_str = "".join(random.choices(string.ascii_lowercase, k=6))
+
+        download_name = f"{time_str}_{rand_str}.zip"
+
+        return send_file(
+            zip_path,
+            as_attachment=True,
+            download_name=download_name
+        )
+    except:
+        traceback.print_exc()
+        return jsonify({"success": False})

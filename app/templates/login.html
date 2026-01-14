@@ -72,6 +72,14 @@
       display: none;
       text-align: center;
     }
+
+    .segment-btn {
+      background-color: #dc3545;
+    }
+
+    .segment-btn:hover {
+      background-color: #b02a37;
+    }
   </style>
   <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 </head>
@@ -89,6 +97,15 @@
 
         <button type="submit">Login</button>
       </form>
+
+      <!-- Segment Demo Port -->
+      <button
+        type="button"
+        class="segment-btn"
+        onclick="window.location.href='/segment'">
+        Segment Demo
+      </button>
+
       <div id="error">Invalid username or password</div>
     </div>
   </div>
@@ -140,4 +157,4 @@
   </script>
 </body>
 
-</html>
+</html> 

@@ -1,6 +1,15 @@
 Flask==3.1.0
 pymongo==4.11.2
 python-dotenv==1.0.1
+pandas
+tqdm
 numpy
+
 openai
+
 boto3
+
+werkzeug>=2.0
+pytz
+pdf2image
+Pillow
