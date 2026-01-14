@@ -17,19 +17,38 @@ pdfInput.onchange = async () => {
 
     if (!file.name.toLowerCase().endsWith(".pdf")) {
         alert("Not a PDF file");
+        pdfInput.value = "";
         return;
     }
 
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("/api/preprocess/upload_pdf", {
-        method: "POST",
-        body: formData
-    });
-    const data = await res.json();
+    let res;
+    try {
+        res = await fetch("/api/preprocess/upload_pdf", {
+            method: "POST",
+            body: formData
+        });
+    } catch (e) {
+        alert("Network error during upload");
+        return;
+    }
 
-    if (!data.success) {
+    if (!res.ok) {
+        alert("Upload failed (server rejected the file)");
+        return;
+    }
+
+    let data;
+    try {
+        data = await res.json();
+    } catch (e) {
+        alert("Invalid server response");
+        return;
+    }
+
+    if (!data.success || !data.pdf_path) {
         alert(data.msg || "Upload failed");
         return;
     }
@@ -38,12 +57,12 @@ pdfInput.onchange = async () => {
     imageList = [];
     imagePanel.innerHTML = "";
 
-    // after upload success
-    currentPdfPath = data.pdf_path;
-
     pdfPanel.innerHTML = `
-        <embed src="/${data.pdf_path}" type="application/pdf">
+        <embed src="/${currentPdfPath}" type="application/pdf" style="width:100%; height:100%;">
     `;
+
+    // allow re-uploading the same file
+    pdfInput.value = "";
 };
 
 convertBtn.onclick = async () => {

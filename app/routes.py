@@ -508,7 +508,7 @@ def upload_pdf():
 
         clear_tmp()
 
-        pdf_path = os.path.join(TMP_DIR, filename)
+        pdf_path = f"tmp/{filename}"
         file.save(pdf_path)
 
         return jsonify({"success": True, "pdf_path": pdf_path})
