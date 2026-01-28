@@ -12,6 +12,7 @@
 <body>
     <h1 class="page-title">Auto Feedback Generation</h1>
     <div class="container">
+
         <div class="left-section">
             <h2 style="text-decoration: underline;">Setting Step: 1 of 2</h2>
             <p id="save-status"></p>
@@ -28,7 +29,12 @@
             <div class="content-section" id="style-keywords-section">
                 <h2>Set Feedback Keywords</h2>
                 <p>Choose keywords that best describe your preferred feedback style: </p>
-                <div id="feedback-function-1-container"></div>
+                    <div class="style-keywords-row">
+                        <div class="style-keywords-col" id="feedback-function-1A-container"></div>
+                        <div class="style-keywords-col" id="feedback-function-1B-container"></div>
+                        <div class="style-keywords-col" id="feedback-function-1C-container"></div>
+                        <div class="style-keywords-col" id="feedback-function-1D-container"></div>
+                    </div>
             </div>
 
             <hr style="margin: 2rem 0; border: 1px solid #ddd;">
@@ -62,11 +68,22 @@
         // Load components
         async function loadComponents() {
             try {
-                // Load component 1
-                const response1 = await fetch("{{ url_for('static', filename='components/feedback_function_1.html') }}");
-                const html1 = await response1.text();
-                document.getElementById('feedback-function-1-container').innerHTML = html1;
-                
+                // === Component 1A ===
+                const r1a = await fetch("{{ url_for('static', filename='components/feedback_function_1A.html') }}");
+                document.getElementById('feedback-function-1A-container').innerHTML = await r1a.text();
+
+                // === Component 1B ===
+                const r1b = await fetch("{{ url_for('static', filename='components/feedback_function_1B.html') }}");
+                document.getElementById('feedback-function-1B-container').innerHTML = await r1b.text();
+
+                // === Component 1C ===
+                const r1c = await fetch("{{ url_for('static', filename='components/feedback_function_1C.html') }}");
+                document.getElementById('feedback-function-1C-container').innerHTML = await r1c.text();
+
+                // === Component 1D ===
+                const r1d = await fetch("{{ url_for('static', filename='components/feedback_function_1D.html') }}");
+                document.getElementById('feedback-function-1D-container').innerHTML = await r1d.text();
+
                 // Load component 2
                 const response2 = await fetch("{{ url_for('static', filename='components/feedback_function_2.html') }}");
                 const html2 = await response2.text();

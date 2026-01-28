@@ -60,6 +60,20 @@
     background-color: #138496;
 }
 
+/* === Style Keywords Component (Component 1) - submodules === */
+.style-keywords-row {
+    display: flex;
+    gap: 1.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.style-keywords-col {
+    flex: 1;
+    min-width: 0;
+}
+
+
 /* Feedback Templates Component (Component 2) */
 .template-section {
     margin-top: 0.5rem;

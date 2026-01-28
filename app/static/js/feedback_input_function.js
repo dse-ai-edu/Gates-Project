@@ -3,57 +3,117 @@
 let templateCount = 3;
 const maxTemplates = 10;
 let locked_style = false;
+// ==================== Component 1: Style Keywords Functions (Multi-Module) ====================
 
-// ==================== Component 1: Style Keywords Functions ====================
+const STYLE_KEYWORDS_STORAGE_KEY = 'step1_style_keywords';
 
+/**
+ * Get selected style keywords from all submodules
+ * @returns {Object} e.g. { A: "First Person", B: "Neutral", ... }
+ */
 function getSelectedStyles() {
-    const checkboxes = document.querySelectorAll('#style-grid input[type="checkbox"]:checked');
-    return Array.from(checkboxes).map(cb => cb.value);
-}
+    const result = {};
+    const modules = document.querySelectorAll('.style-keywords-submodule');
 
-function resetStyles() {
-    const checkboxes = document.querySelectorAll('#style-grid input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
+    modules.forEach(module => {
+        const moduleKey = module.dataset.module;
+        const checked = module.querySelector('input[type="checkbox"]:checked');
+        if (checked) {
+            result[moduleKey] = checked.value;
+        }
     });
-    // Update sessionStorage
-    saveStyleKeywordsToSessionStorage();
+
+    return result;
 }
 
+/**
+ * Save current selections to sessionStorage
+ */
 function saveStyleKeywordsToSessionStorage() {
     const selectedStyles = getSelectedStyles();
-    const styleKeywords = selectedStyles.join('\n');
-    sessionStorage.setItem('step1_style_keywords', styleKeywords);
-    console.log('Style keywords saved:', styleKeywords);
+    sessionStorage.setItem(
+        STYLE_KEYWORDS_STORAGE_KEY,
+        JSON.stringify(selectedStyles)
+    );
+    console.log('Style keywords saved:', selectedStyles);
 }
 
+/**
+ * Load selections from sessionStorage
+ * Falls back to default (first checkbox checked) if missing
+ */
 function loadStyleKeywordsFromSessionStorage() {
-    const storedStyles = sessionStorage.getItem('step1_style_keywords') || '';
-    if (storedStyles) {
-        const styleArray = storedStyles.split('\n');
-        styleArray.forEach(style => {
-            const checkbox = document.querySelector(`input[value="${style}"]`);
-            if (checkbox) {
-                checkbox.checked = true;
-            }
-        });
+    const raw = sessionStorage.getItem(STYLE_KEYWORDS_STORAGE_KEY);
+    if (!raw) return;
+
+    let stored;
+    try {
+        stored = JSON.parse(raw);
+    } catch (e) {
+        console.warn('Invalid style keyword storage format');
+        return;
+    }
+
+    Object.entries(stored).forEach(([moduleKey, value]) => {
+        const module = document.querySelector(
+            `.style-keywords-submodule[data-module="${moduleKey}"]`
+        );
+        if (!module) return;
+
+        const checkbox = module.querySelector(
+            `input[type="checkbox"][value="${value}"]`
+        );
+        if (checkbox) {
+            checkbox.checked = true;
+        }
+    });
+}
+
+/**
+ * Reset a single submodule:
+ * - uncheck all
+ * - check the first checkbox
+ */
+function resetSubmodule(module) {
+    const checkboxes = module.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => cb.checked = false);
+    if (checkboxes.length > 0) {
+        checkboxes[0].checked = true;
     }
 }
 
+/**
+ * Initialize style keyword components
+ */
 function initStyleKeywordsComponent() {
-    // Load stored data
+    // Load stored selections
     loadStyleKeywordsFromSessionStorage();
-    
-    // Add event listeners
-    const resetBtn = document.getElementById('reset-styles-btn');
-    if (resetBtn) {
-        resetBtn.addEventListener('click', resetStyles);
-    }
-    
-    // Add change listeners to checkboxes
-    const checkboxes = document.querySelectorAll('#style-grid input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', saveStyleKeywordsToSessionStorage);
+
+    const modules = document.querySelectorAll('.style-keywords-submodule');
+
+    modules.forEach(module => {
+        const checkboxes = module.querySelectorAll('input[type="checkbox"]');
+        const resetBtn = module.querySelector('.reset-submodule-btn');
+
+        // Enforce single selection per module (radio-like)
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (cb.checked) {
+                    checkboxes.forEach(other => {
+                        if (other !== cb) other.checked = false;
+                    });
+                }
+                saveStyleKeywordsToSessionStorage();
+            });
+        });
+
+        // Reset button (module-local)
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                resetSubmodule(module);
+                saveStyleKeywordsToSessionStorage();
+            });
+        }
     });
 }
 
@@ -314,7 +374,14 @@ function initTeachingExampleComponent() {
 // ==================== Display Functions for step_final ====================
 
 function displayStyleKeywordsAsText(keywords, container) {
-    const displayText = keywords.length > 0 ? keywords.join(', ') : 'N/A';
+    const values = keywords && typeof keywords === 'object'
+        ? Object.values(keywords)
+        : [];
+
+    const displayText = values.length > 0
+        ? values.map(v => `${v}; `).join('')
+        : 'N/A';
+
     container.innerHTML = `<div class="display-text">${displayText}</div>`;
 }
 
@@ -375,93 +442,136 @@ function clearAllStoredData() {
     console.log('All stored feedback data cleared');
 }
 
+
 function getStoredConfigData() {
-    const styleKeywords = sessionStorage.getItem('step1_style_keywords') || '';
+    const rawStyleKeywords = sessionStorage.getItem('step1_style_keywords');
     const feedbackTemplates = sessionStorage.getItem('step1_feedback_templates') || '';
     const teachStyle = sessionStorage.getItem('step2_selected_teach_style') || '';
     const teachExample = sessionStorage.getItem('step2_teach_example') || '';
     const lockedStyle = sessionStorage.getItem('locked_style') === 'true';
-    
+
+    let styleKeywords = [];
+    if (rawStyleKeywords) {
+        try {
+            const parsed = JSON.parse(rawStyleKeywords);
+            styleKeywords = Object.values(parsed).filter(v => v && v.trim());
+        } catch (e) {
+            console.warn('Failed to parse style keywords from sessionStorage');
+        }
+    }
+
     return {
-        style_keywords: styleKeywords ? styleKeywords.split('\n').filter(s => s.trim()) : [],
-        feedback_templates: feedbackTemplates ? feedbackTemplates.split('\n').filter(t => t.trim()) : [],
+        style_keywords: styleKeywords,
+        feedback_templates: feedbackTemplates
+            ? feedbackTemplates.split('\n').filter(t => t.trim())
+            : [],
         teach_style: teachStyle,
         teach_example: teachExample,
         locked_style: lockedStyle
     };
 }
 
-// Load prior setting from database
+
+// Load prior setting from database (updated for multi-module style keywords)
 function loadPriorSetting() {
-   // Initialize archive_tid as empty string
+    // Initialize archive_tid as empty string
     sessionStorage.setItem('archive_tid', '');
-    
-    const archive_tid_local = prompt("Please enter the History Session ID (archive_tid) to retrieve your prior settings:");
-    
+
+    const archive_tid_local = prompt(
+        "Please enter the History Session ID (archive_tid) to retrieve your prior settings:"
+    );
+
     if (archive_tid_local === null) {
-       // User cancelled the prompt
         return;
     }
-    
+
     if (!archive_tid_local.trim()) {
         alert("History Session ID cannot be empty");
         return;
     }
-    
+
     const status = document.getElementById('save-status');
     status.textContent = '🔄 Loading...';
     status.style.color = 'blue';
-    
+
     fetch('/api/comment/retrieve_style', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({ tid: archive_tid_local.trim() })
-    }).then(response => {
+    })
+    .then(response => {
         if (!response.ok) {
             throw Error('Retrieve failed! Please try again.');
         }
         return response.json();
-    }).then(result => {
+    })
+    .then(result => {
         if (result.success && result.config) {
-           // Get the last config element
             const lastConfig = result.config;
-            
-           // Save to sessionStorage
-            sessionStorage.setItem('step1_style_keywords', lastConfig.style_keywords.join('\n'));
-            sessionStorage.setItem('step1_feedback_templates', lastConfig.feedback_templates.join('\n'));
-            sessionStorage.setItem('step2_selected_teach_style', lastConfig.teach_style);
-            sessionStorage.setItem('step2_teach_example', lastConfig.step2_teach_example);
 
-           // Set archive_tid to the retrieved history session ID
+            /* === Step 1: Style Keywords (map array -> object) === */
+            let styleKeywordMap = {};
+            if (Array.isArray(lastConfig.style_keywords)) {
+                const keys = ['A', 'B', 'C', 'D'];
+                lastConfig.style_keywords.forEach((value, idx) => {
+                    if (keys[idx] && value) {
+                        styleKeywordMap[keys[idx]] = value;
+                    }
+                });
+            }
+
+            sessionStorage.setItem(
+                'step1_style_keywords',
+                JSON.stringify(styleKeywordMap)
+            );
+
+            /* === Step 1: Feedback Templates === */
+            sessionStorage.setItem(
+                'step1_feedback_templates',
+                (lastConfig.feedback_templates || []).join('\n')
+            );
+
+            /* === Step 2 data === */
+            sessionStorage.setItem(
+                'step2_selected_teach_style',
+                lastConfig.teach_style || ''
+            );
+            sessionStorage.setItem(
+                'step2_teach_example',
+                lastConfig.step2_teach_example || ''
+            );
+
+            /* === Archive TID === */
             sessionStorage.setItem('archive_tid', archive_tid_local.trim());
-            
+
             status.textContent = '✔️ Settings Loaded Successfully';
             status.style.color = 'green';
-            
-           // Reload components to reflect loaded data
+
+            // Re-initialize components to reflect loaded data
             setTimeout(() => {
+                window.feedbackInputFunctions.initStyleKeywordsComponent();
                 window.feedbackInputFunctions.initTeachingStyleComponent();
                 window.feedbackInputFunctions.initTeachingExampleComponent();
             }, 500);
-            
-           // Auto-save after loading
+
+            // Auto-save after loading
             setTimeout(() => {
                 saveAndProceed_step2();
             }, 1500);
+
         } else {
             status.textContent = '❌ Load failed';
             status.style.color = 'red';
             alert("No Setting Found in our Records...");
-           // Keep archive_tid as empty string if retrieve failed
         }
-    }).catch(error => {
+    })
+    .catch(error => {
         console.error(error);
         status.textContent = '❌ Load failed';
         status.style.color = 'red';
         alert("No Setting Found in our Records...");
-       // Keep archive_tid as empty string if retrieve failed
     });
 }
 

@@ -319,10 +319,14 @@ The output, i.e., merged teacher style template, should be no more than 250 word
 
 
 ## Bridge grading result for response generation
-MACRO_TRAIT_BASE = """
-Now you should generate a feedback response to the student answer. 
+MACRO_TRAIT_BASE = """ 
+Now you should generate a feedback response to the student answer.
 # Your characteristics:
-You must act as a teacher who has the traits: {}.\n"""
+You must act as a teacher who has the following traits:
+
+{}
+"""
+
 
 MACRO_TEMPLATE_BASE = """
 # Template of Output Response:

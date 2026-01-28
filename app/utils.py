@@ -3,6 +3,10 @@ import openai
 import traceback
 import numpy as np
 
+import json
+from pathlib import Path
+from typing import Union, List
+
 import os
 import html
 import re
@@ -80,6 +84,13 @@ def llm_generate(input_text: str, system_text:str=None,  max_retry:int=3, **kwar
 
 
 ## Response Generation 
+def format_trait_block(keyword: str, info: dict) -> str:
+    # component 1 with 4 keywords
+    short = info.get("short", "NA").strip()
+    detail = info.get("detail", "NA").strip()
+    return (f"KEYWORD: {keyword} \n SUMMARY: {short} \n DETAILS: {detail}")
+
+
 def parse_teaching_style(
         teach_style: str = None, 
         teach_example: str = None, 
@@ -119,7 +130,7 @@ def parse_teaching_style(
 def parse_teaching_text(
         question: str,
         answer: str,
-        style_keywords: str,
+        style_keywords: Union[str, List[str]],
         feedback_templates: str = "",
         # grading: list[str, str]
         ) -> str:
@@ -127,11 +138,32 @@ def parse_teaching_text(
     # Step 1: optional, add grading information
     # grading_rubric, grading_text = grading
     grading_prompt = ""
+    current_dir = Path(__file__).resolve().parent
+    keyword_info_path = current_dir / "keyword_info.json"
+    try:
+        with open(keyword_info_path, "r", encoding="utf-8") as f:
+            keyword_info = json.load(f)
+    except Exception as e:
+        keyword_info = dict()
+        
     # if grading_rubric and grading_text:
     #     grading_prompt = GRADING_REFERENCE.format(grading_rubric=grading_rubric, grading_text=grading_text)
     
     # Step 2: add macro-view-style
-    macro_trait_prompt = MACRO_TRAIT_BASE.format(style_keywords)
+    if isinstance(style_keywords, str):
+        keywords = [k.strip() for k in style_keywords.split(",") if k.strip()]
+    elif isinstance(style_keywords, (list, tuple)):
+        keywords = [str(k).strip() for k in style_keywords if str(k).strip()]
+    else:
+        keywords = []
+    
+    macro_trait_text = ""
+    for kw in keywords:
+        info = keyword_info.get(kw , None)
+        if info is not None:
+            trait_this = format_trait_block(kw, info)
+            macro_trait_text += f"""\n\n{trait_this}"""
+    macro_trait_prompt = MACRO_TRAIT_BASE.format(macro_trait_text)
 
     if not feedback_templates:
         feedback_templates = "- Stength, - Weakness, - Improvement."
