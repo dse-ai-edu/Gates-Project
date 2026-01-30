@@ -3,37 +3,41 @@
      data-module="B"
      id="style-keywords-component-B">
 
-    <h3>Keyword Group B: Interpersonal Quality</h3>
+    <h3>Interpersonal Quality</h3>
 
     <div class="component-content">
-        <button class="reset-btn reset-submodule-btn">
+        <button class="reset-btn reset-submodule-btn"
+                onclick="window.feedbackInputFunctions.resetSingleStep('step12')">
             Reset
         </button>
 
         <div class="style-grid vertical">
             <div class="checkbox-item">
-                <input type="checkbox"
+                <input type="radio"
+                       name="step12"
                        id="inter-neutral"
                        value="Neutral"
                        checked>
                 <label for="inter-neutral"
                        title="Emotionally even, non-evaluative, matter of fact. Signals objectivity and consistency.">
-                    Neutral / Matter-of-fact (Neutral)
+                    Neutral
                 </label>
             </div>
 
             <div class="checkbox-item">
-                <input type="checkbox"
+                <input type="radio"
+                       name="step12"
                        id="inter-formal"
                        value="Formal">
                 <label for="inter-formal"
                        title="Professional, academic, impersonal. Emphasizes standards, conventions, and disciplinary norms.">
-                    Formal and Professional (Formal)
+                    Formal and Professional
                 </label>
             </div>
 
             <div class="checkbox-item">
-                <input type="checkbox"
+                <input type="radio"
+                       name="step12"
                        id="inter-conversational"
                        value="Conversational">
                 <label for="inter-conversational"

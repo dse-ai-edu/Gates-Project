@@ -1,21 +1,104 @@
 <!-- Teaching Style Component -->
 <div class="feedback-input-component" id="teaching-style-component">
     <h3>Primary Feedback Pattern</h3>
+
     <div class="component-content" id="teaching-style-content">
         <p>Choose one pattern below that best matches your feedback philosophy:</p>
+
         <div class="radio-group" id="teaching-style-group">
+
             <div class="radio-item">
-                <input type="radio" id="tpha" name="teaching-style" value="Humorous and Active">
-                <label for="tpha">Humorous and Active</label>
+                <input type="radio"
+                       id="ts-correctness"
+                       name="step3"
+                       value="Correctness"
+                       checked>
+                <label for="ts-correctness"
+                       title="The most basic level of feedback content centers on the accuracy of a response, often termed verification or knowledge of results (KR).">
+                    Correctness-Oriented
+                </label>
             </div>
+
             <div class="radio-item">
-                <input type="radio" id="tprl" name="teaching-style" value="Rigorous and Logical">
-                <label for="tprl">Rigorous and Logical</label>
+                <input type="radio"
+                       id="ts-procedural"
+                       name="step3"
+                       value="Procedural">
+                <label for="ts-procedural"
+                       title="More sophisticated feedback focuses on procedural knowledge, which provides information on the actions and strategies needed to complete a task.">
+                    Procedural/Steps-Focused
+                </label>
             </div>
+
             <div class="radio-item">
-                <input type="radio" id="tpcs" name="teaching-style" value="Caring and Sharing">
-                <label for="tpcs">Caring and Sharing</label>
+                <input type="radio"
+                       id="ts-conceptual"
+                       name="step3"
+                       value="Conceptual">
+                <label for="ts-conceptual"
+                       title="Panadero and Lipnevich emphasize that feedback is most effective when it shifts from outcomes to the underlying processes and reasoning involved in learning.">
+                    Conceptual/Reasoning-Focused
+                </label>
+            </div>
+
+            <div class="radio-item">
+                <input type="radio"
+                       id="ts-custom"
+                       name="step3"
+                       value="">
+                <label for="ts-custom">
+                    Provide Your Own Rubric
+                </label>
+            </div>
+        </div>
+
+        <!-- Custom Rubric Box -->
+        <div id="custom-rubric-container" style="display:none; margin-top:12px;">
+            <textarea id="custom-rubric-text"
+                      rows="8"
+                      placeholder="Enter your own rubric here..."
+                      style="width:100%; resize:vertical; overflow-y:auto;"></textarea>
+
+            <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+                <button type="button" id="confirm-custom-rubric">
+                    Confirm
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    const customRadio = document.getElementById("ts-custom");
+    const container = document.getElementById("custom-rubric-container");
+    const textarea = document.getElementById("custom-rubric-text");
+    const confirmBtn = document.getElementById("confirm-custom-rubric");
+
+    const radios = document.querySelectorAll('input[name="step3"]');
+
+    radios.forEach(radio => {
+        radio.addEventListener("change", () => {
+            if (customRadio.checked) {
+                container.style.display = "block";
+            } else {
+                container.style.display = "none";
+            }
+        });
+    });
+
+    confirmBtn.addEventListener("click", () => {
+        const text = textarea.value.trim();
+        if (!text) {
+            alert("Please enter your rubric before confirming.");
+            return;
+        }
+
+        window.step3 = "";
+        window.step3A = text;
+
+        console.log("step3 =", window.step3);
+        console.log("step3A =", window.step3A);
+    });
+})();
+</script>

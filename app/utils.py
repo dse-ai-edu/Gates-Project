@@ -84,7 +84,7 @@ def llm_generate(input_text: str, system_text:str=None,  max_retry:int=3, **kwar
 
 
 ## Response Generation 
-def format_trait_block(keyword: str, info: dict) -> str:
+def format_keyword_block(keyword: str, info: dict) -> str:
     # component 1 with 4 keywords
     short = info.get("short", "NA").strip()
     detail = info.get("detail", "NA").strip()
@@ -101,13 +101,14 @@ def parse_teaching_style(
     # Step 1: Process teach_style
     standard_template = str(TP_PLAIN) # default = plain style
     teach_style_lower = teach_style.lower().strip()
-    match teach_style_lower:
-        case "tpha":
-            standard_template = str(TP_HUMOROUS_ACTIVE)
-        case "tprl":
-            standard_template = str(TP_RIGOROUS_LOGICAL)
-        case "tpcs":
-            standard_template = str(TP_CARING_SHARING)
+    if "tpha" in teach_style_lower:
+        standard_template = str(TP_HUMOROUS_ACTIVE)
+    elif "tprl" in teach_style_lower:
+        standard_template = str(TP_RIGOROUS_LOGICAL)
+    elif "tpcs" in teach_style_lower:
+        standard_template = str(TP_CARING_SHARING)
+    else:
+        standard_template = ""
     #  
     # Step 2: Generate personal template
     personal_template = ""
@@ -126,6 +127,7 @@ def parse_teaching_style(
     return {"final": final_respond_prompt, 
             "selected": standard_template, 
             "custom": personal_template, }
+
 
 def parse_teaching_text(
         question: str,
@@ -161,7 +163,7 @@ def parse_teaching_text(
     for kw in keywords:
         info = keyword_info.get(kw , None)
         if info is not None:
-            trait_this = format_trait_block(kw, info)
+            trait_this = format_keyword_block(kw, info)
             macro_trait_text += f"""\n\n{trait_this}"""
     macro_trait_prompt = MACRO_TRAIT_BASE.format(macro_trait_text)
 

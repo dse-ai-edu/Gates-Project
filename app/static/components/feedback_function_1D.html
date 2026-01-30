@@ -3,16 +3,18 @@
      data-module="D"
      id="style-keywords-component-D">
 
-    <h3>Keyword Group D: Motivational Framing</h3>
+    <h3>Motivational Framing</h3>
 
     <div class="component-content">
-        <button class="reset-btn reset-submodule-btn">
+        <button class="reset-btn reset-submodule-btn"
+                onclick="window.feedbackInputFunctions.resetSingleStep('step14')">
             Reset
         </button>
 
         <div class="style-grid vertical">
             <div class="checkbox-item">
-                <input type="checkbox"
+                <input type="radio"
+                       name="step14"
                        id="mot-task"
                        value="Task-Focused"
                        checked>
@@ -23,7 +25,8 @@
             </div>
 
             <div class="checkbox-item">
-                <input type="checkbox"
+                <input type="radio"
+                       name="step14"
                        id="mot-growth"
                        value="Growth-Oriented">
                 <label for="mot-growth"
@@ -33,7 +36,8 @@
             </div>
 
             <div class="checkbox-item">
-                <input type="checkbox"
+                <input type="radio"
+                       name="step14"
                        id="mot-high"
                        value="High Expectations + Reassurance">
                 <label for="mot-high"

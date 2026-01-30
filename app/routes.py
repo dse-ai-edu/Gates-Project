@@ -299,7 +299,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             system_prompts_raw = utils.parse_teaching_style(
                 teach_style=teach_style,
                 teach_example=teach_example,
-            )
+                )
         except Exception as e:
             traceback.print_exc()
             return {'success': False, 'error': str(e)}

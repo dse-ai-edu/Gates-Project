@@ -26,7 +26,7 @@ Constraints:
 - Output ONLY the list.
 """
 
-from pdf2image import convert_from_path
+# from pdf2image import convert_from_path
 from pathlib import Path
 
 # =========================

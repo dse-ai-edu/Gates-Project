@@ -3,16 +3,18 @@
      data-module="C"
      id="style-keywords-component-C">
 
-    <h3>Keyword Group C: Directness</h3>
+    <h3>Directness</h3>
 
     <div class="component-content">
-        <button class="reset-btn reset-submodule-btn">
+        <button class="reset-btn reset-submodule-btn"
+                onclick="window.feedbackInputFunctions.resetSingleStep('step13')">
             Reset
         </button>
 
         <div class="style-grid vertical">
             <div class="checkbox-item">
-                <input type="checkbox"
+                <input type="radio"
+                       name="step13"
                        id="direct-direct"
                        value="Direct"
                        checked>
@@ -23,7 +25,8 @@
             </div>
 
             <div class="checkbox-item">
-                <input type="checkbox"
+                <input type="radio"
+                       name="step13"
                        id="direct-indirect"
                        value="Indirect">
                 <label for="direct-indirect"

@@ -74,48 +74,67 @@ function loadStyleKeywordsFromSessionStorage() {
  * - uncheck all
  * - check the first checkbox
  */
-function resetSubmodule(module) {
-    const checkboxes = module.querySelectorAll('input[type="checkbox"]');
-    checkboxes.forEach(cb => cb.checked = false);
-    if (checkboxes.length > 0) {
-        checkboxes[0].checked = true;
-    }
-}
+// function resetSubmodule(module) {
+//     const checkboxes = module.querySelectorAll('input[type="checkbox"]');
+//     checkboxes.forEach(cb => cb.checked = false);
+//     if (checkboxes.length > 0) {
+//         checkboxes[0].checked = true;
+//     }
+// }
 
 /**
  * Initialize style keyword components
  */
-function initStyleKeywordsComponent() {
-    // Load stored selections
-    loadStyleKeywordsFromSessionStorage();
+// function initStyleKeywordsComponent() {
+//     // Load stored selections
+//     loadStyleKeywordsFromSessionStorage();
 
-    const modules = document.querySelectorAll('.style-keywords-submodule');
+//     const modules = document.querySelectorAll('.style-keywords-submodule');
 
-    modules.forEach(module => {
-        const checkboxes = module.querySelectorAll('input[type="checkbox"]');
-        const resetBtn = module.querySelector('.reset-submodule-btn');
+//     modules.forEach(module => {
+//         const checkboxes = module.querySelectorAll('input[type="checkbox"]');
+//         const resetBtn = module.querySelector('.reset-submodule-btn');
 
-        // Enforce single selection per module (radio-like)
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', () => {
-                if (cb.checked) {
-                    checkboxes.forEach(other => {
-                        if (other !== cb) other.checked = false;
-                    });
-                }
-                saveStyleKeywordsToSessionStorage();
-            });
-        });
+//         // Enforce single selection per module (radio-like)
+//         checkboxes.forEach(cb => {
+//             cb.addEventListener('change', () => {
+//                 if (cb.checked) {
+//                     checkboxes.forEach(other => {
+//                         if (other !== cb) other.checked = false;
+//                     });
+//                 }
+//                 saveStyleKeywordsToSessionStorage();
+//             });
+//         });
 
-        // Reset button (module-local)
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => {
-                resetSubmodule(module);
-                saveStyleKeywordsToSessionStorage();
-            });
+//         // Reset button (module-local)
+//         if (resetBtn) {
+//             resetBtn.addEventListener('click', () => {
+//                 resetSubmodule(module);
+//                 saveStyleKeywordsToSessionStorage();
+//             });
+//         }
+//     });
+// }
+
+window.feedbackInputFunctions.resetSingleStep = function (stepName) {
+    const radios = document.querySelectorAll(`input[type="radio"][name="${stepName}"]`);
+    if (!radios.length) return;
+
+    let defaultRadio = null;
+    radios.forEach(r => {
+        if (r.hasAttribute("checked")) {
+            defaultRadio = r;
         }
+        r.checked = false;
     });
-}
+    if (defaultRadio) {
+        defaultRadio.checked = true;
+    } else {
+        radios[0].checked = true;
+    }
+};
+
 
 // ==================== Component 2: Feedback Templates Functions ====================
 
