@@ -3,179 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Step 1/2: Base Style and Feedback Template</title>
+    <title>Keywords and Templates</title>
+
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
 </head>
 
-<body>
-    <h1 class="page-title">Auto Feedback Generation</h1>
-    <div class="container">
+<body data-page="page_1">
+    
+<h1 class="page-title">Auto Feedback Generation</h1>
 
-        <div class="left-section">
-            <h2 style="text-decoration: underline;">Setting Step: 1 of 2</h2>
-            <p id="save-status"></p>
-            
-            <div class="traverse-buttons">
-                <button class="t-button" onclick="saveAndProceed_step1()">Save</button>
-                <button class="t-button" style="background-color: #ff9800;" onclick="window.feedbackInputFunctions.loadPriorSetting()">Load Prior Setting</button>
-                <!-- <button class="t-button" onclick="resetSection()">Reset</button> -->
-            </div>
-        </div>
+<div class="container">
 
-        <div class="right-section">
-            <!-- Component 1: Style Keywords -->
-            <div class="content-section" id="style-keywords-section">
-                <h2>Set Feedback Keywords</h2>
-                <p>Choose keywords that best describe your preferred feedback style: </p>
-                    <div class="style-keywords-row">
-                        <div class="style-keywords-col" id="feedback-function-1A-container"></div>
-                        <div class="style-keywords-col" id="feedback-function-1B-container"></div>
-                        <div class="style-keywords-col" id="feedback-function-1C-container"></div>
-                        <div class="style-keywords-col" id="feedback-function-1D-container"></div>
-                    </div>
-            </div>
+    <!-- ================= Left Control Panel ================= -->
+    <div class="left-section">
+        <h2 style="text-decoration: underline;">Setting Step: 1</h2>
+        <p id="save-status"></p>
 
-            <hr style="margin: 2rem 0; border: 1px solid #ddd;">
-
-            <!-- Component 2: Feedback Templates -->
-            <div class="content-section" id="feedback-templates-section">
-                <h2>Templates of Feedback Response</h2>
-                <div id="feedback-function-2-container"></div>
-            </div>
+        <div class="traverse-buttons">
+            <button class="t-button" onclick="saveAndProceed_page1()">Save</button>
+            <button class="t-button"
+                    style="background-color:#ff9800;"
+                    onclick="window.feedbackInputFunctions.loadPriorSetting()">
+                Load Prior Setting
+            </button>
         </div>
     </div>
-    
-    <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
-    <script>
-        // User authentication check
-        function checkAuthentication() {
-            const user = localStorage.getItem('user');
-            if (!user) {
-                alert('Please login first to access this page.');
-                window.location.href = '/login';
-                return false;
-            }
-            return true;
-        }
-        
-        // Initialize authentication check on page load
-        if (!checkAuthentication()) {
-            throw new Error('Authentication required');
-        }
-        
-        // Load components
-        async function loadComponents() {
-            try {
-                // === Component 1A ===
-                const r1a = await fetch("{{ url_for('static', filename='components/feedback_function_1A.html') }}");
-                document.getElementById('feedback-function-1A-container').innerHTML = await r1a.text();
 
-                // === Component 1B ===
-                const r1b = await fetch("{{ url_for('static', filename='components/feedback_function_1B.html') }}");
-                document.getElementById('feedback-function-1B-container').innerHTML = await r1b.text();
+    <!-- ================= Right Content Panel ================= -->
+    <div class="right-section">
 
-                // === Component 1C ===
-                const r1c = await fetch("{{ url_for('static', filename='components/feedback_function_1C.html') }}");
-                document.getElementById('feedback-function-1C-container').innerHTML = await r1c.text();
+        <!-- ===== Component 1: Feedback Keywords (step11–step14) ===== -->
+        <div class="content-section" id="style-keywords-section">
+            <h2>Set Feedback Keywords</h2>
+            <p>Choose one keyword from each group:</p>
 
-                // === Component 1D ===
-                const r1d = await fetch("{{ url_for('static', filename='components/feedback_function_1D.html') }}");
-                document.getElementById('feedback-function-1D-container').innerHTML = await r1d.text();
+            <div class="style-keywords-row">
+                <div class="style-keywords-col" id="feedback-function-1A-container"></div>
+                <div class="style-keywords-col" id="feedback-function-1B-container"></div>
+                <div class="style-keywords-col" id="feedback-function-1C-container"></div>
+                <div class="style-keywords-col" id="feedback-function-1D-container"></div>
+            </div>
+        </div>
 
-                // Load component 2
-                const response2 = await fetch("{{ url_for('static', filename='components/feedback_function_2.html') }}");
-                const html2 = await response2.text();
-                document.getElementById('feedback-function-2-container').innerHTML = html2;
-                
-                // Initialize components after loading
-                setTimeout(() => {
-                    window.feedbackInputFunctions.initStyleKeywordsComponent();
-                    window.feedbackInputFunctions.initFeedbackTemplatesComponent();
-                }, 100);
-                
-            } catch (error) {
-                console.error('Failed to load components:', error);
-            }
+        <hr style="margin:2rem 0; border:1px solid #ddd;">
+
+        <!-- ===== Component 2: Feedback Templates (step2, read-only) ===== -->
+        <div class="content-section" id="feedback-templates-section">
+            <h2>Templates of Feedback Response</h2>
+            <div id="feedback-function-2-container"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= Shared Logic ================= -->
+<script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
+
+<script>
+/* ---------- Authentication ---------- */
+(function checkAuthentication() {
+    const user = localStorage.getItem('user');
+    if (!user) {
+        alert('Please login first.');
+        window.location.href = '/login';
+        throw new Error('Authentication required');
+    }
+})();
+
+/* ---------- Load Components ---------- */
+async function loadComponents() {
+    try {
+        const map = [
+            ['feedback-function-1A-container', 'components/feedback_function_1A.html'],
+            ['feedback-function-1B-container', 'components/feedback_function_1B.html'],
+            ['feedback-function-1C-container', 'components/feedback_function_1C.html'],
+            ['feedback-function-1D-container', 'components/feedback_function_1D.html'],
+            ['feedback-function-2-container',  'components/feedback_function_2.html']
+        ];
+
+        for (const [id, path] of map) {
+            const r = await fetch(`{{ url_for('static', filename='') }}${path}`);
+            document.getElementById(id).innerHTML = await r.text();
         }
-        
-        // Save and proceed to next step
-        function saveAndProceed_step1() {
-            const selectedStyles = window.feedbackInputFunctions.getSelectedStyles();
-            const templateTexts = window.feedbackInputFunctions.getTemplateTexts();
-            
-            if (selectedStyles.length === 0) {
-                alert("❗ Please select at least one Keywords of Feedback Style.");
-                return;
-            }
-            if (templateTexts.length === 0) {
-                alert("❗ Please enter at least one Feedback Template Item; you could press the button \"Default Template\" if you do not want to set.");
-                return;
-            }
-            // Validate feedback templates contain at least one English letter
-            const hasValidTemplate = templateTexts.some(template => {
-                return /[a-zA-Z]/.test(template);
-            });
-            
-            if (!hasValidTemplate) {
-                alert("❗ Template is not valid; you could press the button \"DEFAULT Template\" if you do not want to set.");
-                return;
-            }
 
-            // Show saving status
-            const status = document.getElementById('save-status');
-            status.textContent = '💾 Saved to local storage';
-            status.style.color = 'green';
-            
-            // Navigate to step2 after a brief delay
-            setTimeout(() => {
-                window.location.href = '/step2';
-            }, 1000);
-        }
-        
-        // Reset all selections
-        function resetSection() {
-            // Reset components
-            window.feedbackInputFunctions.resetStyles();
-            
-            // Reset templates to default
-            const templateContainer = document.getElementById('template-container');
-            if (templateContainer) {
-                templateContainer.innerHTML = `
-                    <div class="template-row">
-                        <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="strength">
-                        <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                    </div>
-                    <div class="template-row">
-                        <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="weakness">
-                        <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                    </div>
-                    <div class="template-row">
-                        <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="improvement">
-                        <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                    </div>
-                `;
-                
-                // Re-initialize templates component
-                window.feedbackInputFunctions.initFeedbackTemplatesComponent();
-            }
-            
-            // Clear sessionStorage
-            sessionStorage.removeItem('step1_style_keywords');
-            sessionStorage.removeItem('step1_feedback_templates');
-            
-            // Clear status
-            const status = document.getElementById('save-status');
-            status.textContent = '';
-            status.style.color = '';
-        }
-        
-        // Initialize page
-        window.addEventListener('load', function() {
-            sessionStorage.removeItem('predefined_conf');
-            loadComponents();
-        });
-    </script>
+        /* 初始化逻辑全部交给 JS 文件 */
+        setTimeout(() => {
+            window.feedbackInputFunctions.initStyleKeywordsComponent();
+            window.feedbackInputFunctions.initFeedbackTemplatesComponent();
+        }, 100);
+
+    } catch (e) {
+        console.error('Component loading failed:', e);
+    }
+}
+
+/* ---------- Save & Proceed ---------- */
+function saveAndProceed_page1() {
+    const steps = ['step11', 'step12', 'step13', 'step14'];
+    const missing = steps.filter(k => !sessionStorage.getItem(k));
+
+    if (missing.length > 0) {
+        alert('❗ Please select one keyword in each group.');
+        return;
+    }
+
+    const step2 = sessionStorage.getItem('step2');
+    if (!step2 || !/[a-zA-Z]/.test(step2)) {
+        alert('❗ Feedback template is invalid.');
+        return;
+    }
+
+    const status = document.getElementById('save-status');
+    status.textContent = '✔ Saved';
+    status.style.color = 'green';
+
+    setTimeout(() => {
+        window.location.href = '/page_2';
+    }, 800);
+}
+
+/* ---------- Init ---------- */
+window.addEventListener('load', () => {
+    loadComponents();
+});
+</script>
+
 </body>
 </html>

@@ -3,107 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>>Step 2/2: Feedback Pattern and Personalization</title>
+    <title>Feedback Pattern</title>
+
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
 </head>
-<body>
-    <h1 class="page-title">Auto Feedback Generation</h1>
-    <div class="container">
-        <div class="left-section">
-            <h2 style="text-decoration: underline;">Configure Feedback Patterns</h2>
-            <p id="save-status"></p>
-            
-            <ul class="instruction-list">
-                <li id="step-1-text">Select your <b>Primary Feedback Pattern</b></li>
-                <li id="step-2-text">Add your <b>Personalized Feedback Example</b></li>
-                <li id="step-3-text">Review and Finalize Settings</li>
-            </ul>
 
-            <div class="traverse-buttons">
-                <button class="t-button" onclick="goBack()">Back</button>
-                <button class="t-button" onclick="window.feedbackInputFunctions.saveAndProceed_step2()">Save</button>
-                <button class="t-button" style="background-color: #ff9800;" onclick="window.feedbackInputFunctions.loadPriorSetting()">Load Prior Setting</button>
-            </div>
-        </div>
+<body data-page="page_2">
 
-        <div class="right-section">
-            <!-- Component 3: Teaching Style -->
-            <div class="content-section" id="teaching-style-section">
-                <div id="feedback-function-3-container"></div>
-            </div>
+<h1 class="page-title">Auto Feedback Generation</h1>
 
-            <hr style="margin: 2rem 0; border: 1px solid #ddd;">
+<div class="container">
 
-            <!-- Component 4: Teaching Example -->
-            <div class="content-section" id="teaching-example-section">
-                <div id="feedback-function-4-container"></div>
-            </div>
+    <!-- ================= Left Control Panel ================= -->
+    <div class="left-section">
+        <h2 style="text-decoration: underline;">Setting Step: 2</h2>
+        <p id="save-status"></p>
+
+        <ul class="instruction-list">
+            <li>Select your <b>Feedback Pattern</b></li>
+            <li>(Optional) Provide a <b>Custom Feedback Pattern</b></li>
+        </ul>
+
+        <div class="traverse-buttons">
+            <button class="t-button" onclick="goBack()">Back</button>
+            <button class="t-button" onclick="saveAndProceed_page2()">Save</button>
+            <button class="t-button"
+                    style="background-color:#ff9800;"
+                    onclick="window.feedbackInputFunctions.loadPriorSetting()">
+                Load Prior Setting
+            </button>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
-    <script>
-        // User authentication check
-        function checkAuthentication() {
-            const user = localStorage.getItem('user');
-            if (!user) {
-                alert('Please login first to access this page.');
-                window.location.href = '/login';
-                return false;
-            }
-            return true;
-        }
-        
-        // Initialize authentication check on page load
-        if (!checkAuthentication()) {
-            throw new Error('Authentication required');
-        }
-        
-        // Load components
-        async function loadComponents() {
-            sessionStorage.removeItem('predefined_conf')
-            try {
-                // Load component 3
-                const response3 = await fetch("{{ url_for('static', filename='components/feedback_function_3.html') }}");
-                const html3 = await response3.text();
-                document.getElementById('feedback-function-3-container').innerHTML = html3;
-                
-                // Load component 4
-                const response4 = await fetch("{{ url_for('static', filename='components/feedback_function_4.html') }}");
-                const html4 = await response4.text();
-                document.getElementById('feedback-function-4-container').innerHTML = html4;
-                
-                // Initialize components after loading
-                setTimeout(() => {
-                    window.feedbackInputFunctions.initTeachingStyleComponent();
-                    window.feedbackInputFunctions.initTeachingExampleComponent();
-                }, 100);
-                
-            } catch (error) {
-                console.error('Failed to load components:', error);
-            }
-        }
-        
+    <!-- ================= Right Content Panel ================= -->
+    <div class="right-section">
 
-        // Navigation functions
-        function goBack() {
-            window.location.href = '/step1';
-        }
-        
-        
-        // Initialize page
-        window.addEventListener('load', loadComponents);
-        
-        // Auto-clear save status when user makes changes
-        document.addEventListener('change', function() {
-            const status = document.getElementById('save-status');
-            if (status.textContent) {
-                status.textContent = '';
-                status.style.color = '';
-            }
-        });
-    </script>
+        <!-- ===== Component 3: Feedback Pattern (step3 / step3A) ===== -->
+        <div class="content-section" id="feedback-pattern-section">
+            <div id="feedback-function-3-container"></div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ================= Shared Logic ================= -->
+<script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
+
+<script>
+/* ---------- Authentication ---------- */
+(function checkAuthentication() {
+    const user = localStorage.getItem('user');
+    if (!user) {
+        alert('Please login first.');
+        window.location.href = '/login';
+        throw new Error('Authentication required');
+    }
+})();
+
+/* ---------- Load Component ---------- */
+async function loadComponents() {
+    try {
+        const r = await fetch("{{ url_for('static', filename='components/feedback_function_3.html') }}");
+        document.getElementById('feedback-function-3-container').innerHTML = await r.text();
+
+        /* initialize  */
+        setTimeout(() => {
+            window.feedbackInputFunctions.initTeachingStyleComponent();
+        }, 100);
+
+    } catch (e) {
+        console.error('Component loading failed:', e);
+    }
+}
+
+/* ---------- Navigation ---------- */
+function goBack() {
+    window.location.href = '/page_1';
+}
+
+/* ---------- Save & Proceed ---------- */
+function saveAndProceed_page2() {
+    const step3  = sessionStorage.getItem('step3') || '';
+    const step3A = sessionStorage.getItem('step3A') || '';
+
+    if (!step3 && !step3A) {
+        alert('❗ Please select a feedback pattern or provide a custom one.');
+        return;
+    }
+
+    const status = document.getElementById('save-status');
+    status.textContent = '✔ Saved';
+    status.style.color = 'green';
+
+    setTimeout(() => {
+        window.location.href = '/page_final';
+    }, 800);
+}
+
+/* ---------- Init ---------- */
+window.addEventListener('load', () => {
+    loadComponents();
+});
+
+/* ---------- Auto-clear save status ---------- */
+document.addEventListener('change', () => {
+    const status = document.getElementById('save-status');
+    if (status.textContent) {
+        status.textContent = '';
+        status.style.color = '';
+    }
+});
+</script>
+
 </body>
 </html>

@@ -59,25 +59,25 @@ def home():
 def login():
     return render_template('login.html')
 
-@app.route('/step1')
-def step1():
-    return render_template('step1.html')
+@app.route('/page_1')
+def page_1():
+    return render_template('page_1.html')
 
-@app.route('/step2')
+@app.route('/page_2')
 def step2():
-    return render_template('step2.html')
+    return render_template('page_2.html')
 
-@app.route('/step_final')
-def step_final():
-    return render_template('step_final.html')
+@app.route('/page_final')
+def page_final():
+    return render_template('page_final.html')
 
-@app.route("/segment")
-def segment_page():
-    return render_template("segment.html")
+# @app.route("/segment")
+# def segment_page():
+#     return render_template("segment.html")
 
-@app.route('/tmp/<path:filename>')
-def serve_tmp(filename):
-    return send_from_directory(TMP_DIR, filename)
+# @app.route('/tmp/<path:filename>')
+# def serve_tmp(filename):
+#     return send_from_directory(TMP_DIR, filename)
 
 
 # @app.route('/<path:filepath>')

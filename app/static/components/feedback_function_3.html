@@ -52,53 +52,14 @@
             </div>
         </div>
 
-        <!-- Custom Rubric Box -->
-        <div id="custom-rubric-container" style="display:none; margin-top:12px;">
+        <!-- Custom Rubric Box (shown only when the 4th option is selected) -->
+        <div id="custom-rubric-container"
+             style="display:none; margin-top:12px;">
             <textarea id="custom-rubric-text"
                       rows="8"
                       placeholder="Enter your own rubric here..."
                       style="width:100%; resize:vertical; overflow-y:auto;"></textarea>
-
-            <div style="display:flex; justify-content:flex-end; margin-top:6px;">
-                <button type="button" id="confirm-custom-rubric">
-                    Confirm
-                </button>
-            </div>
         </div>
+
     </div>
 </div>
-
-<script>
-(function () {
-    const customRadio = document.getElementById("ts-custom");
-    const container = document.getElementById("custom-rubric-container");
-    const textarea = document.getElementById("custom-rubric-text");
-    const confirmBtn = document.getElementById("confirm-custom-rubric");
-
-    const radios = document.querySelectorAll('input[name="step3"]');
-
-    radios.forEach(radio => {
-        radio.addEventListener("change", () => {
-            if (customRadio.checked) {
-                container.style.display = "block";
-            } else {
-                container.style.display = "none";
-            }
-        });
-    });
-
-    confirmBtn.addEventListener("click", () => {
-        const text = textarea.value.trim();
-        if (!text) {
-            alert("Please enter your rubric before confirming.");
-            return;
-        }
-
-        window.step3 = "";
-        window.step3A = text;
-
-        console.log("step3 =", window.step3);
-        console.log("step3A =", window.step3A);
-    });
-})();
-</script>
