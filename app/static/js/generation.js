@@ -20,7 +20,7 @@ let lockedStyleTmp = true;  // Local variable for UI control (renamed to avoid c
 
 let currentConfig = {
     style_keywords: ['calculus  teacher'],
-    feedback_templates: 'strength,weakness,improvement',
+    feedback_templates: ['strength', 'weakness', 'improvement'],
     feedback_pattern: '',
     custom_rubric: ''
 };
@@ -66,14 +66,14 @@ function loadConfiguredSystem() {
     const configData = window.feedbackInputFunctions.getStoredConfigData();
     
     currentConfig = {
-        style_keywords: configData.style_keywords,
-        feedback_templates: configData.feedback_templates,
-        feedback_pattern: configData.feedback_pattern,
-        custom_rubric: configData.custom_rubric
+        style_keywords: configData.style_keywords || [],
+        feedback_templates: configData.feedback_templates || [],
+        feedback_pattern: configData.feedback_pattern || '',
+        custom_rubric: configData.custom_rubric || ''
     };
     
     // Check if style is locked from previous steps
-    isStyleLocked = configData.locked_style;
+    isStyleLocked = configData.locked_style === true;
     
     // Initialize UI state
     // updateLockButtonState();
@@ -83,6 +83,7 @@ function loadConfiguredSystem() {
     // Display configuration
     displayConfigurationAsText();
 }
+
 
 // Display configuration as text in four panels
 function displayConfigurationAsText() {
@@ -95,29 +96,58 @@ function displayConfigurationAsText() {
 
     // 2 Feedback Templates  
     const templateDisplay = document.getElementById('feedback-templates-display');
-    const templateDefault = ['- Strength', '- Weakness', '- Improvement'];
+
+    const templateDefault = ['`Strength', '`Weakness', '`Improvement'];
 
     let lines;
-    if (currentConfig.feedback_templates.length > 0) {
-        lines = currentConfig.feedback_templates.map((t, i) => `${i + 1}. ${t}`);
+    let templates = currentConfig.feedback_templates;
+    if (typeof templates === 'string') {
+        try {
+            templates = JSON.parse(templates);
+        } catch (e) {
+            templates = [];
+        }
+    }
+
+    if (Array.isArray(templates) &&
+        templates.length > 0) {
+        lines = templates.map((t, i) => `${i + 1}. ${t}`);
     } else {
-        const defaultLines = templateDefault.map((t, i) => `${i + 1}. ${t}`);
-        lines = ['[Default Template]', ...defaultLines];
+        lines = [
+            '[Default Template]',
+            ...templateDefault.map((t, i) => `${i + 1}. ${t}`)
+        ];
     }
 
     const templateText = lines.join('\n');
     templateDisplay.style.whiteSpace = 'pre-line';
     templateDisplay.textContent = templateText;
+    // templateDisplay.textContent = "- Strength  - Weakness  - Improvement";
     
     // 3 Pattern
+    console.log("FLAG 1")
+    console.log(currentConfig.feedback_pattern)
+    console.log("FLAG 1")
     const stylePattern = document.getElementById('feedback-pattern-display');
-    stylePattern.textContent = currentConfig.feedback_pattern || '-Custom Rubric Pattern-';
-    
+    if (currentConfig.feedback_pattern) {
+        stylePattern.textContent = currentConfig.feedback_pattern;
+    } else if (currentConfig.custom_rubric) {
+        stylePattern.textContent = 'Custom Rubric Pattern';
+    } else {
+        stylePattern.textContent = 'N/A';
+    }
+
     // 4 custom content
     const exampleDisplay = document.getElementById('custom-rubric-display');
     exampleDisplay.style.whiteSpace = 'pre-line';
-    exampleDisplay.textContent = currentConfig.custom_rubric || '-Not Applicable-';
+    if (currentConfig.feedback_pattern !== "") {
+        exampleDisplay.textContent = '<Not Applicable>';
+    } else {
+        exampleDisplay.textContent =
+            currentConfig.custom_rubric || '<Not Applicable>';
+    }
 }
+
 
 // Load editable components (when unlocked)
 async function loadEditableComponents() {
@@ -196,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadConfiguredSystem();
 });
 
+
 function generatePersonalizedFeedback() {
     const studentAnswer = document.getElementById('student-answer').value;
     const resultBox = document.getElementById('result-textarea');
@@ -256,7 +287,11 @@ function generatePersonalizedFeedback() {
             <div style="color:#fb827a;">
             Generated using: ${currentConfig.feedback_pattern} style<br>
             Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: Default Keywords'}<br>
-            Templates: ${currentConfig.feedback_templates || 'DEV: Default Template'}
+            Templates: ${
+                currentConfig.feedback_templates.length
+                    ? currentConfig.feedback_templates.join(', ')
+                    : 'DEV: Default Template'
+            }
             </div>`;
             
         } else {
@@ -265,9 +300,7 @@ function generatePersonalizedFeedback() {
     })
     .catch(error => {
         console.error('Error generating feedback:', error);
-        
-        // If the API call fails, display an error message.
-        resultTextarea.value = `❌ Error generating feedback: ${error.message}. Please try again or check your configuration.`;
+        resultBox.innerText = `❌ Error generating feedback: ${error.message}. Please try again or check your configuration.`;
     });
 }
 

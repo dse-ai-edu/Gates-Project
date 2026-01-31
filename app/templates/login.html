@@ -81,7 +81,7 @@
       background-color: #b02a37;
     }
   </style>
-  <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+  <!-- <script src="{{ url_for('static', filename='js/utils.js') }}"></script> -->
 </head>
 
 <body>
@@ -99,26 +99,20 @@
       </form>
 
       <!-- Segment Demo Port -->
-      <button
+      <!-- <button
         type="button"
         class="segment-btn"
         onclick="window.location.href='/segment'">
         Segment Demo
-      </button>
+      </button> -->
 
       <div id="error">Invalid username or password</div>
     </div>
   </div>
   <script>
     window.addEventListener('load', function() {
-      localStorage.removeItem('tid');
       localStorage.removeItem('user');
-      sessionStorage.removeItem('archive_tid');
-      sessionStorage.removeItem('step1_style_keywords');
-      sessionStorage.removeItem('step1_feedback_templates');
-      sessionStorage.removeItem('step2_selected_teach_style');
-      sessionStorage.removeItem('step2_teach_example');
-      sessionStorage.removeItem('locked_style');
+      sessionStorage.clear();
       console.log("Clear System-related Vars.")
     });
 
@@ -137,12 +131,16 @@
         });
         const result = await response.json();
         if (result.success) {
+          document.getElementById('error').style.display = 'none';
           console.log("receive success signal.")
+
           // await createSession();
           localStorage.setItem('user', result.user);
-          localStorage.setItem('tid', result.token);
+          // localStorage.setItem('tid', result.token);
+          sessionStorage.setItem('auth_token', result.token);
+
           console.log("complete local set.")
-          window.location.href = '/step1';
+          window.location.href = '/page_1';
         } else {
           const errorDiv = document.getElementById('error');
           errorDiv.textContent = 'Invalid username or password';

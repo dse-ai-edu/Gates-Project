@@ -1,8 +1,13 @@
+window.feedbackInputFunctions = window.feedbackInputFunctions || {};
+
+
 // Feedback Input Functions JavaScript
 // Global variables
 let templateCount = 3;
 const maxTemplates = 10;
 let locked_style = false;
+
+
 // ==================== Component 1: Style Keywords Functions (Multi-Module) ====================
 
 // const STYLE_KEYWORDS_STORAGE_KEY = 'step1_style_keywords';
@@ -117,30 +122,36 @@ let locked_style = false;
 //     });
 // }
 
-window.feedbackInputFunctions.resetSingleStep = function (stepName) {
-    const radios = document.querySelectorAll(`input[type="radio"][name="${stepName}"]`);
-    if (!radios.length) return;
+// window.feedbackInputFunctions.resetSingleStep = function (stepName) {
+//     const radios = document.querySelectorAll(`input[type="radio"][name="${stepName}"]`);
+//     if (!radios.length) return;
 
-    let defaultRadio = null;
-    radios.forEach(r => {
-        if (r.hasAttribute("checked")) {
-            defaultRadio = r;
-        }
-        r.checked = false;
-    });
-    if (defaultRadio) {
-        defaultRadio.checked = true;
-    } else {
-        radios[0].checked = true;
-    };
+//     let defaultRadio = null;
+//     radios.forEach(r => {
+//         if (r.hasAttribute("checked")) {
+//             defaultRadio = r;
+//         }
+//         r.checked = false;
+//     });
+//     if (defaultRadio) {
+//         defaultRadio.checked = true;
+//     } else {
+//         radios[0].checked = true;
+//     };
 
-    const selected = defaultRadio || radios[0];
-    sessionStorage.setItem(stepName, selected.value);
-};
+//     const selected = defaultRadio || radios[0];
+//     sessionStorage.setItem(stepName, selected.value);
+// };
 
 
 function initStyleKeywordsComponent() {
     const radios = document.querySelectorAll('input[type="radio"][name^="step1"]');
+
+    radios.forEach(radio => {
+        if (radio.checked) {
+            sessionStorage.setItem(radio.name, radio.value);
+        }
+    });
 
     radios.forEach(radio => {
         radio.addEventListener('change', () => {
@@ -150,7 +161,6 @@ function initStyleKeywordsComponent() {
         });
     });
 
-    // reset value in sessionStorage
     ['step11', 'step12', 'step13', 'step14'].forEach(step => {
         const value = sessionStorage.getItem(step);
         if (!value) return;
@@ -164,12 +174,8 @@ function initStyleKeywordsComponent() {
     });
 }
 
-// ==================== Component 2: Feedback Templates Functions ====================
 
-function getTemplateTexts() {
-    const inputs = document.querySelectorAll('.template-input');
-    return Array.from(inputs).map(input => input.value).filter(value => value.trim() !== '');
-}
+// ==================== Component 2: Feedback Templates Functions ====================
 
 // function addTemplate() {
 //     const templateContainer = document.getElementById('template-container');
@@ -213,66 +219,108 @@ function getTemplateTexts() {
 //     }
 // }
 
+
+// function initFeedbackTemplatesComponent() {
+//     // Load stored data
+//     loadFeedbackTemplatesFromSessionStorage();
+    
+//     // Add event listeners
+//     // const addBtn = document.getElementById('add-template-btn');
+//     // if (addBtn) {
+//     //     addBtn.addEventListener('click', addTemplate);
+//     // }
+    
+//     // Add event listeners to existing inputs
+//     const existingInputs = document.querySelectorAll('.template-input');
+//     existingInputs.forEach(input => {
+//         input.addEventListener('input', saveFeedbackTemplatesToSessionStorage);
+//     });
+    
+//     // Update template count
+//     templateCount = existingInputs.length;
+//     // updateAddButtonState();
+//     updateStep2FromTemplates();
+// }
+
+
+function getTemplateTexts() {
+    const inputs = document.querySelectorAll('.template-input');
+    return Array.from(inputs).map(input => input.value).filter(value => value.trim() !== '');
+}
+
+
 function saveFeedbackTemplatesToSessionStorage() {
     const templateTexts = getTemplateTexts();
-    const feedbackTemplates = templateTexts.join('\n');
-    sessionStorage.setItem('step1_feedback_templates', feedbackTemplates);
-    console.log('Feedback templates saved:', feedbackTemplates);
+    sessionStorage.setItem('step2', JSON.stringify(templateTexts));
+    console.log('Feedback templates saved:', templateTexts);
 }
+
 
 function loadFeedbackTemplatesFromSessionStorage() {
-    const storedTemplates = sessionStorage.getItem('step1_feedback_templates') || '';
-    if (storedTemplates) {
-        const templateArray = storedTemplates.split('\n').filter(t => t.trim());
-        const templateContainer = document.getElementById('template-container');
-        
-        // Clear existing templates first
-        templateContainer.innerHTML = '';
-        templateCount = 0;
-        
-        // Add stored templates
-        templateArray.forEach(template => {
-            if (template.trim()) {
-                const templateRow = document.createElement('div');
-                templateRow.className = 'template-row';
-                templateRow.innerHTML = `
-                    <input type="text" class="template-input" placeholder="enter one template item (max 50 characters)" maxlength="50" value="${template.trim()}">
-                    <button class="delete-btn" onclick="deleteTemplate(this)">×</button>
-                `;
-                templateContainer.appendChild(templateRow);
-                templateCount++;
-                
-                // Add event listener to input
-                const input = templateRow.querySelector('.template-input');
-                input.addEventListener('input', saveFeedbackTemplatesToSessionStorage);
-            }
-        });
-        
-        // updateAddButtonState();
+    const raw = sessionStorage.getItem('step2');
+    if (!raw) {
+        clearTemplateUI();
+        return;
     }
-}
 
-function initFeedbackTemplatesComponent() {
-    // Load stored data
-    loadFeedbackTemplatesFromSessionStorage();
-    
-    // Add event listeners
-    // const addBtn = document.getElementById('add-template-btn');
-    // if (addBtn) {
-    //     addBtn.addEventListener('click', addTemplate);
-    // }
-    
-    // Add event listeners to existing inputs
-    const existingInputs = document.querySelectorAll('.template-input');
-    existingInputs.forEach(input => {
+    let templateArray;
+    try {
+        templateArray = JSON.parse(raw);
+    } catch (e) {
+        console.warn('Invalid step2 template format');
+        clearTemplateUI();
+        return;
+    }
+
+    if (!Array.isArray(templateArray)) {
+        clearTemplateUI();
+        return;
+    }
+
+    const templateContainer = document.getElementById('template-container');
+    templateContainer.innerHTML = '';
+    templateCount = 0;
+
+    templateArray.forEach(template => {
+        if (typeof template !== 'string' || !template.trim()) return;
+
+        const templateRow = document.createElement('div');
+        templateRow.className = 'template-row';
+        templateRow.innerHTML = `
+            <input type="text" class="template-input"
+                   maxlength="50"
+                   value="${template}">
+        `;
+        templateContainer.appendChild(templateRow);
+        templateCount++;
+
+        const input = templateRow.querySelector('.template-input');
         input.addEventListener('input', saveFeedbackTemplatesToSessionStorage);
     });
-    
-    // Update template count
-    templateCount = existingInputs.length;
-    // updateAddButtonState();
-    updateStep2FromTemplates();
 }
+
+/* clear template UI（sessionStorage） */
+function clearTemplateUI() {
+    const templateContainer = document.getElementById('template-container');
+    if (templateContainer) {
+        templateContainer.innerHTML = '';
+    }
+    templateCount = 0;
+}
+
+
+function initFeedbackTemplatesComponent() {
+    const DEFAULT_FEEDBACK_TEMPLATES = ["Strengths", "Weaknesses","Suggestions for improvement"];
+    if (!sessionStorage.getItem('step2')) {
+        sessionStorage.setItem(
+            'step2',
+            JSON.stringify([...DEFAULT_FEEDBACK_TEMPLATES])
+        );
+    }
+    loadFeedbackTemplatesFromSessionStorage();
+}
+
+
 
 // function resetToDefaultTemplate() {
 //    // Clear sessionStorage first to prevent loading old data
@@ -308,19 +356,19 @@ function initFeedbackTemplatesComponent() {
 // }
 
 
-function updateStep2FromTemplates() {
-    const inputs = document.querySelectorAll('.template-input');
-    const value = Array.from(inputs)
-        .map(i => i.value.trim())
-        .filter(Boolean)
-        .join(', ');
+// function updateStep2FromTemplates() {
+//     const inputs = document.querySelectorAll('.template-input');
+//     const value = Array.from(inputs)
+//         .map(i => i.value.trim())
+//         .filter(Boolean)
+//         .join(', ');
 
-    sessionStorage.setItem('step2', value);
-}
+//     sessionStorage.setItem('step2', value);
+// }
 
 // ==================== Component 3: Teaching Style Functions ====================
 
-// function getSelectedTeachingStyle() {
+// function getSelectedFeedbackPattern() {
 //     const selectedRadio = document.querySelector('input[name="teaching-style"]:checked');
 //     if (selectedRadio) {
 //         return selectedRadio.value;
@@ -335,15 +383,15 @@ function updateStep2FromTemplates() {
 //     return null;
 // }
 
-// function saveTeachingStyleToStorage() {
-//     const selectedStyle = getSelectedTeachingStyle();
+// function saveFeedbackPatternToStorage() {
+//     const selectedStyle = getSelectedFeedbackPattern();
 //     if (selectedStyle) {
 //         sessionStorage.setItem('step2_selected_teach_style', selectedStyle);
 //         console.log('Teaching style saved:', selectedStyle);
 //     }
 // }
 
-// function loadTeachingStyleFromStorage() {
+// function loadFeedbackPatternFromStorage() {
 //     const storedStyle = sessionStorage.getItem('step2_selected_teach_style');
 //     if (storedStyle) {
 //         const radio = document.querySelector(`input[name="teaching-style"][value="${storedStyle}"]`);
@@ -353,29 +401,31 @@ function updateStep2FromTemplates() {
 //     }
 // }
 
-// function initTeachingStyleComponent() {
+// function initFeedbackPatternComponent() {
 //     // Load stored data
-//     loadTeachingStyleFromStorage();
+//     loadFeedbackPatternFromStorage();
     
 //     // Add event listeners to radio buttons
 //     const radioButtons = document.querySelectorAll('input[name="teaching-style"]');
 //     radioButtons.forEach(radio => {
-//         radio.addEventListener('change', saveTeachingStyleToStorage);
+//         radio.addEventListener('change', saveFeedbackPatternToStorage);
 //     });
 // }
 
-
-function initTeachingStyleComponent() {
+function initFeedbackPatternComponent() {
     const radios = document.querySelectorAll('input[name="step3"]');
     const container = document.getElementById('custom-rubric-container');
     const textarea = document.getElementById('custom-rubric-text');
+    const customRadio = document.querySelector('input[name="step3"][value=""]');
 
+    const initiallyChecked = document.querySelector('input[name="step3"]:checked');
+    if (initiallyChecked && initiallyChecked.value !== '') {
+        sessionStorage.setItem('step3', initiallyChecked.value);
+    }
     radios.forEach(radio => {
         radio.addEventListener('change', () => {
             if (!radio.checked) return;
-
-            if (radio.value === '') {
-                // Fourth option
+            if (radio === customRadio) {
                 sessionStorage.setItem('step3', '');
                 container.style.display = 'block';
             } else {
@@ -387,11 +437,12 @@ function initTeachingStyleComponent() {
 
     if (textarea) {
         textarea.addEventListener('input', () => {
-            sessionStorage.setItem('step3A', textarea.value);
+            if (customRadio && customRadio.checked) {
+                sessionStorage.setItem('step3A', textarea.value);
+            }
         });
     }
 
-    // Restore state
     const step3 = sessionStorage.getItem('step3');
     const step3A = sessionStorage.getItem('step3A');
 
@@ -401,11 +452,11 @@ function initTeachingStyleComponent() {
         );
         if (radio) radio.checked = true;
         container.style.display = 'none';
-    } else if (step3A) {
-        const customRadio = document.querySelector('input[name="step3"][value=""]');
+
+    } else if (step3 === '' && step3A) {
         if (customRadio) customRadio.checked = true;
         container.style.display = 'block';
-        textarea.value = step3A;
+        if (textarea) textarea.value = step3A;
     }
 }
 
@@ -491,6 +542,7 @@ function displayStyleKeywordsAsText(keywords, container) {
     container.innerHTML = `<div class="display-text">${displayText}</div>`;
 }
 
+
 function displayFeedbackTemplatesAsText(templates, container) {
     if (templates.length > 0) {
         const html = templates.map(template => 
@@ -502,13 +554,13 @@ function displayFeedbackTemplatesAsText(templates, container) {
     }
 }
 
-// function displayTeachingStyleAsText(selectedStyle, container) {
-//     const teachingStyles = [
+// function displayFeedbackPatternAsText(selectedStyle, container) {
+//     const FeedbackPatterns = [
 //         'AUTHORITATIVE', 'SOCRATIC', 'NURTURING', 'CONSTRUCTIVE', 'DIRECT', 'PLAIN'
 //     ];
     
 //     let html = '<div class="radio-group">';
-//     teachingStyles.forEach(style => {
+//     FeedbackPatterns.forEach(style => {
 //         const isSelected = style === selectedStyle;
 //         const className = isSelected ? 'radio-item' : 'radio-item grayed';
 //         const checked = isSelected ? 'checked' : '';
@@ -534,7 +586,7 @@ function getAllFormData() {
     return {
         // selectedStyles: getSelectedStyles(),
         // templateTexts: getTemplateTexts(),
-        // teachingStyle: getSelectedTeachingStyle(),
+        // FeedbackPattern: getSelectedFeedbackPattern(),
         // additionalExamples: getAdditionalExamples()
         step11: sessionStorage.getItem('step11'),
         step12: sessionStorage.getItem('step12'),
@@ -595,7 +647,7 @@ function getStoredConfigData() {
         ].filter(Boolean),
         feedback_templates: sessionStorage.getItem('step2') || '',
         feedback_pattern: sessionStorage.getItem('step3') || '',
-        feedback_pattern_custom: sessionStorage.getItem('step3A') || ''
+        custom_rubric: sessionStorage.getItem('step3A') || ''
     };
 }
 
@@ -680,7 +732,7 @@ function getStoredConfigData() {
 //             // Re-initialize components to reflect loaded data
 //             setTimeout(() => {
 //                 window.feedbackInputFunctions.initStyleKeywordsComponent();
-//                 window.feedbackInputFunctions.initTeachingStyleComponent();
+//                 window.feedbackInputFunctions.initFeedbackPatternComponent();
 //                 window.feedbackInputFunctions.initTeachingExampleComponent();
 //             }, 500);
 
@@ -717,7 +769,7 @@ function getStoredConfigData() {
 //     }
     
 //     if (document.getElementById('teaching-style-component')) {
-//         initTeachingStyleComponent();
+//         initFeedbackPatternComponent();
 //     }
     
 //     if (document.getElementById('teaching-example-component')) {
@@ -734,17 +786,22 @@ document.addEventListener('DOMContentLoaded', function () {
     switch (page) {
 
         case 'page_1':
-            // Step 1: style keywords (step11–step14)
-            // Step 2: templates (step2, read-only)
             initStyleKeywordsComponent();
-            initFeedbackTemplatesComponent();
+
+            if (document.getElementById('template-container')) {
+                initFeedbackTemplatesComponent();
+            }
+
             break;
 
         case 'page_2':
             // Step 3: feedback pattern (step3 / step3A)
-            initTeachingStyleComponent();
+            if (document.getElementById('teaching-style-container')) {
+                initFeedbackPatternComponent();
+            }
             break;
 
+            
         case 'page_final':
             // Display-only page
             // No interactive components to initialize
@@ -758,80 +815,34 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
-// procedding functions
-function saveAndProceed_page2() {
-    // const teachingStyle = window.feedbackInputFunctions.getSelectedTeachingStyle();
-    // const additionalExamples = window.feedbackInputFunctions.getAdditionalExamples();
-    const step3  = sessionStorage.getItem('step3') || '';
-    const step3A = sessionStorage.getItem('step3A') || '';
 
-    let tid = sessionStorage.getItem('tid');
-    
-    // Create session ID if it doesn't exist
-    if (!tid) {
-        tid = crypto.randomUUID();
-        sessionStorage.setItem('tid', tid);
-    }
-    
-    // if (!teachingStyle) {
-    //     alert("❗ Please select a Primary Feedback Pattern");
-    //     return;
-    // }
-    if (!step3 && !step3A) {
-        alert("❗ Please select a Feedback Pattern or provide a custom one.");
-        return;
-    }
+//
+function bindStyleKeywordSession() {
+    const validSteps = new Set(["step11", "step12", "step13", "step14"]);
 
-    // Get step1 data from sessionStorage
-    const configData = window.feedbackInputFunctions.getStoredConfigData();
-    
-    // Prepare data for backend
-    const styleData = {
-        'tid': tid,
-        'style_keywords': configData.style_keywords,
-        'feedback_templates': configData.feedback_templates,
-        'feedback_pattern': step3 || '',
-        'feedback_pattern_custom': step3A || ''
-    };
-    
-    console.log('Sending styleData to backend:', styleData);
-    
-    // Show saving status
-    const status = document.getElementById('save-status');
-    status.textContent = '💾 Saving...';
-    status.style.color = 'blue';
-    
-    fetch('/api/comment/update_style', {
-        method: 'POST', 
-        headers: {
-            'Content-Type': 'application/json'
-        }, 
-        body: JSON.stringify(styleData)
-    }).then(response => {
-        if (!response.ok) {
-            throw Error('Save failed! Please try again.');
+    document.querySelectorAll('.style-keywords-submodule[data-step]').forEach(module => {
+        const stepName = module.dataset.step;
+        if (!validSteps.has(stepName)) return;
+
+        const radios = module.querySelectorAll(`input[type="radio"][name="${stepName}"]`);
+
+        radios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.checked) {
+                    sessionStorage.setItem(stepName, radio.value);
+                }
+            });
+        });
+
+
+        const checked = module.querySelector(`input[type="radio"][name="${stepName}"]:checked`);
+        if (checked) {
+            sessionStorage.setItem(stepName, checked.value);
         }
-        return response.json()
-    }).then(result => {
-        if (result.success) {
-            status.textContent = '✔️ Saved';
-            status.style.color = 'green';
-            
-            // Redirect to step_final after successful save
-            setTimeout(() => {
-                window.location.href = '/page_final';
-            }, 1000);
-        } else {
-            console.log("Failed result is", result);
-            throw Error('Save failed! Please try again.');
-        }
-    }).catch(error => {
-        console.error(error);
-        status.textContent = '❌ Save failed';
-        status.style.color = 'red';
-        alert(error);
     });
 }
+
+
 // ==================== Export functions for global access ====================
 
 // Make functions available globally
@@ -839,8 +850,8 @@ window.feedbackInputFunctions = {
     // Component 1
     // getSelectedStyles,
     // resetStyles,
-    resetSingleStep,
-    initStyleKeywordsComponent,
+    // resetSingleStep,
+    initStyleKeywordsComponent,   
     
     // Component 2
     getTemplateTexts,
@@ -850,8 +861,8 @@ window.feedbackInputFunctions = {
     // resetToDefaultTemplate,
     
     // Component 3
-    // getSelectedTeachingStyle,
-    initTeachingStyleComponent,
+    // getSelectedFeedbackPattern,
+    initFeedbackPatternComponent,
     
     // Component 4
     // getAdditionalExamples,
@@ -860,15 +871,15 @@ window.feedbackInputFunctions = {
     // Display functions
     displayStyleKeywordsAsText,
     displayFeedbackTemplatesAsText,
-    // displayTeachingStyleAsText,
+    // displayFeedbackPatternAsText,
     // displayTeachingExampleAsText,
     
     // Utility functions
     getAllFormData,
     clearAllStoredData,
     getStoredConfigData,
-    loadPriorSetting,
+    // loadPriorSetting,
 
     // Utility functions
-    saveAndProceed_page2
+    // saveAndProceed_page2
 };

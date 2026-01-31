@@ -18,7 +18,7 @@
 
     <!-- ================= Left Control Panel ================= -->
     <div class="left-section">
-        <h2 style="text-decoration: underline;">Setting Step: 2</h2>
+        <h2 style="text-decoration: underline;">Pattern Setting</h2>
         <p id="save-status"></p>
 
         <ul class="instruction-list">
@@ -29,11 +29,11 @@
         <div class="traverse-buttons">
             <button class="t-button" onclick="goBack()">Back</button>
             <button class="t-button" onclick="saveAndProceed_page2()">Save</button>
-            <button class="t-button"
+            <!-- <button class="t-button"
                     style="background-color:#ff9800;"
                     onclick="window.feedbackInputFunctions.loadPriorSetting()">
                 Load Prior Setting
-            </button>
+            </button> -->
         </div>
     </div>
 
@@ -63,6 +63,90 @@
 })();
 
 /* ---------- Load Component ---------- */
+
+
+// procedding functions
+function saveAndProceed_page2() {
+    // const FeedbackPattern = window.feedbackInputFunctions.getSelectedFeedbackPattern();
+    // const additionalExamples = window.feedbackInputFunctions.getAdditionalExamples();
+    const step3  = sessionStorage.getItem('step3') || '';
+    const step3A = sessionStorage.getItem('step3A') || '';
+    console.log("----", step3, "----", step3A)
+
+    let tid = sessionStorage.getItem('tid');
+    
+    // Create session ID if it doesn't exist
+    if (!tid) {
+        tid = crypto.randomUUID();
+        sessionStorage.setItem('tid', tid);
+    }
+    
+    // if (!FeedbackPattern) {
+    //     alert("❗ Please select a Primary Feedback Pattern");
+    //     return;
+    // }
+    if (!step3 && !step3A) {
+        alert("❗ Please select a Feedback Pattern or provide a custom one.");
+        return;
+    }
+
+    // Get step1 data from sessionStorage
+    const configData = window.feedbackInputFunctions.getStoredConfigData();
+    
+    // Prepare data for backend
+    const styleData = {
+        'tid': tid,
+        'style_keywords': configData.style_keywords,
+        'feedback_templates': configData.feedback_templates,
+        'feedback_pattern': step3 || '',
+        'feedback_pattern_custom': step3A || ''
+    };
+    
+    console.log('Sending styleData to backend:', styleData);
+    
+    // Show saving status
+    const status = document.getElementById('save-status');
+    status.textContent = '💾 Saving...';
+    status.style.color = 'blue';
+    
+    fetch('/api/comment/update_style', {
+        method: 'POST', 
+        headers: {
+            'Content-Type': 'application/json'
+        }, 
+        body: JSON.stringify(styleData)
+    }).then(response => {
+        if (!response.ok) {
+            throw Error('Save failed! Please try again.');
+        }
+        return response.json()
+    }).then(result => {
+        if (result.success) {
+            status.textContent = '✔️ Saved';
+            status.style.color = 'green';
+            
+            // Redirect to step_final after successful save
+            setTimeout(() => {
+                window.location.href = '/page_final';
+            }, 1000);
+        } else {
+            console.log("Failed result is", result);
+            throw Error('Save failed! Please try again.');
+        }
+    }).catch(error => {
+        console.error(error);
+        status.textContent = '❌ Save failed';
+        status.style.color = 'red';
+        alert(error);
+    });
+}
+
+/* ---------- Init ---------- */
+window.addEventListener('load', () => {
+    loadComponents();
+});
+
+
 async function loadComponents() {
     try {
         const r = await fetch("{{ url_for('static', filename='components/feedback_function_3.html') }}");
@@ -70,7 +154,7 @@ async function loadComponents() {
 
         /* initialize  */
         setTimeout(() => {
-            window.feedbackInputFunctions.initTeachingStyleComponent();
+            window.feedbackInputFunctions.initFeedbackPatternComponent();
         }, 100);
 
     } catch (e) {
@@ -83,24 +167,6 @@ function goBack() {
     window.location.href = '/page_1';
 }
 
-/* ---------- Save & Proceed ---------- */
-function saveAndProceed_page2() {
-    const step3  = sessionStorage.getItem('step3') || '';
-    const step3A = sessionStorage.getItem('step3A') || '';
-
-    if (!step3 && !step3A) {
-        alert('❗ Please select a feedback pattern or provide a custom one.');
-        return;
-    }
-
-    const status = document.getElementById('save-status');
-    status.textContent = '✔ Saved';
-    status.style.color = 'green';
-
-    setTimeout(() => {
-        window.location.href = '/page_final';
-    }, 800);
-}
 
 /* ---------- Init ---------- */
 window.addEventListener('load', () => {

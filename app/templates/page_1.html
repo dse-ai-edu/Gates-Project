@@ -11,23 +11,23 @@
 </head>
 
 <body data-page="page_1">
-    
+
 <h1 class="page-title">Auto Feedback Generation</h1>
 
 <div class="container">
 
     <!-- ================= Left Control Panel ================= -->
     <div class="left-section">
-        <h2 style="text-decoration: underline;">Setting Step: 1</h2>
+        <h2 style="text-decoration: underline;">Keyword Setting</h2>
         <p id="save-status"></p>
 
         <div class="traverse-buttons">
             <button class="t-button" onclick="saveAndProceed_page1()">Save</button>
-            <button class="t-button"
+            <!-- <button class="t-button"
                     style="background-color:#ff9800;"
                     onclick="window.feedbackInputFunctions.loadPriorSetting()">
                 Load Prior Setting
-            </button>
+            </button> -->
         </div>
     </div>
 
@@ -88,16 +88,22 @@ async function loadComponents() {
             document.getElementById(id).innerHTML = await r.text();
         }
 
-        /* 初始化逻辑全部交给 JS 文件 */
-        setTimeout(() => {
-            window.feedbackInputFunctions.initStyleKeywordsComponent();
-            window.feedbackInputFunctions.initFeedbackTemplatesComponent();
-        }, 100);
+        const init = () => {
+            initStyleKeywordsComponent();
+            initFeedbackTemplatesComponent();
+        };
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
 
     } catch (e) {
         console.error('Component loading failed:', e);
     }
 }
+
 
 /* ---------- Save & Proceed ---------- */
 function saveAndProceed_page1() {
