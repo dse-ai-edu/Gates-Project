@@ -251,7 +251,7 @@ function estimateExpectation(currentConfig) {
             ? currentConfig.custom_rubric
             : JSON.stringify(currentConfig.custom_rubric))
         : '';
-    const len_estimate = text1.length + text2.length;
+    const len_estimate = text1.length + text2.length * 10;
     const mean = 12 + (len_estimate - 3000) / 3000;
     const std = 2;
     const u1 = Math.random();
@@ -328,12 +328,25 @@ function generatePersonalizedFeedback() {
             ? templates.join(', ')
             : (templates || 'DEV: Default Template');
 
+        const pattern_val =
+            (typeof currentConfig.feedback_pattern === 'string' &&
+            currentConfig.feedback_pattern.trim() !== '')
+                ? currentConfig.feedback_pattern
+                : 'Custom';
+
+        const rubric_txt =
+            (typeof currentConfig.custom_rubric === 'string' &&
+            currentConfig.custom_rubric.trim() !== '')
+                ? `Your Custom Rubric: ${currentConfig.custom_rubric}<br>`
+                : '';
+
         resultBox.innerHTML += `
         <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
         <div style="color:#fb827a;">
-        Generated using: ${currentConfig.feedback_pattern} style<br>
-        Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: Default Keywords'}<br>
+        Generated in: ${pattern_val} style<br>
         Templates: ${templateText}
+        Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: Default Keywords'}<br>
+        ${rubric_txt}
         </div>`;
     })
     .catch(error => {
