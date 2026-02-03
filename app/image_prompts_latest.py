@@ -99,7 +99,8 @@ You are given one or more PDFs, each containing scanned images of multiple stude
 
 Your task is to:
 1. Identify and separate each student’s exam, and then
-2. Segment each student’s exam into separate image files, where each image contains the student’s complete work for exactly one exam question or sub-question.
+2. Segment each student’s exam into separate image files, 
+where each image contains the student’s complete work for exactly one exam question or sub-question.
 
 Apply the same rules consistently across all PDFs in the batch.
 
