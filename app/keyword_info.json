@@ -1,46 +1,68 @@
 {
   "First Person": {
+    "subgroup": 1,
+    "group_idx": 1,
     "short": "Feedback is written from the instructor’s perspective, using “I” statements.",
     "detail": "Example: “I notice that the derivative does not yet apply the product rule.”\n\nKEYWORD SECTION: Point of View\nKEYWORD NAME: First Person\n\nPROMPT: Write feedback from the instructor’s perspective using first-person language (“I”).\n\nHARD CONSTRAINTS:\n- The feedback must include first-person pronouns (e.g., “I notice,” “I expect,” “I recommend”).\n- Do not use second person (“you”) or third-person references to the student."
   },
   "Second Person": {
+    "subgroup": 1,
+    "group_idx": 2,
     "short": "Feedback addresses the student directly using “you.”",
     "detail": "Example: “You did not apply the product rule in this derivative.”\n\nKEYWORD SECTION: Point of View\nKEYWORD NAME: Second Person\n\nPROMPT: Write feedback that directly addresses the student using “you.”\n\nHARD CONSTRAINTS:\n- Must include second-person pronouns (e.g., “you,” “your”).\n- Must not include first-person pronouns (e.g., “I,” “we”).\n- Must not refer to “the student” in the third person."
   },
   "Third Person": {
+    "subgroup": 1,
+    "group_idx": 3,
     "short": "Feedback refers to the work itself rather than the instructor or student.",
     "detail": "Example: “The derivative shown does not apply the product rule.”\n\nKEYWORD SECTION: Point of View\nKEYWORD NAME: Third Person\n\nPROMPT: Write feedback that refers only to the work or solution, not the instructor or student.\n\nHARD CONSTRAINTS:\n- Must not include first-person or second-person pronouns (“I,” “we,” “you”).\n- Must refer to the work, solution, or response (e.g., “the derivative,” “the solution shown,” “the work”)."
   },
   "Neutral": {
-    "short": "Emotionally even, non-evaluative, matter of fact. Signals objectivity and consistency.",
+    "subgroup": 2,
+    "group_idx": 1,
+    "short": "Emotionally even and matter of fact. Signals objectivity and consistency.",
     "detail": "Example: “The derivative shown does not account for the product rule. When differentiating a product of two functions, both functions must be considered.”\n\nKEYWORD SECTION: Interpersonal Quality\nKEYWORD NAME: Neutral\n\nPROMPT: Use emotionally neutral, non-evaluative language. State observations, criteria, and expectations plainly, without praise, encouragement, or softening language.\n\nHARD CONSTRAINTS:\n- Do not include emotional language or affective cues.\n- Do not include praise, reassurance, or encouragement.\n- Avoid hedging, politeness markers, or conversational fillers.\n- Focus on facts, rules, or criteria only."
   },
   "Formal": {
-    "short": "Professional, academic, impersonal. Emphasizes standards, conventions, and disciplinary norms.",
+    "subgroup": 2,
+    "group_idx": 2,
+    "short": "Professional and academic. Emphasizes standards and disciplinary norms.",
     "detail": "Example: “The submitted derivative is incomplete. The product rule must be applied when differentiating the function.”\n\nKEYWORD SECTION: Interpersonal Quality\nKEYWORD NAME: Formal\n\nPROMPT: Use professional, academic language aligned with disciplinary norms. Emphasize standards and conventions rather than tone or emotion.\n\nHARD CONSTRAINTS:\n- Maintain an impersonal, academic register.\n- Avoid conversational phrasing or casual expressions.\n- May reference standards and expectations explicitly.\n- Do not include emotional reassurance or informal language."
   },
   "Conversational": {
-    "short": "Natural language, approachable, less institutional.",
+    "subgroup": 2,
+    "group_idx": 3,
+    "short": "Uses natural and approachable language.",
     "detail": "Example: “Here, the derivative only reflects part of the function. Since this expression is a product, both pieces need to be included when differentiating.”\n\nKEYWORD SECTION: Interpersonal Quality\nKEYWORD NAME: Conversational\n\nPROMPT: Use natural, approachable language while remaining instructional. The tone should feel human and accessible without sacrificing clarity or accuracy.\n\nHARD CONSTRAINTS:\n- Plain language is allowed; academic jargon should be minimized.\n- Do not use slang, emojis, or humor.\n- Do not include emotional coaching or motivational language unless specified elsewhere.\n- The feedback must still clearly reference the task or concept."
   },
   "Direct": {
-    "short": "States judgments or gaps plainly.",
+    "subgroup": 3,
+    "group_idx": 1,
+    "short": "Uses explicit and plain language.",
     "detail": "Example: “This derivative is incorrect. The product rule was not applied.”\n\nKEYWORD SECTION: Directness\nKEYWORD NAME: Direct\n\nPROMPT: State errors, gaps, or judgments explicitly and unambiguously. Do not hedge, soften, or qualify statements.\n\nHARD CONSTRAINTS:\n- Do not use hedging or modal language (e.g., “may,” “might,” “appears,” “could”).\n- Do not use politeness markers or softeners (e.g., “please,” “you may want to”).\n- Statements should be definitive and concise."
   },
   "Indirect": {
-    "short": "Uses hedging, conditional phrasing, and softeners.",
+    "subgroup": 3,
+    "group_idx": 2,
+    "short": "Uses softened and conditional language,.",
     "detail": "Example: “It appears that the product rule may not have been fully applied when taking this derivative.”\n\nKEYWORD SECTION: Directness\nKEYWORD NAME: Indirect\n\nPROMPT: Use softened, conditional, or tentative language. Signal partial completion or uncertainty rather than definitive error.\n\nHARD CONSTRAINTS:\n- Must include hedging language (e.g., “appears,” “may,” “might,” “seems,” “not yet”).\n- Avoid blunt judgments (e.g., “incorrect,” “wrong,” “failed”).\n- Frame issues as possible or emerging rather than conclusive.\n- Maintain instructional clarity despite softened phrasing."
   },
   "Task-Focused": {
+    "subgroup": 4,
+    "group_idx": 1,
     "short": "Maintains attention on the work, process, or criteria and avoids personal attribution.",
     "detail": "Example: “The issue is in the differentiation step. Applying the product rule will produce a derivative that accounts for both factors in the function.”\n\nKEYWORD SECTION: Motivational Framing\nKEYWORD NAME: Task-Focused\n\nPROMPT: Keep feedback focused on the work, process, or criteria. Describe what is missing, incomplete, or needed in the task without referencing the student personally.\n\nHARD CONSTRAINTS:\n- Focus only on the work, steps, rules, or criteria.\n- Do not reference the student’s ability, effort, or identity.\n- Do not reference future growth, learning over time, or encouragement.\n- Avoid motivational or affective language."
   },
   "Growth-Oriented": {
+    "subgroup": 4,
+    "group_idx": 2,
     "short": "Frames performance as improvable over time.",
     "detail": "Example: “Applying the product rule here will strengthen your handling of composite expressions, which becomes increasingly important in later calculus problems.”\n\nKEYWORD SECTION: Motivational Framing\nKEYWORD NAME: Growth-Oriented\n\nPROMPT: Frame the feedback as part of ongoing learning and improvement over time. Emphasize how applying the feedback will support future performance or more advanced work.\n\nHARD CONSTRAINTS:\n- Must reference learning, development, or improvement over time.\n- Must connect the feedback to future or increasingly complex tasks.\n- Avoid fixed standards language (e.g., “at this level…”).\n- Do not include reassurance about ability unless explicitly specified elsewhere."
   },
   "High Expectations + Reassurance": {
-    "short": "Sets clear standards while affirming that the student is capable of meeting them with the next steps.",
+    "subgroup": 4,
+    "group_idx": 3,
+    "short": "Sets clear standards while affirming that the student is capable of meeting them.",
     "detail": "Example: “At this level, derivatives of products are expected to reflect both components of the function. Applying the product rule here will allow you to include the missing term and produce a complete derivative going forward.”\n\nKEYWORD SECTION: Motivational Framing\nKEYWORD NAME: High Expectations and Reassurance\n\nPROMPT: Communicate clear academic standards while explicitly affirming that the student is capable of meeting those standards. Frame errors as expected and fixable. Focuses on what to do next while signaling explicitly, “this is within your reach.” Override the selected Point of View and write the reassurance in second person (“you”).\n\nHARD CONSTRAINTS:\n- Must explicitly state an academic expectation or standard (e.g., “At this level…”, “This problem requires…”).\n- Must include an explicit affirmation of capability in second person (e.g., “You are capable of meeting this standard,” “You can absolutely do this”).\n- Must include a concrete next step for revision.\n- Must frame the error as normal and correctable."
   }
 }
