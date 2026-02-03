@@ -193,8 +193,8 @@ def update_style_config():
         config_data = {
             'style_keywords': data.get('style_keywords', []),
             'feedback_templates': data.get('feedback_templates', []),
-            'teach_style': data.get('teach_style', ''),
-            'teach_example': data.get('teach_example', '')
+            'feedback_pattern': data.get('feedback_pattern', ''),
+            'custom_rubric': data.get('custom_rubric', '')
         }
         
         existing_record = database['comment_config'].find_one({'tid': tid})
@@ -269,81 +269,139 @@ def retrieve_style_config():
     
     return jsonify(response)
 
-def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
-    """Generate personalized feedback response for student answer"""
-    if predefined_flag:
-        import predefined_conf
-        predefined_data = predefined_conf.predefined_data
-        system_prompts_raw = {
-            "final": predefined_data[predefined_flag]["final"], 
-            "selected": predefined_data[predefined_flag]["selected"], 
-            "custom": predefined_data[predefined_flag]["custom"], }
-    elif history_prompt_dict:
-        system_prompts_raw = history_prompt_dict
-    else:
-        try:
-            # Extract configuration from system
-            micro_feedback = system_info.get('micro_style', {})
-            macro_feedback = system_info.get('macro_style', {})
-            
-        # Get style descriptors and templates
-            style_keywords = macro_feedback.get('keywords', [])
-            feedback_templates = macro_feedback.get('templates', [])
-            
-        # Get teaching style and personalization
-            teach_style = micro_feedback.get('teach_style', '')
-            teach_example = micro_feedback.get('examples', '')
-            locked_style = macro_feedback.get('locked_style', False)
-            
-        # Build system prompt for feedback generation
-            system_prompts_raw = utils.parse_teaching_style(
-                teach_style=teach_style,
-                teach_example=teach_example,
-                )
-        except Exception as e:
-            traceback.print_exc()
-            return {'success': False, 'error': str(e)}
 
+# def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
+#     """Generate personalized feedback response for student answer"""
+#     if predefined_flag:
+#         import predefined_conf
+#         predefined_data = predefined_conf.predefined_data
+#         system_prompts_raw = {
+#             "final": predefined_data[predefined_flag]["final"], 
+#             "selected": predefined_data[predefined_flag]["selected"], 
+#             "custom": predefined_data[predefined_flag]["custom"], }
+#     elif history_prompt_dict:
+#         system_prompts_raw = history_prompt_dict
+#     else:
+#         try:
+#             # Extract configuration from system
+#             micro_feedback = system_info.get('micro_style', {})
+#             macro_feedback = system_info.get('macro_style', {})
+            
+#         # Get style descriptors and templates
+#             style_keywords = macro_feedback.get('keywords', [])
+#             feedback_templates = macro_feedback.get('templates', [])
+            
+#         # Get teaching style and personalization
+#             teach_style = micro_feedback.get('teach_style', '')
+#             teach_example = micro_feedback.get('examples', '')
+#             locked_style = macro_feedback.get('locked_style', False)
+            
+#         # Build system prompt for feedback generation
+#             system_prompts_raw = utils.parse_teaching_style(
+#                 teach_style=teach_style,
+#                 teach_example=teach_example,
+#                 )
+#         except Exception as e:
+#             traceback.print_exc()
+#             return {'success': False, 'error': str(e)}
+
+#     try:
+#         # Build user prompt with student answer
+#         system_prompt = system_prompts_raw['final']
+#         custom_prompt = system_prompts_raw['custom'] if system_prompts_raw.get('custom', '') else None
+#         user_prompt = utils.parse_teaching_text(
+#             question=question_text + "\n ## Reference Answer is: " + reference_text,
+#             answer=answer_text,
+#             style_keywords=style_keywords,
+#             feedback_templates=feedback_templates,
+#             )
+        
+#        # Generate feedback using LLM
+#         feedback_text, feedback_prob = utils.llm_generate(
+#             input_text=user_prompt,
+#             system_text=system_prompt,
+#             model='gpt-4o',
+#             temperature=0.7, 
+#             max_tokens=750,
+#             logprobs=True
+#         )
+        
+#         return {
+#             'success': True,
+#             'feedback_text': feedback_text,
+#             'feedback_prob': feedback_prob,
+#             'style_keywords': style_keywords,
+#             'feedback_templates': feedback_templates,
+#             'teach_style': teach_style,
+#             'teach_example': teach_example,
+#             'system_prompt': system_prompt,
+#             'selected_prompt': system_prompts_raw.get('selected', ""),
+#             'custom_prompt': custom_prompt
+#         }
+        
+#     except Exception as e:
+#         traceback.print_exc()
+#         print(system_prompts_raw)
+#         return {'success': False, 'error': str(e)}
+
+
+def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
     try:
-        # Build user prompt with student answer
-        system_prompt = system_prompts_raw['final']
-        custom_prompt = system_prompts_raw['custom'] if system_prompts_raw.get('custom', '') else None
+        style_keywords = system_info.get('style_keywords', [])
+        feedback_templates = system_info.get('feedback_templates', [])
+        feedback_pattern = system_info.get('feedback_pattern', "")
+        custom_rubric = system_info.get('custom_rubric', "")
+        locked_style = system_info.get('locked_style', False)
+        
+        print(f"debug: before parse_feedback_pattern")
+        pattern_dict = utils.parse_feedback_pattern(
+            feedback_pattern=feedback_pattern,
+            custom_rubric=custom_rubric,
+            )
+        
+        pattern_key = pattern_dict.get("pattern_key", None)
+        pattern_body = pattern_dict.get("pattern_body", None)
+        print(f"debug: selected feedback_pattern: `{pattern_key}`; `{str(pattern_body)[:200]}`")
+        
+        
+        if reference_text is not None and len(reference_text.strip()) > 0:
+            question_text = question_text + "\n ## Reference Answer(s): " + reference_text
+        answer_text = answer_text.strip()
+        
         user_prompt = utils.parse_teaching_text(
-            question=question_text + "\n ## Reference Answer is: " + reference_text,
+            question=question_text,
             answer=answer_text,
             style_keywords=style_keywords,
             feedback_templates=feedback_templates,
             )
         
-       # Generate feedback using LLM
+        print(f"debug: before utils.llm_generate")
+        # Generate feedback using LLM
         feedback_text, feedback_prob = utils.llm_generate(
             input_text=user_prompt,
-            system_text=system_prompt,
-            model='gpt-4o',
-            temperature=0.7, 
-            max_tokens=750,
-            logprobs=True
-        )
+            system_text=pattern_body,
+            model='gpt-4o-mini',
+            max_tokens=2048,
+            have_log=True
+            )
         
         return {
-            'success': True,
-            'feedback_text': feedback_text,
-            'feedback_prob': feedback_prob,
-            'style_keywords': style_keywords,
-            'feedback_templates': feedback_templates,
-            'teach_style': teach_style,
-            'teach_example': teach_example,
-            'system_prompt': system_prompt,
-            'selected_prompt': system_prompts_raw.get('selected', ""),
-            'custom_prompt': custom_prompt
-        }
+                'success': True,
+                'feedback_text': feedback_text,
+                'feedback_prob': feedback_prob,
+                'style_keywords': style_keywords,
+                'feedback_templates': feedback_templates,
+                'feedback_pattern': feedback_pattern,
+                'custom_rubric': custom_rubric,
+                'pattern_body': pattern_body,
+            }
         
     except Exception as e:
         traceback.print_exc()
-        print(system_prompts_raw)
+        print(system_info)
         return {'success': False, 'error': str(e)}
-
-
+    
+    
 @app.route('/api/comment/submit', methods=['POST'])
 def comment_submit():
     """Generate personalized feedback response for student answer (no scoring involved)"""
@@ -413,13 +471,11 @@ def comment_submit():
             'system_config': {
                 'style_keywords': generate_result['style_keywords'],
                 'feedback_templates': generate_result['feedback_templates'],
-                'teach_style': generate_result['teach_style'],
-                'teach_example': generate_result['teach_example'],
-                'final_prompt': generate_result['system_prompt'],
-                'selected_prompt': generate_result['selected_prompt'],
-                'custom_prompt': generate_result['custom_prompt']
+                'feedback_pattern': generate_result['feedback_pattern'],
+                'custom_rubric': generate_result['custom_rubric'],
+                'pattern_body': generate_result['pattern_body'],
             },
-            'confidence': generate_result['feedback_prob'],
+            'feedback_prob': generate_result['feedback_prob'],
             'generated_at': datetime.utcnow()
         })
         
@@ -444,16 +500,16 @@ def comment_load():
         response_text = result.get('generated_response', '')
         if response_text:
             # Return the generated response (no scoring)
-            confidence = result.get('confidence', '-1')
+            certainty_score = result.get('feedback_prob', '-1')
 
             # Format as HTML for display
             formatted_response = utils.format_response_html(
                 response_text=response_text,
-                confidence=confidence,
+                certainty_score=certainty_score,
             )
             print(f">>>3>>>{formatted_response}")
             print(f">>>4>>>{response_text}")
-            print(f">>>5>>>{confidence}")
+            print(f">>>5>>>{certainty_score}")
 
             return jsonify({'success': True, 'response': formatted_response})
         return jsonify({'success': False, 'response': None})

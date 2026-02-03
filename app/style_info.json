@@ -1,5 +1,5 @@
 {
-  "Correctness-Focused": {
+  "Correctness": {
     "introduction": "## Research definition\nThe most basic level of feedback content centers on the accuracy of a response, often termed verification or knowledge of results (KR).\n\n## Core concepts\n\n- **Verification**: This is a simple dichotomous judgment that indicates whether an answer is correct or incorrect.\n- **Knowledge of Correct Response (KCR)**: This identifies the correct answer, allowing the student to see the target result.\n- **Error Flagging**: This highlights the location of an error without necessarily providing the correct answer, prompting the student to find the mistake themselves.\n- **Task-Level Feedback (FT)**: This focuses on how well a task is being performed, distinguishing correct from incorrect answers and building surface knowledge. It is the most common form of feedback used in classrooms.\n- **Descriptive Feedback**: Focuses on the substance of the work, providing clear evidence of behavior and detailing the \"what, how, and why\" of a performance.\n- **Corrective Suggestions**: These are action-oriented moves in which instructors provide specific directives in the margins or at the end of the work to help students improve in the future.\n\n## Instructor-facing explanation\nUse this when you want students to know whether an answer is right or wrong and what the correct result should be, without extended explanation.\n\n## Feedback moves\n\n### Strengths\nDescribe what is correct.\n\n### Weaknesses\nClearly identify the location of an error(s) or missing elements at the task level.\n\n### Suggestions for improvement\nSuggest a next step or show a worked example of a similar problem.\n\n## Avoids\nOpen-ended questioning",
     "full_style_name": "Correctness-Oriented",
     "pedagogical_goal": "Your instructional goal is to help the student identify whether their answer is correct and understand what the correct result should be",
@@ -38,7 +38,7 @@
     "note": ""
   },
 
-  "Rubric-Based": {
+  "Rubric": {
     "introduction": "## Instructor-facing explanation\nUse this when you want feedback and grading to strictly follow your course rubric.",
     "full_style_name": "Customized-Based",
     "pedagogical_goal": "You are generating feedback using the RUBRIC-BASED teaching style.",
@@ -50,5 +50,20 @@
     "priority_rule": "Ensure that each section aligns with the teaching style’s pedagogical goal and content focus, and that Suggestions for Improvement always move learning forward.",
     "exclusions": "Do not introduce criteria that are not present in the rubric.\nDo not override rubric priorities with system-defined teaching styles.\nDo not reference student ability or personal traits.",
     "note": "Below are keys (fields) of ideal Teaching Styles, you may use or ignore them in your generation. You may reuse or revise the content with the same key: [introduction, full_style_name, pedagogical_goal, primary_content_focus, strength_rule, weakness_rule, improvement_rule, priority_rule, exclusions]"
-  }
+  },
+  
+  
+  "Plain": {
+    "introduction": "## Research definition\nPlain feedback represents the most minimal form of instructional response. It simply states what is present in the student work without evaluation, explanation, or pedagogical framing.\n\n## Core concepts\n\n- **Neutral Description**: The feedback reports observable aspects of the response without judging correctness, quality, or reasoning.\n- **Status Reporting**: It may indicate whether an answer is provided, missing, or incomplete, without further interpretation.\n\n## Instructor-facing explanation\nUse this when the goal is only to acknowledge the student’s submission or to restate what is visible in the work, without guiding learning.\n\n## Feedback moves\n\n### Strengths\nMay restate parts of the response that are present.\n\n### Weaknesses\nMay note missing or incomplete elements in a descriptive manner.\n\n### Suggestions for improvement\nNone.\n\n## Avoids\nInstruction, evaluation, or guidance",
+    "full_style_name": "Plain / Minimal",
+    "pedagogical_goal": "Your instructional goal is to acknowledge or describe the student’s response without providing evaluation or guidance.",
+    "primary_content_focus": "Your primary content focus is Description Only.",
+    "strength_rule": "IF included, THEN only restate what is present in the student response.\n\n- Do not evaluate correctness or quality.\n- Do not interpret intent or reasoning.\n\n## Allowed moves\n- Describe What Happened",
+    "weakness_rule": "IF included, THEN only note absence or incompleteness in a factual way.\n\n- Do not label errors.\n- Do not explain why something is wrong or missing.\n\n## Allowed moves\n- Describe What Happened",
+    "improvement_rule": "Suggestions for improvement are not included in this pattern.",
+    "priority_rule": "Ensure the feedback remains purely descriptive and does not introduce instructional intent.",
+    "exclusions": "Do not provide corrective statements.\nDo not explain procedures or concepts.\nDo not ask questions.\nDo not reference student ability or personal traits.",
+    "note": ""
+    }
+
 }

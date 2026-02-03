@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Union, List
 
+import numpy as np
+
 import os
 import html
 import re
@@ -16,6 +18,30 @@ from app import key_iter
 from app.prompts import *
 from app.pattern_prompt import *
 
+from pathlib import Path
+
+
+def find_app_dir(max_depth=3):
+    start = Path(__file__).resolve().parent
+    cur = start
+    for _ in range(max_depth + 1):
+        candidate = cur / "app"
+        if candidate.exists():
+            return candidate.resolve()
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    for depth in range(1, max_depth + 1):
+        for p in start.rglob("app"):
+            try:
+                if len(p.relative_to(start).parts) <= depth:
+                    return p.resolve()
+            except ValueError:
+                continue
+    return start
+
+
+# Multi Modal LLM
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
@@ -58,29 +84,69 @@ def vllm_generate(input_text:str, system_text:str=None, input_image:list=None, m
     raise SystemError('failed to generate response with llm.')
 
 
-def llm_generate(input_text: str, system_text:str=None,  max_retry:int=3, **kwarg) -> str:
+def ppl_from_response(response):
+    logps = []
+    for item in response.choices[0].logprobs.content:
+        logps.append(item.logprob)
+    if not logps:
+        return None
+    return float(np.exp(-np.mean(logps)))
+
+# LLM main calling
+def llm_generate(
+    input_text: str, 
+    system_text: str = None, 
+    model: str = 'gpt-4o-mini', 
+    max_retry: int = 3, 
+    max_tokens: int = 2048,
+    have_log: bool = False, 
+    # **kwarg
+    ) -> str:
     
-    messages = [{'role':'user','content':input_text},]
+    user_msg = {'role':'user','content': str(input_text)}
     
     if system_text is not None:
-        messages = [{'role':'system','content':system_text},] + messages
-    
+        system_msg = {'role':'system','content':str(system_text)}
+        messages = [system_msg, user_msg]
+    else:
+        messages = [user_msg]  
+        
     for _ in range(max_retry):
+        print(f"[SYS] Num of Try: {_}:")
         try:
             client = openai.OpenAI(api_key=next(key_iter))
-            response = client.chat.completions.create(
-                messages=messages, 
-                **kwarg
-            )
+            
+            if have_log: 
+                print(f"!!! debug: before response generation A: ")
+                response = client.chat.completions.create(
+                    messages=messages, 
+                    model=model,
+                    max_tokens=max_tokens if max_tokens is not None else 2048,
+                    top_logprobs=1,
+                    logprobs=True,
+                    # **kwarg
+                    )
+                print(f"!!! debug: after response generation A, {str(response)[:200]}")
+            else:
+                print(f"!!! debug: before response generation B: ")
+                response = client.chat.completions.create(messages=messages, model=model, max_tokens=max_tokens)
+                print(f"!!! debug: after response generation B, {str(response)[:200]}")
             response_text = response.choices[0].message.content
-            if response.choices[0].logprobs:
-                response_prob = response.choices[0].logprobs.content[0].logprob
-                response_prob = np.round(np.exp(response_prob)*100, 2)
+            print(f"!!! debug: response_text: {response_text}")
+            if hasattr(response.choices[0], "logprobs"):
+                print(f"--- LOGPROB: {str(response)}")
+                print(f"--- TEXT: {response_text}")
+                print(f"--- Len of log content: {len(response.choices[0].logprobs.content)}")
+                response_prob = ppl_from_response(response)
             else:
                 response_prob = None
+            print(f"!!! debug: response_prob: {response_prob}")
             return response_text, response_prob
-        except:
-            traceback.print_exc()
+        except Exception as e:
+            error_msg = str(e)
+            print(f"!!! debug: response_prob error: {error_msg}")
+            continue
+    return error_msg, None
 
 
 ## Response Generation 
@@ -91,42 +157,106 @@ def format_keyword_block(keyword: str, info: dict) -> str:
     return (f"KEYWORD: {keyword} \n SUMMARY: {short} \n DETAILS: {detail}")
 
 
-def parse_teaching_style(
-        teach_style: str = None, 
-        teach_example: str = None, 
-        resource: str = None, 
-        example: str = None,
-        **kwarg) -> str:
+# def parse_teaching_style(
+#         teach_style: str = None, 
+#         teach_example: str = None, 
+#         resource: str = None, 
+#         example: str = None,
+#         **kwarg) -> str:
 
-    # Step 1: Process teach_style
-    standard_template = str(TP_PLAIN) # default = plain style
-    teach_style_lower = teach_style.lower().strip()
-    if "tpha" in teach_style_lower:
-        standard_template = str(TP_HUMOROUS_ACTIVE)
-    elif "tprl" in teach_style_lower:
-        standard_template = str(TP_RIGOROUS_LOGICAL)
-    elif "tpcs" in teach_style_lower:
-        standard_template = str(TP_CARING_SHARING)
+#     # Step 1: Process teach_style
+#     standard_template = str(TP_PLAIN) # default = plain style
+#     teach_style_lower = teach_style.lower().strip()
+#     if "tpha" in teach_style_lower:
+#         standard_template = str(TP_HUMOROUS_ACTIVE)
+#     elif "tprl" in teach_style_lower:
+#         standard_template = str(TP_RIGOROUS_LOGICAL)
+#     elif "tpcs" in teach_style_lower:
+#         standard_template = str(TP_CARING_SHARING)
+#     else:
+#         standard_template = ""
+#     #  
+#     # Step 2: Generate personal template
+#     personal_template = ""
+#     if teach_example:
+#         teach_style_custom_text = str(teach_example).strip()
+#         from app.prompt_tool import complete_style_extraction
+#         personal_template = complete_style_extraction(teach_style_custom_text)
+#     #  
+#     # Step 3: Merge templates or use standard
+#     if standard_template and personal_template:
+#         from app.prompt_tool import complete_style_merge
+#         final_respond_prompt = complete_style_merge(standard_template, personal_template)
+#     else:
+#         final_respond_prompt = standard_template
+#     #  
+#     return {"final": final_respond_prompt, 
+#             "selected": standard_template, 
+#             "custom": personal_template, }
+
+def longest_common_substring_len(a: str, b: str) -> int:
+    a, b = a.lower(), b.lower()
+    m, n = len(a), len(b)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    best = 0
+    for i in range(1, m + 1):
+        for j in range(1, n + 1):
+            if a[i - 1] == b[j - 1]:
+                dp[i][j] = dp[i - 1][j - 1] + 1
+                best = max(best, dp[i][j])
+    return best
+
+
+def best_match_by_lcs(query: str, candidates: list) -> str | None:
+    best_score, best_candidate = 0, None
+    for c in candidates:
+        score = longest_common_substring_len(query, c)
+        if score > best_score:
+            best_score = score
+            best_candidate = c
+    return best_candidate
+
+def parse_feedback_pattern(
+        feedback_pattern: str = None, 
+        custom_rubric: str = None, 
+        model: str = 'gpt-4o-mini',
+        **kwarg) -> str:
+    
+    app_dir = find_app_dir()
+    json_path = app_dir / "style_info.json"
+    with open(json_path, "r", encoding="utf-8") as f:
+        style_info = json.load(f)
+    
+    pattern_input_lower = feedback_pattern.lower().strip()
+    default_pattern_key, default_pattern = next(iter(style_info.items()))  # default = first one
+    pattern_body, case_num = None, -1
+    if len(pattern_input_lower) > 0 and 'custom' not in pattern_input_lower:
+        case_num = 1
+        # Case 1: Pre-defined Pattern
+        matched_pattern_key = best_match_by_lcs(pattern_input_lower, style_info.keys())
+        pattern_body = style_info.get(matched_pattern_key)
+    elif str(custom_rubric).strip() == 0:
+        case_num = 3
+        # Case 3: No match and no rubric -> plain pattern
+        matched_pattern_key = "Plain"
+        pattern_body = style_info.get(matched_pattern_key)
     else:
-        standard_template = ""
-    #  
-    # Step 2: Generate personal template
-    personal_template = ""
-    if teach_example:
-        teach_style_custom_text = str(teach_example).strip()
-        from app.prompt_tool import complete_style_extraction
-        personal_template = complete_style_extraction(teach_style_custom_text)
-    #  
-    # Step 3: Merge templates or use standard
-    if standard_template and personal_template:
-        from app.prompt_tool import complete_style_merge
-        final_respond_prompt = complete_style_merge(standard_template, personal_template)
-    else:
-        final_respond_prompt = standard_template
-    #  
-    return {"final": final_respond_prompt, 
-            "selected": standard_template, 
-            "custom": personal_template, }
+        # Case 2: Generate personal template
+        case_num = 2
+        matched_pattern_key = "Custom"
+        customize_prompt = style_info.get("Rubric")
+        system_text = str(customize_prompt)
+        input_text = f"""User Rubric: {custom_rubric}"""
+        pattern_body, pattern_prob = llm_generate(
+            input_text, system_text, 
+            model=model, max_retry=5, need_logpred=False)
+        if pattern_body is None:
+            matched_pattern_key = "Custom (override by Plain)"
+            pattern_body = style_info.get("Rubric")
+            
+    print(f"[PATTERN] Pattern Case  Above :{case_num}: `{matched_pattern_key}` from `{feedback_pattern}`")
+    return {"pattern_key": matched_pattern_key, 
+            "pattern_body": pattern_body}
 
 
 def parse_teaching_text(
@@ -139,7 +269,7 @@ def parse_teaching_text(
     
     # Step 1: optional, add grading information
     # grading_rubric, grading_text = grading
-    grading_prompt = ""
+    # grading_prompt = ""
     current_dir = Path(__file__).resolve().parent
     keyword_info_path = current_dir / "keyword_info.json"
     try:
@@ -159,13 +289,16 @@ def parse_teaching_text(
     else:
         keywords = []
     
-    macro_trait_text = ""
+    # keyword formatting
+    keyword_full_text = ""
     for kw in keywords:
-        info = keyword_info.get(kw , None)
+        matched_kw = best_match_by_lcs(kw, keywords)
+        info = keyword_info.get(matched_kw , None)
         if info is not None:
-            trait_this = format_keyword_block(kw, info)
-            macro_trait_text += f"""\n\n{trait_this}"""
-    macro_trait_prompt = MACRO_TRAIT_BASE.format(macro_trait_text)
+            kw_text_this = format_keyword_block(matched_kw, info)
+            keyword_full_text += f"""\n\n{kw_text_this}"""
+            
+    macro_trait_prompt = MACRO_TRAIT_BASE.format(keyword_full_text)
 
     if not feedback_templates:
         feedback_templates = "- Stength, - Weakness, - Improvement."
@@ -174,32 +307,47 @@ def parse_teaching_text(
     # Step 3: final user text
     final_respond_prompt = macro_trait_prompt
     final_respond_prompt += FEEDBACK_BASE
-    # final_respond_prompt += "Below are requirements for your feedback response: {} \n".format(FEEDBACK_REQUIREMENT)
     final_respond_prompt += FEEDBACK_INPUT_BASE.format(question=question, answer=answer)
-    if grading_prompt: final_respond_prompt += grading_prompt
+    
+    # if grading_prompt: 
+    #     final_respond_prompt += grading_prompt
+        
     final_respond_prompt += macro_template_prompt
     final_respond_prompt += FEEDBACK_OUTPUT_INSTRUCTION
     final_respond_prompt += "## Teacher (you) Response [NO MORE THAN *500* WORDS]: "
     return final_respond_prompt
 
 
-def format_response_html(response_text: str = "Placeholder of Response.", confidence: str|float = 0):
+def format_response_html(response_text: str = "Placeholder of Response.", certainty_score: str|float = 0):
     ## text
     html_text = html.escape(response_text)
     html_text = html_text.replace('\n', '<br>')
     html_text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', html_text)
     
     ## conf
-    processed_confidence = 0.0
-    if confidence is not None:
-        confidence_str = str(confidence)[:20]
-        pattern = r'^(\d+|\d+\.\d+)$'
-        match = re.match(pattern, confidence_str.strip())
-        if match:
-            number_str = match.group(1)
-            processed_confidence = float(number_str)
-            processed_confidence = round(processed_confidence, 4)
+    certainty_score_default = -1
+    case = 0
+    if certainty_score is not None:
+        if isinstance(certainty_score, float) and certainty_score>100:
+            processed_certainty_score = float(certainty_score)
+            processed_certainty_score = f"{processed_certainty_score:.2e}"
+            case = 1
+        elif isinstance(certainty_score, float):
+            processed_certainty_score = float(certainty_score)
+            processed_certainty_score = round(processed_certainty_score, 4)
+            case = 2
+        elif isinstance(certainty_score, int):
+            processed_certainty_score = certainty_score
+            case = 3
+        else:
+            processed_certainty_score = str(certainty_score)[:6]
+            case = 4
+        print(f">>9>>>Case{case}: {certainty_score} to {processed_certainty_score}; {type(processed_certainty_score)}")
+    else:
+        processed_certainty_score = -999
+        
+    ppl_note = "*Note: (PPL=1) fully certainty; (PPL→∞) increasing uncertainty."
     
-    confidence_display =f'<span style="color:#fb827a;font-weight:bold;">[conf: {processed_confidence:.4f}]</span>'
+    confidence_display =f'<span style="color:#fb827a;font-weight:bold;">[PPL: {processed_certainty_score}] {ppl_note} </span>'
     formatted_html = f"{html_text} <br> ----- <br> {confidence_display}"
     return formatted_html

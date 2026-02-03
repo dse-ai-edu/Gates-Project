@@ -89,17 +89,31 @@ function loadConfiguredSystem() {
 function displayConfigurationAsText() {
     // 1 Style Keywords
     const styleDisplay = document.getElementById('style-keywords-display');
-    const styleText = currentConfig.style_keywords.length > 0 
-        ? currentConfig.style_keywords.join(', ') 
-        : 'N/A';
-    styleDisplay.textContent = styleText;
+
+    let keywords = currentConfig.style_keywords;
+    let kw_lines = [];
+
+    if (Array.isArray(keywords)) {
+        kw_lines = keywords.map(k => `- ${k}`);
+    } else if (typeof keywords === 'string' && keywords.trim() !== '') {
+        kw_lines = keywords
+            .split(',')
+            .map(k => k.trim())
+            .filter(k => k.length > 0)
+            .map(k => `- ${k}`);
+    } else {
+        kw_lines = ['N/A'];
+    }
+
+    styleDisplay.style.whiteSpace = 'pre-line';
+    styleDisplay.textContent = kw_lines.join('\n');
 
     // 2 Feedback Templates  
     const templateDisplay = document.getElementById('feedback-templates-display');
 
     const templateDefault = ['`Strength', '`Weakness', '`Improvement'];
 
-    let lines;
+    let tp_lines;
     let templates = currentConfig.feedback_templates;
     if (typeof templates === 'string') {
         try {
@@ -111,15 +125,15 @@ function displayConfigurationAsText() {
 
     if (Array.isArray(templates) &&
         templates.length > 0) {
-        lines = templates.map((t, i) => `${i + 1}. ${t}`);
+        tp_lines = templates.map((t, i) => `${i + 1}. ${t}`);
     } else {
-        lines = [
+        tp_lines = [
             '[Default Template]',
             ...templateDefault.map((t, i) => `${i + 1}. ${t}`)
         ];
     }
 
-    const templateText = lines.join('\n');
+    const templateText = tp_lines.join('\n');
     templateDisplay.style.whiteSpace = 'pre-line';
     templateDisplay.textContent = templateText;
     // templateDisplay.textContent = "- Strength  - Weakness  - Improvement";
@@ -181,7 +195,7 @@ function saveCurrentConfiguration() {
         'feedback_pattern': currentConfig.feedback_pattern,
         'custom_rubric': currentConfig.custom_rubric
     };
-    
+
     console.log('Saving configuration:', styleData);
     
     fetch('/api/comment/update_style', {
@@ -227,82 +241,109 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
+
+function estimateExpectation(currentConfig) {
+    const text1 = currentConfig.feedback_pattern != null
+        ? String(currentConfig.feedback_pattern)
+        : '';
+    const text2 = currentConfig.custom_rubric != null
+        ? (typeof currentConfig.custom_rubric === 'string'
+            ? currentConfig.custom_rubric
+            : JSON.stringify(currentConfig.custom_rubric))
+        : '';
+    const len_estimate = text1.length + text2.length;
+    const mean = 12 + (len_estimate - 3000) / 3000;
+    const std = 2;
+    const u1 = Math.random();
+    const u2 = Math.random();
+    let expectation =
+        mean + std * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+    expectation = Math.min(15, Math.max(10, expectation));
+    return Number(expectation.toFixed(1));
+}
+
+
 function generatePersonalizedFeedback() {
     const studentAnswer = document.getElementById('student-answer').value;
     const resultBox = document.getElementById('result-textarea');
     const tid = sessionStorage.getItem('tid') || crypto.randomUUID();
     const archive_tid = sessionStorage.getItem('archive_tid') || '';
     const predefined_flag = sessionStorage.getItem('predefined_conf') || '';
-    
-    // Preparing to submit data
+    const expectation = estimateExpectation(currentConfig);
+
+    // === timer ===
+    const startTime = Date.now();
+    let timerId = null;
+
+    function updateRunningTime() {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        resultBox.innerHTML =
+            `Generating New Feedback... Please Wait (expect ${expectation} seconds)...<br>` +
+            `Running ${elapsed} seconds...`;
+    }
+
+    updateRunningTime();
+    timerId = setInterval(updateRunningTime, 1000);
+
     const submitData = {
-        'tid': tid,
-        'archive_tid': archive_tid,
-        'student_answer': studentAnswer,
-        'style_keywords': currentConfig.style_keywords,
-        'feedback_templates': currentConfig.feedback_templates,
-        'feedback_pattern': currentConfig.feedback_pattern,
-        'custom_rubric': currentConfig.custom_rubric,
-        'predefined_flag': predefined_flag
+        tid,
+        archive_tid,
+        student_answer: studentAnswer,
+        style_keywords: currentConfig.style_keywords,
+        feedback_templates: currentConfig.feedback_templates,
+        feedback_pattern: currentConfig.feedback_pattern,
+        custom_rubric: currentConfig.custom_rubric,
+        predefined_flag
     };
-    
+
     console.log('Submitting feedback request:', submitData);
-    
-    // Step 1: Call /api/comment/submit to generate feedback.
+
     fetch('/api/comment/submit', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData)
     })
     .then(response => response.json())
     .then(submitResult => {
         if (submitResult.success) {
-            console.log('Feedback generation submitted successfully');
-            let attempt_id=submitResult.attempt_id
-            // Step 2: Call /api/comment/load to retrieve the formatted feedback text.
-            return fetch(`/api/comment/load?tid=${tid}&attempt_id=${attempt_id}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+            let attempt_id = submitResult.attempt_id;
+            return fetch(`/api/comment/load?tid=${tid}&attempt_id=${attempt_id}`);
         } else {
             throw new Error(submitResult.error || 'Feedback generation failed');
         }
     })
     .then(response => response.json())
     .then(loadResult => {
-        if (loadResult.success) {
-            console.log('Feedback loaded successfully');
-
-            const htmlText  = loadResult.response;  
-            // 1. First render the main body (with <strong>, <span color>, <br>, etc.).
-            resultBox.innerHTML = htmlText;
-
-            // 2. Add configuration information at the end (use <hr> with 15 horizontal lines for a simpler style)
-            resultBox.innerHTML += `
-            <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
-            <div style="color:#fb827a;">
-            Generated using: ${currentConfig.feedback_pattern} style<br>
-            Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: Default Keywords'}<br>
-            Templates: ${
-                currentConfig.feedback_templates.length
-                    ? currentConfig.feedback_templates.join(', ')
-                    : 'DEV: Default Template'
-            }
-            </div>`;
-            
-        } else {
+        if (!loadResult.success) {
             throw new Error(loadResult.error || 'Failed to load formatted feedback');
         }
+
+        if (timerId) clearInterval(timerId);
+
+        const htmlText = loadResult.response;
+        resultBox.innerHTML = htmlText;
+
+        const templates = currentConfig.feedback_templates;
+        const templateText = Array.isArray(templates)
+            ? templates.join(', ')
+            : (templates || 'DEV: Default Template');
+
+        resultBox.innerHTML += `
+        <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
+        <div style="color:#fb827a;">
+        Generated using: ${currentConfig.feedback_pattern} style<br>
+        Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: Default Keywords'}<br>
+        Templates: ${templateText}
+        </div>`;
     })
     .catch(error => {
+        if (timerId) clearInterval(timerId);
         console.error('Error generating feedback:', error);
-        resultBox.innerText = `❌ Error generating feedback: ${error.message}. Please try again or check your configuration.`;
+        resultBox.innerText =
+            `❌ Error generating feedback: ${error.message}. Please try again or check your configuration.`;
     });
 }
+
 
 
 // Store answers loaded from backend
