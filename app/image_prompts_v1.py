@@ -14,7 +14,8 @@ RECOGNITION = """
 
     Transcribe all nonstandard or informal mathematical notation exactly as written. 
 
-    If handwriting is too unclear to recognize, just try as your best and output: ``<UNCLEAR> 'reliable content you recognized'`` without other explanations. 
+    If handwriting is too unclear to recognize, just try as your best and output: 
+    ``<UNCLEAR> 'reliable content you recognized'`` without other explanations. 
 
 """
 

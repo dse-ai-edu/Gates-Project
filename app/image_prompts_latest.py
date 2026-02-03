@@ -2,11 +2,13 @@ RECOGNITION = """
 
 You are given an image containing a student’s handwritten solution to a mathematics problem.
 
-Your task is to recognize the handwritten mathematical content and transcribe it into LaTeX, preserving the intended mathematical meaning and solution flow rather than the exact visual layout.
+Your task is to recognize the handwritten mathematical content and transcribe it into LaTeX, 
+preserving the intended mathematical meaning and solution flow rather than the exact visual layout.
 
 CORE OBJECTIVE
 
-Produce a clean, readable LaTeX transcription that reflects the student’s intended sequence of mathematical reasoning, even when the handwriting layout is irregular or disorganized.
+Produce a clean, readable LaTeX transcription that reflects the student’s intended sequence of mathematical reasoning, 
+even when the handwriting layout is irregular or disorganized.
 
 HANDWRITING RECOGNITION AND INTERPRETATION RULES
 
