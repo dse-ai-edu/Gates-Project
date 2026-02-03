@@ -167,3 +167,26 @@ Do not override rubric priorities with system-defined teaching styles.
 Do not reference student ability or personal traits."
   }
 }
+
+
+
+
+Example Response:
+
+Strengths
+The expression for \( \sec \theta \) has been correctly determined as \( \sec \theta = \sqrt{x^2 + 1} \), following the proper application of the cosine and secant identities. Additionally, the process of transitioning from \( \cot^{-1} \left( \frac{2\sqrt{x^2+1}}{x^2} \right) = \phi \) to expressing \( \cot \phi \) has been articulated appropriately.
+
+Weaknesses
+The equation \( \tan^{-1} x = 0 \) produces a value of \( x = 0 \), but further analysis of this equation is necessary to provide context for the remaining calculations. The subsequent steps show a lack of clarity in connecting each transformation throughout the problem. Specifically, the derivation for \( \sin \phi \) appears inconsistent, as it should reflect the relationship derived from \( \cot \phi \) rather than an arbitrary substitution involving \( x^4 + 4x^2 + 4 \). This results in a misalignment with conventional trigonometric identities.
+
+Suggestions for improvement
+The basic trigonometric identities should be reviewed to ensure clarity in transformations throughout the work. Specifically, the conversion from \( \cot \phi \) to \( \sin \phi \) requires adherence to the definitions of these functions. It is recommended to derive \( \sin \phi \) directly from the expression of \( \cot \phi = \frac{\cos \phi}{\sin \phi} \) and \( \sin^2 \phi + \cos^2 \phi = 1 \). Providing explicit steps leading from the definition of \( \phi \) to its sine and cosine forms will enhance clarity. A re-examination of the relationships between \( x \), \( \theta \), and \( \phi \) within the context of the problem would also strengthen the final expressions derived.
+-----
+[PPL: 2.0472] *Note: (PPL=1) fully certainty; (PPL→∞) increasing uncertainty.
+
+
+Generated using: Procedural style
+
+Keywords: Third Person, Formal, Direct, Task-Focused
+
+Templates: ["Strengths","Weaknesses","Suggestions for improvement"]

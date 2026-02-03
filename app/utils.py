@@ -84,10 +84,15 @@ def vllm_generate(input_text:str, system_text:str=None, input_image:list=None, m
     raise SystemError('failed to generate response with llm.')
 
 
-def ppl_from_response(response):
+def ppl_from_response(response, min_logprob=-100):
     logps = []
     for item in response.choices[0].logprobs.content:
-        logps.append(item.logprob)
+        lp = item.logprob
+        if lp is None:
+            continue
+        if lp < min_logprob: 
+            continue
+        logps.append(lp)
     if not logps:
         return None
     return float(np.exp(-np.mean(logps)))
@@ -135,6 +140,9 @@ def llm_generate(
             print(f"!!! debug: response_text: {response_text}")
             if hasattr(response.choices[0], "logprobs"):
                 print(f"--- LOGPROB: {str(response)}")
+                with open("tmp0202.json", "w") as g:
+                    response_dict = response.model_dump()
+                    json.dump(response_dict, g, ensure_ascii=False, indent=2)
                 print(f"--- TEXT: {response_text}")
                 print(f"--- Len of log content: {len(response.choices[0].logprobs.content)}")
                 response_prob = ppl_from_response(response)
@@ -249,7 +257,7 @@ def parse_feedback_pattern(
         input_text = f"""User Rubric: {custom_rubric}"""
         pattern_body, pattern_prob = llm_generate(
             input_text, system_text, 
-            model=model, max_retry=5, need_logpred=False)
+            model=model, max_retry=5, have_log=False)
         if pattern_body is None:
             matched_pattern_key = "Custom (override by Plain)"
             pattern_body = style_info.get("Rubric")
