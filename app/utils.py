@@ -354,7 +354,7 @@ def format_response_html(response_text: str = "Placeholder of Response.", certai
     else:
         processed_certainty_score = -999
         
-    ppl_note = "*Note: (PPL=1) fully certainty; (PPL→∞) increasing uncertainty."
+    ppl_note = "*NOTE - PPL=1: fully certainty); - PPL→∞: increasing uncertainty."
     
     confidence_display =f'<span style="color:#fb827a;font-weight:bold;">[PPL: {processed_certainty_score}] {ppl_note} </span>'
     formatted_html = f"{html_text} <br> ----- <br> {confidence_display}"
