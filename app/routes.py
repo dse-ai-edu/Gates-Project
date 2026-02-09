@@ -22,6 +22,8 @@ from app import app, database
 from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
+from bson import ObjectId
+import io
 
 from app.question_image_prompt import QUESTION_RECOGNITION, ASSESSMENT_RECOGNITION
 from app.image_prompts_latest import RECOGNITION
@@ -787,9 +789,8 @@ def api_image_convert():
             return jsonify({'success': False, 'error': 'No file uploaded'}), 400
 
         file = request.files['file']
-        
         input_type = request.form.get('type', '').lower()
-        
+
         if file.filename == '':
             return jsonify({'success': False, 'error': 'Empty filename'}), 400
 
@@ -799,9 +800,24 @@ def api_image_convert():
         if ext not in ('png', 'jpg', 'jpeg', 'pdf'):
             return jsonify({'success': False, 'error': 'Unsupported file type'}), 400
 
-        # -------------------------------------------------
-        # Save file under app/tmp (must be inside ./app/)
-        # -------------------------------------------------
+        # =================================================
+        # 1. Save to MongoDB (assets)
+        # =================================================
+        file_bytes = file.read()
+
+        asset_doc = {
+            "filename": filename,
+            "ext": ext,
+            "content": file_bytes,
+            "created_at": datetime.utcnow()
+        }
+
+        result = database['assets'].insert_one(asset_doc)
+        asset_id = result.inserted_id
+
+        # =================================================
+        # 2. Restore file from MongoDB to tmp
+        # =================================================
         tmp_dir = os.path.join(app_dir, 'tmp')
         os.makedirs(tmp_dir, exist_ok=True)
 
@@ -809,12 +825,12 @@ def api_image_convert():
         saved_name = f'{uid}.{ext}'
         saved_path = os.path.join(tmp_dir, saved_name)
 
-        file.save(saved_path)
+        with open(saved_path, 'wb') as f:
+            f.write(file_bytes)
 
-        # -------------------------------------------------
-        # Prepare image list for vllm_generate
-        # vllm_generate expects paths relative to ./app/
-        # -------------------------------------------------
+        # =================================================
+        # 3. Prepare image list for vllm_generate
+        # =================================================
         input_images = []
 
         if ext == 'pdf':
@@ -822,8 +838,7 @@ def api_image_convert():
                 image_paths = process_pdf(pdf_path=saved_path)
                 if not image_paths:
                     return jsonify({'success': False, 'error': 'Empty PDF after processing'}), 500
-                # only first page
-                input_images = [image_paths[0]]
+                input_images = [image_paths[0]]  # first page only
             except Exception:
                 traceback.print_exc()
                 return jsonify({'success': False, 'error': 'Failed to process PDF'}), 500
@@ -831,11 +846,9 @@ def api_image_convert():
             rel_path = os.path.relpath(saved_path, app_dir)
             input_images = [rel_path]
 
-
-        # -------------------------------------------------
-        # Call vLLM for OCR
-        # -------------------------------------------------
-
+        # =================================================
+        # 4. Select system prompt
+        # =================================================
         if input_type == 'question':
             system_prompt = QUESTION_RECOGNITION
         elif input_type == 'assessment':
@@ -844,7 +857,10 @@ def api_image_convert():
             system_prompt = RECOGNITION
         else:
             system_prompt = QUESTION_RECOGNITION
-            
+
+        # =================================================
+        # 5. Call vLLM
+        # =================================================
         text, _ = utils.vllm_generate(
             input_text="",
             system_text=system_prompt,
@@ -854,6 +870,7 @@ def api_image_convert():
 
         return jsonify({
             'success': True,
+            'asset_id': str(asset_id),
             'text': text.strip()
         })
 
