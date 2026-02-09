@@ -1,4 +1,4 @@
-<!-- Style Keywords Subcomponent 1A -->
+<!-- Style Keywords Subcomponent 1-1 -->
 <div class="feedback-input-component style-keywords-submodule"
      data-step="step11"
      id="style-keywords-component-step11">
@@ -6,45 +6,23 @@
     <h3>Point of View</h3>
 
     <div class="component-content">
-        <!-- <button class="reset-btn reset-submodule-btn"
-                onclick="window.feedbackInputFunctions.resetSingleStep('step11')">
-            Reset
-        </button> -->
-
         <div class="style-grid vertical">
-            <div class="checkbox-item">
-                <input type="radio"
-                       name="step11"
-                       id="pov-1st"
-                       value="First Person"
-                       checked>
-                <label for="pov-1st"
-                       title="Feedback is written from the instructor’s perspective, using “I” statements.">
-                    First Person
-                </label>
-            </div>
 
+            {% for item in subgroup1_keywords %}
             <div class="checkbox-item">
                 <input type="radio"
                        name="step11"
-                       id="pov-2nd"
-                       value="Second Person">
-                <label for="pov-2nd"
-                       title="Feedback addresses the student directly using “you.”">
-                    Second Person
-                </label>
-            </div>
+                       id="kw11_{{ item.group_idx }}"
+                       value="{{ item.key }}"
+                       {% if loop.first %}checked{% endif %}>
 
-            <div class="checkbox-item">
-                <input type="radio"
-                       name="step11"
-                       id="pov-3rd"
-                       value="Third Person">
-                <label for="pov-3rd"
-                       title="Feedback refers to the work itself rather than the instructor or student.">
-                    Third Person
+                <label for="kw11_{{ item.group_idx }}"
+                       title="{{ item.short }}">
+                    {{ item.name }}
                 </label>
             </div>
+            {% endfor %}
+
         </div>
     </div>
 </div>

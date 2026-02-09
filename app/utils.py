@@ -50,38 +50,38 @@ def verify_response(response_text):
     # leave if for now and we will implement it later based on need
     return True
 
-def vllm_generate(input_text:str, system_text:str=None, input_image:list=None, max_retry:int=3, **kwarg):
-    if input_image:
-        image_list = [encode_image('./app/'+x) for x in input_image]
-        messages = [{
-            'role':'user',
-            'content':[{"type": "image_url", "image_url": 
-                        {"url": "data:image/png;base64,{}".format(x),},} for x in image_list] \
-                            + [{"type": "text","text":input_text},]
-        }]
-    else:
-        messages = [{'role':'user','content':input_text},]
+# def vllm_generate(input_text:str, system_text:str=None, input_image:list=None, max_retry:int=3, **kwarg):
+#     if input_image:
+#         image_list = [encode_image('./app/'+x) for x in input_image]
+#         messages = [{
+#             'role':'user',
+#             'content':[{"type": "image_url", "image_url": 
+#                         {"url": "data:image/png;base64,{}".format(x),},} for x in image_list] \
+#                             + [{"type": "text","text":input_text},]
+#         }]
+#     else:
+#         messages = [{'role':'user','content':input_text},]
     
-    if system_text is not None:
-        messages = [{'role':'system','content':system_text},] + messages
+#     if system_text is not None:
+#         messages = [{'role':'system','content':system_text},] + messages
     
-    for _ in range(max_retry):
-        try:
-            client = openai.OpenAI(api_key=next(key_iter))
-            response = client.chat.completions.create(
-                messages=messages, **kwarg
-            )
-            response_text = response.choices[0].message.content
-            if response.choices[0].logprobs:
-                response_prob = response.choices[0].logprobs.content[0].logprob
-                response_prob = np.round(np.exp(response_prob)*100, 2)
-            else:
-                response_prob = None
-            return response_text, response_prob
-        except:
-            traceback.print_exc()
+#     for _ in range(max_retry):
+#         try:
+#             client = openai.OpenAI(api_key=next(key_iter))
+#             response = client.chat.completions.create(
+#                 messages=messages, **kwarg
+#             )
+#             response_text = response.choices[0].message.content
+#             if response.choices[0].logprobs:
+#                 response_prob = response.choices[0].logprobs.content[0].logprob
+#                 response_prob = np.round(np.exp(response_prob)*100, 2)
+#             else:
+#                 response_prob = None
+#             return response_text, response_prob
+#         except:
+#             traceback.print_exc()
     
-    raise SystemError('failed to generate response with llm.')
+#     raise SystemError('failed to generate response with llm.')
 
 
 def ppl_from_response(response, min_logprob=-100):
@@ -109,7 +109,6 @@ def llm_generate(
     ) -> str:
     
     user_msg = {'role':'user','content': str(input_text)}
-    
     if system_text is not None:
         system_msg = {'role':'system','content':str(system_text)}
         messages = [system_msg, user_msg]
@@ -138,8 +137,8 @@ def llm_generate(
                 print(f"!!! debug: after response generation B, {str(response)[:200]}")
             response_text = response.choices[0].message.content
             print(f"!!! debug: response_text: {response_text}")
-            if hasattr(response.choices[0], "logprobs"):
-                print(f"--- LOGPROB: {str(response)}")
+            if hasattr(response.choices[0], "logprobs") and response.choices[0].logprobs is not None:
+                print(f"--- LOGPROB: ")
                 with open("tmp0202.json", "w") as g:
                     response_dict = response.model_dump()
                     json.dump(response_dict, g, ensure_ascii=False, indent=2)
@@ -231,38 +230,40 @@ def parse_feedback_pattern(
         **kwarg) -> str:
     
     app_dir = find_app_dir()
-    json_path = app_dir / "style_info.json"
+    json_path = app_dir / "static" / "data" / "pattern_info.json"
     with open(json_path, "r", encoding="utf-8") as f:
-        style_info = json.load(f)
+        pattern_info = json.load(f)
     
     pattern_input_lower = feedback_pattern.lower().strip()
-    default_pattern_key, default_pattern = next(iter(style_info.items()))  # default = first one
+    default_pattern_key, default_pattern = next(iter(pattern_info.items()))  # default = first one
     pattern_body, case_num = None, -1
     if len(pattern_input_lower) > 0 and 'custom' not in pattern_input_lower:
         case_num = 1
         # Case 1: Pre-defined Pattern
-        matched_pattern_key = best_match_by_lcs(pattern_input_lower, style_info.keys())
-        pattern_body = style_info.get(matched_pattern_key)
+        matched_pattern_key = best_match_by_lcs(pattern_input_lower, pattern_info.keys())
+        pattern_body = pattern_info.get(matched_pattern_key)
     elif str(custom_rubric).strip() == 0:
         case_num = 3
         # Case 3: No match and no rubric -> plain pattern
         matched_pattern_key = "Plain"
-        pattern_body = style_info.get(matched_pattern_key)
+        pattern_body = pattern_info.get(matched_pattern_key)
     else:
         # Case 2: Generate personal template
         case_num = 2
         matched_pattern_key = "Custom"
-        customize_prompt = style_info.get("Rubric")
+        customize_prompt = pattern_info.get("Rubric")
         system_text = str(customize_prompt)
         input_text = f"""User Rubric: {custom_rubric}"""
+        print(f"*** debug: generate pattern input_text: `{input_text}`")
+        print(f"*** debug: generate pattern system_text: `{system_text}`")
         pattern_body, pattern_prob = llm_generate(
-            input_text, system_text, 
+            input_text=input_text, system_text=system_text, 
             model=model, max_retry=5, have_log=False)
         if pattern_body is None:
             matched_pattern_key = "Custom (override by Plain)"
-            pattern_body = style_info.get("Rubric")
+            pattern_body = pattern_info.get("Plain")
             
-    print(f"[PATTERN] Pattern Case  Above :{case_num}: `{matched_pattern_key}` from `{feedback_pattern}`")
+    print(f"[PATTERN] Pattern Case Above: {case_num}: `{matched_pattern_key}` from `{feedback_pattern}`")
     return {"pattern_key": matched_pattern_key, 
             "pattern_body": pattern_body}
 
@@ -278,8 +279,9 @@ def parse_teaching_text(
     # Step 1: optional, add grading information
     # grading_rubric, grading_text = grading
     # grading_prompt = ""
-    current_dir = Path(__file__).resolve().parent
-    keyword_info_path = current_dir / "keyword_info.json"
+    app_dir = find_app_dir()
+    data_dir = app_dir / "static" / "data" 
+    keyword_info_path = data_dir / "keyword_info.json"
     try:
         with open(keyword_info_path, "r", encoding="utf-8") as f:
             keyword_info = json.load(f)
@@ -354,8 +356,150 @@ def format_response_html(response_text: str = "Placeholder of Response.", certai
     else:
         processed_certainty_score = -999
         
-    ppl_note = "*NOTE - PPL=1: fully certainty; - PPL→∞: increasing uncertainty."
+    # ppl_note = "*NOTE - PPL=1: fully certainty; - PPL→∞: increasing uncertainty."
     
-    confidence_display =f'<span style="color:#fb827a;font-weight:bold;">[PPL: {processed_certainty_score}] {ppl_note} </span>'
-    formatted_html = f"{html_text} <br> ----- <br> {confidence_display}"
-    return formatted_html
+    # confidence_display =f'<span style="color:#fb827a;font-weight:bold;">[PPL: {processed_certainty_score}] {ppl_note} </span>'
+    # formatted_html = f"{html_text} <br> ----- <br> {confidence_display}"
+    # return formatted_html
+    return html_text
+
+
+
+
+
+# =========================
+import base64
+
+def encode_image(image_path: str) -> str:
+    with open(image_path, 'rb') as image_file:
+        return base64.standard_b64encode(image_file.read()).decode('utf-8')
+
+
+def get_image_media_type(image_path: str) -> str:
+    ext = Path(image_path).suffix.lower()
+    media_types = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp'
+    }
+    return media_types.get(ext, 'image/jpeg')
+
+def vllm_generate(
+    input_text: str,
+    system_text: str = None,
+    input_image: list | str | None = None,
+    max_retry: int = 3,
+    **kwargs
+):
+    """
+    Unified LLM entry.
+    - input_image: None | str | list[str]
+      (only ONE image will be used)
+    """
+    script_path = Path(__file__).resolve()
+    project_dir = script_path.parent 
+
+    # ---- normalize image_path ----
+    image_path = None
+    if isinstance(input_image, list) and input_image:
+        image_path = input_image[0]
+    elif isinstance(input_image, str):
+        image_path = input_image
+
+    last_error = None
+
+    for _ in range(max_retry):
+        try:
+            return llm_generate_gemini(
+                system_prompt=system_text,
+                user_prompt=input_text,
+                image_path=project_dir / image_path,
+                model="gemini-2.5-flash",
+                max_tokens=8192,
+            ), None
+        except Exception as e:
+            last_error = e
+            traceback.print_exc()
+
+    raise SystemError(
+        f"failed to generate response with gemini: {last_error}"
+    )
+
+
+def llm_generate_gemini(
+    system_prompt: str,
+    user_prompt: str,
+    image_path: str | None = None,
+    model: str = "gemini-2.5-flash",
+    max_tokens: int = 8192
+) -> str:
+    from google import genai
+    from google.genai import types
+
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        raise RuntimeError("GOOGLE_API_KEY not set")
+
+    client = genai.Client(api_key=api_key)
+    parts = []
+
+    # ---- image input (at most ONE image) ----
+    if image_path:
+        if not os.path.exists(image_path):
+            raise FileNotFoundError(f"Image not found: {image_path}")
+        with open(image_path, "rb") as f:
+            image_bytes = f.read()
+        parts.append(
+            types.Part.from_bytes(
+                data=image_bytes,
+                mime_type=get_image_media_type(image_path)
+            )
+        )
+
+    # ---- optional user text ----
+    if user_prompt:
+        parts.append(types.Part.from_text(user_prompt))
+
+    if not parts:
+        raise ValueError("Both image_path and user_prompt are empty")
+
+    contents = [
+        types.Content(
+            role="user",
+            parts=parts
+        )
+    ]
+
+    response = client.models.generate_content(
+        model=model,
+        contents=contents,
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt if system_prompt else None,
+            max_output_tokens=max_tokens,
+            response_mime_type="text/plain",
+        )
+    )
+
+    return get_gemini_output_text(response).strip()
+
+
+def get_gemini_output_text(response):
+    texts = []
+
+    # new SDK method
+    if hasattr(response, "candidates"):
+        for cand in response.candidates or []:
+            content = getattr(cand, "content", None)
+            if content:
+                for part in getattr(content, "parts", []) or []:
+                    text = getattr(part, "text", None)
+                    if text:
+                        texts.append(text)
+
+    # if given response.text
+    if not texts and hasattr(response, "text"):
+        return response.text or ""
+
+    return "\n".join(texts)

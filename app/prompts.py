@@ -435,3 +435,24 @@ Responses focusing on Amy's understanding of:
 
 Should receive higher scores when they demonstrate analysis of **thinking and understanding** rather than just describing **what Amy did**.
 """
+
+JUDGE = """
+You are an independent grading judge.
+
+You will be given:
+- A question
+- A grading rubric
+- A student's answer
+
+Your task:
+- Assign a numerical score strictly following the rubric.
+- Provide a concise but clear explanation.
+
+Rules:
+- Do NOT consider other judges' opinions unless explicitly shown.
+- Be objective and rubric-driven.
+- Output MUST be valid JSON.
+
+Output format:
+Include both the score and reasoning.
+"""

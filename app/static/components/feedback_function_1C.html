@@ -1,4 +1,4 @@
-<!-- Style Keywords Subcomponent 1C -->
+<!-- Style Keywords Subcomponent 1-3 -->
 <div class="feedback-input-component style-keywords-submodule"
      data-step="step13"
      id="style-keywords-component-step13">
@@ -6,34 +6,23 @@
     <h3>Directness</h3>
 
     <div class="component-content">
-        <!-- <button class="reset-btn reset-submodule-btn"
-                onclick="window.feedbackInputFunctions.resetSingleStep('step13')">
-            Reset
-        </button> -->
-
         <div class="style-grid vertical">
-            <div class="checkbox-item">
-                <input type="radio"
-                       name="step13"
-                       id="direct-direct"
-                       value="Direct"
-                       checked>
-                <label for="direct-direct"
-                       title="States judgments or gaps plainly.">
-                    Direct
-                </label>
-            </div>
 
+            {% for item in subgroup3_keywords %}
             <div class="checkbox-item">
                 <input type="radio"
                        name="step13"
-                       id="direct-indirect"
-                       value="Indirect">
-                <label for="direct-indirect"
-                       title="Uses hedging, conditional phrasing, and softeners.">
-                    Indirect
+                       id="kw13_{{ item.group_idx }}"
+                       value="{{ item.key }}"
+                       {% if loop.first %}checked{% endif %}>
+
+                <label for="kw13_{{ item.group_idx }}"
+                       title="{{ item.short }}">
+                    {{ item.name }}
                 </label>
             </div>
+            {% endfor %}
+
         </div>
     </div>
 </div>

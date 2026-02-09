@@ -64,75 +64,50 @@
 
             </div>
         </div>
-    </div>
 
-
-    <!-- Information Input Section -->
-    <div class="section" id="information-input">
-        <h2>Input Information</h2>
-
-        <!-- Question -->
-        <div class="information_box" data-type="question">
-            <div class="info-title">Question</div>
-
-            <div class="upload-row">
-                <button class="upload-btn">Upload</button>
-                <span class="file-name" title=""></span>
+        <!-- Student Answer Input -->
+        <div class="section" id="question-input">
+            <h2>Question</h2>
+            <div id="sampleQuestionButtons" style="margin-bottom: 15px;">
+                <button class="sample-q-btn" data-index="0">Q1</button>
+                <button class="sample-q-btn" data-index="1">Q2</button>
+                <button class="sample-q-btn" data-index="2">Q3</button>
+                <button class="sample-q-btn" data-index="3">Q4</button>
+                <button class="sample-q-btn" data-index="4">Q5</button>
             </div>
-
-            <textarea
-                class="info-textarea"
-                placeholder="Load the question here..."></textarea>
-
-            <input
-                type="file"
-                class="hidden-file-input"
-                accept=".png,.jpg,.jpeg,.pdf"
-                style="display:none;">
+            <div id="questionTextArea">
+                <textarea id="question-text" placeholder="Question content will appear here..."></textarea>
+            </div>
         </div>
 
-        <!-- Assessment -->
-        <div class="information_box" data-type="assessment">
-            <div class="info-title">Grading Rubric</div>
-
-            <div class="upload-row">
-                <button class="upload-btn">Upload</button>
-                <span class="file-name" title=""></span>
+        <!-- Student Answer Input -->
+        <div class="section" id="student-input">
+            <h2>Student Answer Input</h2>
+            <div id="sampleAnswerButtons" style="margin-bottom: 15px;">
+                <button class="sample-a-btn" data-index="0">Answer1</button>
+                <button class="sample-a-btn" data-index="1">Answer2</button>
+                <button class="sample-a-btn" data-index="2">Answer3</button>
+                <button class="sample-a-btn" data-index="3">Answer4</button>
+                <button class="sample-a-btn" data-index="4">Answer5</button>
             </div>
+            <div id="textInputArea">
+                <!-- Answer Code Preview -->
+                <textarea id="student-answer" placeholder="Write the student answer here..."></textarea>
 
-            <textarea
-                class="info-textarea"
-                placeholder="Load the assessment here..."></textarea>
-
-            <input
-                type="file"
-                class="hidden-file-input"
-                accept=".png,.jpg,.jpeg,.pdf"
-                style="display:none;">
+                <!-- Answer Image Preview -->
+                <div id="answer-image-wrapper" style="margin-top:10px; display:none;">
+                    <img id="answer-image"
+                        style="
+                            width:400px;
+                            height:200px;
+                            object-fit:contain;
+                            border:1px solid #ccc;
+                        ">
+                </div>
+            </div>
+            <br>
+            <button id="generateFeedbackBtn">Generate Feedback</button>
         </div>
-
-        <!-- Answer -->
-        <div class="information_box" data-type="answer">
-            <div class="info-title">Answer</div>
-
-            <div class="upload-row">
-                <button class="upload-btn">Upload</button>
-                <span class="file-name" title=""></span>
-            </div>
-
-            <div class="answer-upload-hint">
-                Upload one PNG / JPG / PDF file.
-            </div>
-
-            <input
-                type="file"
-                class="hidden-file-input"
-                accept=".png,.jpg,.jpeg,.pdf"
-                style="display:none;">
-        </div>
-
-        <br>
-        <button id="generateFeedbackBtn">Grade and Generate Feedback</button>
 
         <!-- Feedback Result Display -->
         <div class="section" id="feedback-display" style="display: none;">
@@ -149,7 +124,6 @@
             </div>
         </div>
     </div>
-
 
     <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
     <script src="{{ url_for('static', filename='js/generation.js') }}"></script>

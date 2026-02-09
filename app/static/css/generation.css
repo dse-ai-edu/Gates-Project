@@ -142,3 +142,48 @@ button:hover {
         grid-template-columns: 1fr;
     }
 }
+
+
+
+
+.information_box {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    background: #fff;
+}
+
+.info-title {
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.upload-btn {
+    margin-bottom: 8px;
+}
+
+.info-textarea {
+    width: 90%;
+    min-height: 120px;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.upload-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.file-name {
+    max-width: 20ch;         
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    direction: ltr;
+    unicode-bidi: plaintext;
+    color: #555;
+    font-size: 0.9rem;
+}

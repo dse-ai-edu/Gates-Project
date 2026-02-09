@@ -39,12 +39,29 @@
             <h2>Set Feedback Keywords</h2>
             <p>Choose one keyword from each group:</p>
 
-            <div class="style-keywords-row">
-                <div class="style-keywords-col" id="feedback-function-1A-container"></div>
-                <div class="style-keywords-col" id="feedback-function-1B-container"></div>
-                <div class="style-keywords-col" id="feedback-function-1C-container"></div>
-                <div class="style-keywords-col" id="feedback-function-1D-container"></div>
-            </div>
+                <div class="style-keywords-row">
+                    <div class="style-keywords-col" id="feedback-function-1A-container">
+                        {% set subgroup_idx = 1 %}
+                        {% set keywords = subgroup1_keywords %}
+                        {% include "components/feedback_function_1_template.html" %}
+                    </div>
+                    <div class="style-keywords-col" id="feedback-function-1B-container">
+                        {% set subgroup_idx = 2 %}
+                        {% set keywords = subgroup2_keywords %}
+                        {% include "components/feedback_function_1_template.html" %}
+                    </div>
+                    <div class="style-keywords-col" id="feedback-function-1C-container">
+                        {% set subgroup_idx = 3 %}
+                        {% set keywords = subgroup3_keywords %}
+                        {% include "components/feedback_function_1_template.html" %}
+                    </div>
+                    <div class="style-keywords-col" id="feedback-function-1D-container">
+                        {% set subgroup_idx = 4 %}
+                        {% set keywords = subgroup4_keywords %}
+                        {% include "components/feedback_function_1_template.html" %}
+                    </div>
+                </div>
+
         </div>
 
         <hr style="margin:2rem 0; border:1px solid #ddd;">
@@ -75,18 +92,8 @@
 /* ---------- Load Components ---------- */
 async function loadComponents() {
     try {
-        const map = [
-            ['feedback-function-1A-container', 'components/feedback_function_1A.html'],
-            ['feedback-function-1B-container', 'components/feedback_function_1B.html'],
-            ['feedback-function-1C-container', 'components/feedback_function_1C.html'],
-            ['feedback-function-1D-container', 'components/feedback_function_1D.html'],
-            ['feedback-function-2-container',  'components/feedback_function_2.html']
-        ];
-
-        for (const [id, path] of map) {
-            const r = await fetch(`{{ url_for('static', filename='') }}${path}`);
-            document.getElementById(id).innerHTML = await r.text();
-        }
+        const r = await fetch(`{{ url_for('static', filename='components/feedback_function_2.html') }}`);
+        document.getElementById('feedback-function-2-container').innerHTML = await r.text();
 
         const init = () => {
             initStyleKeywordsComponent();
@@ -103,7 +110,6 @@ async function loadComponents() {
         console.error('Component loading failed:', e);
     }
 }
-
 
 /* ---------- Save & Proceed ---------- */
 function saveAndProceed_page1() {
