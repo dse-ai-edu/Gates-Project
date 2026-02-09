@@ -139,9 +139,9 @@ def llm_generate(
             print(f"!!! debug: response_text: {response_text}")
             if hasattr(response.choices[0], "logprobs") and response.choices[0].logprobs is not None:
                 print(f"--- LOGPROB: ")
-                with open("tmp0202.json", "w") as g:
-                    response_dict = response.model_dump()
-                    json.dump(response_dict, g, ensure_ascii=False, indent=2)
+                # with open("tmp0202.json", "w") as g:
+                #     response_dict = response.model_dump()
+                #     json.dump(response_dict, g, ensure_ascii=False, indent=2)
                 print(f"--- TEXT: {response_text}")
                 print(f"--- Len of log content: {len(response.choices[0].logprobs.content)}")
                 response_prob = ppl_from_response(response)
