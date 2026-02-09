@@ -137,14 +137,14 @@
 
         <!-- Answer -->
         <div class="information_box" data-type="answer">
-            <div class="info-title">Answer</div>
+            <div class="info-title">Student Solution</div>
 
             <div class="upload-row">
                 <button class="upload-btn">Upload</button>
                 <span class="file-name" title=""></span>
             </div>
 
-            <!-- <div class="content-split">
+            <div class="content-split">
                 <textarea
                     class="info-textarea"
                     placeholder="Load the answer here..."></textarea>
@@ -152,7 +152,7 @@
                 <div class="image-preview">
                     <img class="preview-img" alt="" />
                 </div>
-            </div> -->
+            </div>
 
             <div class="answer-upload-hint">
                 Upload one PNG / JPG / PDF file.
@@ -186,10 +186,12 @@
                     </button>
 
                     <button
-                        class="action-label-btn"
+                        class="thumb-btn"
+                        id="debate-main-btn"
                         type="button"
                         tabindex="-1"
-                        disabled>
+                        style="color: #0b3c8a;"
+                        >
                         &nbsp;GRADING&nbsp;
                     </button>
 
@@ -245,6 +247,17 @@
                     <div class="modal-actions">
                         <button id="suggestion-save-btn">Save</button>
                         <button id="suggestion-cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="debate-modal" style="display: none;">
+                <div class="modal-content">
+                    <h3 id="debate-title">Grading Debate History</h3>
+                    <textarea id="debate-textarea"
+                            style="width: 80%; min-height: 100px;"></textarea>
+                    <div class="modal-actions">
+                        <button id="debate-exit-btn">Exit</button>
                     </div>
                 </div>
             </div>

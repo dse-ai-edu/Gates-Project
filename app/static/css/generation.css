@@ -36,6 +36,17 @@ textarea {
     height: 200px;
     background-color: #f8f9fa;
     color: #333;
+
+    max-height: 240px;         
+    overflow-y: auto;           
+    overflow-x: hidden;        
+    
+    white-space: pre-wrap;      
+    word-break: break-word;     
+
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
 }
 
 button {
@@ -200,6 +211,23 @@ button:hover {
 }
 
 #suggestion-modal .modal-content {
+    background: #fff;
+    padding: 16px;
+    width: 360px;
+    border-radius: 8px;
+}
+
+#debate-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+#debate-modal .modal-content {
     background: #fff;
     padding: 16px;
     width: 360px;

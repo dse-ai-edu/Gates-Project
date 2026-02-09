@@ -119,7 +119,6 @@ def llm_generate(
         print(f"[SYS] Num of Try: {_}:")
         try:
             client = openai.OpenAI(api_key=next(key_iter))
-            
             if have_log: 
                 print(f"!!! debug: before response generation A: ")
                 response = client.chat.completions.create(
@@ -387,27 +386,36 @@ def get_image_media_type(image_path: str) -> str:
     }
     return media_types.get(ext, 'image/jpeg')
 
+    
+def is_path_like(x):
+    return isinstance(x, (str, Path))
+
+
 def vllm_generate(
     input_text: str,
     system_text: str = None,
-    input_image: list | str | None = None,
+    input_image=None,
     max_retry: int = 3,
+    img_type: str | None = None,
+    project_dir: Path | None = None,
     **kwargs
 ):
-    """
-    Unified LLM entry.
-    - input_image: None | str | list[str]
-      (only ONE image will be used)
-    """
-    script_path = Path(__file__).resolve()
-    project_dir = script_path.parent 
+    if project_dir is None:
+        project_dir = Path(__file__).resolve().parents[1]
 
-    # ---- normalize image_path ----
-    image_path = None
-    if isinstance(input_image, list) and input_image:
-        image_path = input_image[0]
-    elif isinstance(input_image, str):
-        image_path = input_image
+    image_arg = None
+
+    if input_image:
+        if isinstance(input_image, list) and input_image:
+            first = input_image[0]
+            if is_path_like(first):
+                image_arg = project_dir / Path(first)
+            else:
+                image_arg = first
+        elif is_path_like(input_image):
+            image_arg = project_dir / Path(input_image)
+        else:
+            image_arg = input_image
 
     last_error = None
 
@@ -416,9 +424,10 @@ def vllm_generate(
             return llm_generate_gemini(
                 system_prompt=system_text,
                 user_prompt=input_text,
-                image_path=project_dir / image_path,
+                image=image_arg,
                 model="gemini-2.5-flash",
                 max_tokens=8192,
+                img_type=img_type,
             ), None
         except Exception as e:
             last_error = e
@@ -428,13 +437,14 @@ def vllm_generate(
         f"failed to generate response with gemini: {last_error}"
     )
 
-
+        
 def llm_generate_gemini(
     system_prompt: str,
     user_prompt: str,
-    image_path: str | None = None,
+    image=None,
     model: str = "gemini-2.5-flash",
-    max_tokens: int = 8192
+    max_tokens: int = 8192,
+    img_type: str | None = None,
 ) -> str:
     from google import genai
     from google.genai import types
@@ -447,24 +457,52 @@ def llm_generate_gemini(
     parts = []
 
     # ---- image input (at most ONE image) ----
-    if image_path:
-        if not os.path.exists(image_path):
-            raise FileNotFoundError(f"Image not found: {image_path}")
-        with open(image_path, "rb") as f:
-            image_bytes = f.read()
-        parts.append(
-            types.Part.from_bytes(
-                data=image_bytes,
-                mime_type=get_image_media_type(image_path)
+    if image is not None:
+        # 1 path-like
+        if isinstance(image, (str, Path)):
+            image_path = Path(image)
+            if not image_path.exists():
+                raise FileNotFoundError(f"Image not found: {image_path}")
+            with open(image_path, "rb") as f:
+                image_bytes = f.read()
+            parts.append(
+                types.Part.from_bytes(
+                    data=image_bytes,
+                    mime_type=get_image_media_type(image_path)
+                )
             )
-        )
+
+        # 2 dict payload: {"bytes": ..., "mime_type": ...}
+        elif isinstance(image, dict):
+            if "bytes" not in image or "mime_type" not in image:
+                raise ValueError("image dict must contain 'bytes' and 'mime_type'")
+            parts.append(
+                types.Part.from_bytes(
+                    data=image["bytes"],
+                    mime_type=image["mime_type"]
+                )
+            )
+
+        # 3 raw bytes / bytearray
+        elif isinstance(image, (bytes, bytearray)):
+            if not img_type:
+                raise ValueError("img_type is required when image is raw bytes")
+            parts.append(
+                types.Part.from_bytes(
+                    data=image,
+                    mime_type=img_type
+                )
+            )
+
+        else:
+            raise TypeError(f"Unsupported image type: {type(image)}")
 
     # ---- optional user text ----
     if user_prompt:
         parts.append(types.Part.from_text(user_prompt))
 
     if not parts:
-        raise ValueError("Both image_path and user_prompt are empty")
+        raise ValueError("Both image and user_prompt are empty")
 
     contents = [
         types.Content(
@@ -484,6 +522,7 @@ def llm_generate_gemini(
     )
 
     return get_gemini_output_text(response).strip()
+
 
 
 def get_gemini_output_text(response):
