@@ -384,7 +384,7 @@ def retrieve_style_config():
 #         return {'success': False, 'error': str(e)}
 
 
-def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
+def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = "", suggestion = None):
     try:
         style_keywords = system_info.get('style_keywords', [])
         feedback_templates = system_info.get('feedback_templates', [])
@@ -392,8 +392,14 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
         custom_rubric = system_info.get('custom_rubric', "")
         locked_style = system_info.get('locked_style', False)
         
-        print(f"debug: before judgement")
+        print(f"Debug 3: Input Suggestion: {suggestion}")
+        grading_suggestion = suggestion.get("grading")
+        feedback_suggestion = suggestion.get("feedback")
+        
+        print(f"debug: before judgement: grading_suggestion = {grading_suggestion}\n")
         judge_input_text = f"# Question:\n{question_text}\n\n# Assessment Rubric:\n{reference_text}\n\n# Student Answer:\n{answer_text}\n\n"
+        if grading_suggestion is not None and str(grading_suggestion).strip() != "":
+            judge_input_text = judge_input_text + f"\n\n# Grading Suggestion from Human Expert:\n{grading_suggestion}"
         grading_result = multi_agent_judge(
             base_prompt=judge_input_text,
             system_prompt=JUDGE, 
@@ -458,6 +464,11 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             feedback_templates=feedback_templates,
             )
         
+        feedback_suggestion_text = ""
+        if feedback_suggestion is not None and str(feedback_suggestion).strip() != "":
+            feedback_suggestion_text = f"\n\n# Suggestion for Feedback Generation from Human Expert:\n{feedback_suggestion}"
+            user_prompt.replace("[PLACEHOLDER]", feedback_suggestion_text)
+
         print(f"debug: before utils.llm_generate")
         # Generate feedback using LLM
         feedback_text, feedback_prob = utils.llm_generate(
@@ -504,6 +515,9 @@ def comment_submit():
     assessment_this = request.form.get("assessment", "")
     answer_text = request.form.get("answer", "")
     predefined_flag = request.form.get("predefined_flag", "")
+    
+    grading_suggestion = request.form.get("suggestion_grading")
+    feedback_suggestion = request.form.get("suggestion_feedback")
 
     history_prompt_dict = None
 
@@ -562,7 +576,8 @@ def comment_submit():
             question_text=question_this,
             reference_text=assessment_this,   # ← assessment = reference
             history_prompt_dict=history_prompt_dict,
-            predefined_flag=predefined_flag
+            predefined_flag=predefined_flag,
+            suggestion={"grading": grading_suggestion, "feedback": feedback_suggestion}
         )
 
         if not generate_result['success']:

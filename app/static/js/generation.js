@@ -11,18 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const uploadBtn = box.querySelector('.upload-btn');
         const uploadText = box.querySelector('.file-name');
         const fileInput = box.querySelector('.hidden-file-input');
-        const textarea = box.querySelector('.info-textarea'); // answer 
+        const textarea = box.querySelector('.info-textarea');
+
+        // add image preview
+        const previewImg = box.querySelector('.preview-img');
 
         /* ---------- load cache ---------- */
 
         const cachedText = sessionStorage.getItem(INPUT_CACHE_KEYS[type]);
-        if (cachedText) {
-            if (textarea && type !== 'answer') {
-                textarea.value = cachedText;
-            }
+        if (cachedText && textarea) {
+            textarea.value = cachedText;
         }
 
-        if (textarea && type !== 'answer') {
+        if (textarea) {
             textarea.addEventListener('input', () => {
                 sessionStorage.setItem(
                     INPUT_CACHE_KEYS[type],
@@ -48,6 +49,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             uploadText.textContent = file.name;
 
+            /* ---------- IMG ---------- */
+            if (previewImg) {
+                if (file.type.startsWith('image/')) {
+                    const url = URL.createObjectURL(file);
+                    previewImg.src = url;
+                    previewImg.style.display = 'block';
+                } else {
+                    previewImg.src = '';
+                    previewImg.style.display = 'none';
+                }
+            }
+
+            /* ---------- OCR ---------- */
+
             const formData = new FormData();
             formData.append('file', file);
             formData.append('type', type);
@@ -66,8 +81,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     recognizedText
                 );
 
-                if (textarea && type !== 'answer') {
+                if (textarea) {
                     textarea.value = recognizedText;
+                }
+
+                if (window.MathJax) {
+                    MathJax.typesetPromise();
                 }
 
             } catch (e) {
@@ -78,7 +97,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
 });
+
 
 
 // ===============================
@@ -314,9 +338,13 @@ function generatePersonalizedFeedback() {
 
     const resultBox = document.getElementById('result-textarea');
     const resultSection = document.getElementById('feedback-display');
+    const enhancementSection = document.getElementById('enhancement-display');
 
     if (resultSection) {
         resultSection.style.display = 'block';
+    }
+    if (enhancementSection) {
+        enhancementSection.style.display = 'none';
     }
 
     const expectation = estimateExpectation(currentConfig);
@@ -330,6 +358,12 @@ function generatePersonalizedFeedback() {
             `Running ${elapsed}s...`;
     }, 1000);
 
+    // === collect optional suggestions ===
+    const gradingSuggestion =
+        sessionStorage.getItem('suggestion_grading')?.trim();
+    const feedbackSuggestion =
+        sessionStorage.getItem('suggestion_feedback')?.trim();
+
     // === submit ===
     const formData = new FormData();
     formData.append('tid', tid);
@@ -340,6 +374,15 @@ function generatePersonalizedFeedback() {
         'predefined_flag',
         sessionStorage.getItem('predefined_conf') || ''
     );
+
+    // 
+    if (gradingSuggestion) {
+        formData.append('suggestion_grading', gradingSuggestion);
+    }
+
+    if (feedbackSuggestion) {
+        formData.append('suggestion_feedback', feedbackSuggestion);
+    }
 
     fetch('/api/comment/submit', {
         method: 'POST',
@@ -362,8 +405,11 @@ function generatePersonalizedFeedback() {
             throw new Error(loadResult.error || 'Load failed');
         }
 
- 
         resultBox.innerHTML = loadResult.response || '';
+
+        if (enhancementSection) {
+            enhancementSection.style.display = 'block';
+        }
     })
     .catch(err => {
         clearInterval(timerId);
@@ -377,23 +423,127 @@ function generatePersonalizedFeedback() {
 // ===============================
 // DOM ready
 // ===============================
+
 document.addEventListener('DOMContentLoaded', function () {
+
+    /* ===============================
+    =============================== */
+
+    const thankyouToast = document.getElementById('thankyou-toast');
+    let toastTimer = null;
+
+    function showThankYou(event) {
+        if (!thankyouToast) return;
+
+        const x = event.clientX;
+        const y = event.clientY;
+
+        thankyouToast.style.left = `${x + 10}px`;
+        thankyouToast.style.top = `${y + 10}px`;
+        thankyouToast.style.display = 'block';
+
+        requestAnimationFrame(() => {
+            thankyouToast.style.opacity = '1';
+        });
+
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+        }
+
+        toastTimer = setTimeout(() => {
+            thankyouToast.style.opacity = '0';
+            setTimeout(() => {
+                thankyouToast.style.display = 'none';
+            }, 200);
+        }, 2000);
+    }
+
+    const gradingUp = document.getElementById('grading-thumb-up');
+    const feedbackUp = document.getElementById('feedback-thumb-up');
+
+    if (gradingUp) gradingUp.addEventListener('click', showThankYou);
+    if (feedbackUp) feedbackUp.addEventListener('click', showThankYou);
+
+
+    /* ===============================
+       Main feedback generation
+    =============================== */
 
     const generateFeedbackBtn = document.getElementById('generateFeedbackBtn');
     const feedbackDisplay = document.getElementById('feedback-display');
     const resultBox = document.getElementById('result-textarea');
 
     const tid = sessionStorage.getItem('tid') || 'N/A';
-    document.getElementById('tid-value').textContent = tid;
+    const tidEl = document.getElementById('tid-value');
+    if (tidEl) tidEl.textContent = tid;
 
-    generateFeedbackBtn.addEventListener('click', function () {
-
-        // feedbackDisplay.style.display = 'block';
-
-        resultBox.value = 'Generating feedback...';
-        
-        generatePersonalizedFeedback();
-    });
+    if (generateFeedbackBtn && resultBox) {
+        generateFeedbackBtn.addEventListener('click', function () {
+            resultBox.textContent = 'Generating feedback...';
+            generatePersonalizedFeedback();
+        });
+    }
 
     loadConfiguredSystem();
+
+    if (window.MathJax) {
+        MathJax.typesetPromise();
+    }
+
+
+    /* ===============================
+    =============================== */
+
+    const modal = document.getElementById('suggestion-modal');
+    const titleEl = document.getElementById('suggestion-title');
+    const textareaEl = document.getElementById('suggestion-textarea');
+    const saveBtn = document.getElementById('suggestion-save-btn');
+    const cancelBtn = document.getElementById('suggestion-cancel-btn');
+
+    let currentType = null; // grading / feedback
+
+    function openSuggestionModal(type) {
+        if (!modal || !textareaEl || !titleEl) return;
+
+        currentType = type;
+
+        const key = `suggestion_${type}`;
+        const cached = sessionStorage.getItem(key);
+
+        titleEl.textContent = `Suggestions for ${type}`;
+        textareaEl.value = cached || ` `;
+
+        modal.style.display = 'flex';
+    }
+
+    function closeSuggestionModal() {
+        if (!modal) return;
+        modal.style.display = 'none';
+        currentType = null;
+    }
+
+    const gradingDown = document.getElementById('grading-thumb-down');
+    const feedbackDown = document.getElementById('feedback-thumb-down');
+
+    if (gradingDown) {
+        gradingDown.addEventListener('click', () => openSuggestionModal('grading'));
+    }
+
+    if (feedbackDown) {
+        feedbackDown.addEventListener('click', () => openSuggestionModal('feedback'));
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            if (!currentType) return;
+            const key = `suggestion_${currentType}`;
+            sessionStorage.setItem(key, textareaEl.value);
+            closeSuggestionModal();
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeSuggestionModal);
+    }
+
 });

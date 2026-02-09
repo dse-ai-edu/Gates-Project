@@ -324,6 +324,7 @@ def parse_teaching_text(
         
     final_respond_prompt += macro_template_prompt
     final_respond_prompt += FEEDBACK_OUTPUT_INSTRUCTION
+    final_respond_prompt += "[PLACEHOLDER]\n"
     final_respond_prompt += "## Teacher (you) Response [NO MORE THAN *500* WORDS]: "
     return final_respond_prompt
 

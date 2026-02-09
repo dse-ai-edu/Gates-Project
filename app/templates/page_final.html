@@ -9,6 +9,18 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/generation.css') }}">
+
+    <script>
+    window.MathJax = {
+        tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        }
+    };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
 </head>
 
 <body data-page="page_final">
@@ -80,9 +92,15 @@
                 <span class="file-name" title=""></span>
             </div>
 
-            <textarea
-                class="info-textarea"
-                placeholder="Load the question here..."></textarea>
+            <div class="content-split">
+                <textarea
+                    class="info-textarea"
+                    placeholder="Load the question here..."></textarea>
+
+                <div class="image-preview">
+                    <img class="preview-img" alt="" />
+                </div>
+            </div>
 
             <input
                 type="file"
@@ -100,9 +118,15 @@
                 <span class="file-name" title=""></span>
             </div>
 
-            <textarea
-                class="info-textarea"
-                placeholder="Load the assessment here..."></textarea>
+            <div class="content-split">
+                <textarea
+                    class="info-textarea"
+                    placeholder="Load the rubric here..."></textarea>
+
+                <div class="image-preview">
+                    <img class="preview-img" alt="" />
+                </div>
+            </div>
 
             <input
                 type="file"
@@ -119,6 +143,16 @@
                 <button class="upload-btn">Upload</button>
                 <span class="file-name" title=""></span>
             </div>
+
+            <!-- <div class="content-split">
+                <textarea
+                    class="info-textarea"
+                    placeholder="Load the answer here..."></textarea>
+
+                <div class="image-preview">
+                    <img class="preview-img" alt="" />
+                </div>
+            </div> -->
 
             <div class="answer-upload-hint">
                 Upload one PNG / JPG / PDF file.
@@ -137,17 +171,88 @@
         <!-- Feedback Result Display -->
         <div class="section" id="feedback-display" style="display: none;">
             <h2>Generated Feedback</h2>
-            <div id="result-textarea"
-                style="white-space: pre-line;
-                        border: 1px solid #ccc;
-                        padding: 8px;
-                        min-height: 120px;
-                        font-family: inherit;
-                        background-color: #f9f9f9;
-                        overflow-y: auto;">
-                Generating Feedback... Please  Wait a Minute...
+
+            <div class="feedback-container">
+                <div class="feedback-actions" id="enhancement-display">
+
+                <!-- Grading -->
+                <div class="action-group" id="grading-rating-group" data-type="grading">
+                    <button
+                        class="thumb-btn down"
+                        id="grading-thumb-down"
+                        data-value="down"
+                        aria-label="Grading thumbs down">
+                        👎
+                    </button>
+
+                    <button
+                        class="action-label-btn"
+                        type="button"
+                        tabindex="-1"
+                        disabled>
+                        &nbsp;GRADING&nbsp;
+                    </button>
+
+                    <button
+                        class="thumb-btn up"
+                        id="grading-thumb-up"
+                        data-value="up"
+                        aria-label="Grading thumbs up">
+                        👍
+                    </button>
+                </div>
+
+                <!-- Feedback -->
+                <div class="action-group" id="feedback-rating-group" data-type="feedback">
+                    <button
+                        class="thumb-btn down"
+                        id="feedback-thumb-down"
+                        data-value="down"
+                        aria-label="Feedback thumbs down">
+                        👎
+                    </button>
+
+                    <button
+                        class="action-label-btn"
+                        type="button"
+                        tabindex="-1"
+                        disabled>
+                        FEEDBACK
+                    </button>
+
+                    <button
+                        class="thumb-btn up"
+                        id="feedback-thumb-up"
+                        data-value="up"
+                        aria-label="Feedback thumbs up">
+                        👍
+                    </button>
+                </div>
+
+
+                </div>
+
+                <div id="result-textarea">
+                    Generating Feedback... Please Wait a Minute...
+                </div>
             </div>
+
+            <div id="suggestion-modal" style="display: none;">
+                <div class="modal-content">
+                    <h3 id="suggestion-title">Suggestions</h3>
+                    <textarea id="suggestion-textarea"
+                            style="width: 80%; min-height: 100px;"></textarea>
+                    <div class="modal-actions">
+                        <button id="suggestion-save-btn">Save</button>
+                        <button id="suggestion-cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="thankyou-toast" style="display: none;">Thank you!</div>
+
         </div>
+
     </div>
 
 

@@ -187,3 +187,146 @@ button:hover {
     color: #555;
     font-size: 0.9rem;
 }
+
+
+#suggestion-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+#suggestion-modal .modal-content {
+    background: #fff;
+    padding: 16px;
+    width: 360px;
+    border-radius: 8px;
+}
+
+.modal-actions {
+    margin-top: 10px;
+    text-align: right;
+}
+
+.modal-actions button {
+    margin-left: 6px;
+}
+
+
+#thankyou-toast {
+    position: fixed;
+    background: rgba(0, 0, 0, 0.85);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    pointer-events: none;   
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+
+
+.action-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #f0f0f0;  
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+
+
+.thumb-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 6px;
+}
+
+.thumb-btn:hover {
+    transform: scale(1.15);
+}
+
+.thumb-btn:active {
+    transform: scale(0.95);
+}
+
+
+.action-label-btn {
+    background: transparent;   
+    border: none;
+    padding: 4px 6px;
+    font-size: 12px;
+    color: #555;
+    cursor: default;
+    user-select: none;
+}
+
+
+.action-label-btn:disabled {
+    pointer-events: none;
+}
+
+
+.feedback-container {
+    position: relative;
+}
+
+
+.feedback-actions {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+
+    display: flex;
+    gap: 12px;
+
+    z-index: 10;
+}
+
+#result-textarea {
+    padding-top: 48px;
+}
+
+
+.content-split {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+
+.content-split .info-textarea {
+    width: 50%;
+    min-height: 140px;
+    resize: vertical;
+}
+
+
+.image-preview {
+    width: 50%;
+    min-height: 140px;
+    border: 1px dashed #ddd;
+    background-color: #fafafa;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    overflow: hidden;
+}
+
+
+.image-preview .preview-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: none; 
+}

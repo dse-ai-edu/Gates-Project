@@ -157,6 +157,10 @@ def multi_agent_judge(
     """
 
     # -------- Round 1 --------
+    base_prompt_showing = f"{base_prompt[:300]} ... {base_prompt[-300:]}" if len(base_prompt) > 600 else base_prompt
+    system_prompt_showing = f"{system_prompt[:300]} ... {system_prompt[-300:]}" if len(system_prompt) > 600 else system_prompt
+    print(f"GRADING: base_prompt; {base_prompt_showing}\n")
+    print(f"GRADING: system_prompt; {system_prompt_showing}\n")
     judge_a1 = _run_judge(base_prompt, system_prompt, model, max_tokens)
     judge_b1 = _run_judge(base_prompt, system_prompt, model, max_tokens)
 

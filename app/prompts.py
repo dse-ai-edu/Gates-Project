@@ -451,7 +451,7 @@ Your task:
 Rules:
 - Do NOT consider other judges' opinions unless explicitly shown.
 - Be objective and rubric-driven.
-- Output MUST be valid JSON.
+- If there are suggestions from human experts, consider them seriously.
 
 Output format:
 Include both the score and reasoning.
