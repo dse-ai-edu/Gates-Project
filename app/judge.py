@@ -72,20 +72,21 @@ def _run_judge(
         format_obj=JudgeOutput,
     )
 
-    print(f"Debug: judge generation: {str(raw)} with {type(raw)}")
+    print(f"Debug: raw judge generation: {str(raw)} with {type(raw)}")
     try:
         if isinstance(raw, str):
             raw = json.loads(raw)
 
-        score = raw.get('score', 0)
+        score = raw.score
         score = float(score)
         score = round(score, 2)
-        reasoning = raw.get('reasoning', '')
+        reasoning = raw.reasoning
 
     except (TypeError, ValueError, json.JSONDecodeError, AttributeError):
         score = 0.0
         reasoning = ""
 
+    print(f"Debug: output judge generation: {str(score)} with {reasoning}")
     return {"score": score, "reasoning": reasoning}
 
 # =========================
@@ -212,7 +213,7 @@ def run_score_extract(
     try:
         if isinstance(raw, str):
             raw = json.loads(raw)
-        score = raw.get('score', 0)
+        score = raw.score
         score = float(score)
         score = round(score, 2)
     except (TypeError, ValueError, json.JSONDecodeError, AttributeError):
