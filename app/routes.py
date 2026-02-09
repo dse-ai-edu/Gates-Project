@@ -479,7 +479,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             have_log=True
             )
         score_text = re.sub(r'-(\d)', r'- \1', str(grading_result['score']))
-        feedback_text = f"-- Score: {score_text} ---\n\n" + feedback_text
+        feedback_text = f"<<< Score: {score_text} >>>\n\n" + feedback_text
         
         return {
                 'success': True,
