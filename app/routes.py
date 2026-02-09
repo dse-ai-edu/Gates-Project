@@ -467,7 +467,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             max_tokens=2048,
             have_log=True
             )
-        feedback_text = f"Score: {grading_result['score']}.\n" + feedback_text
+        feedback_text = f"-- Score: {grading_result['score']} ---\n\n" + feedback_text
         return {
                 'success': True,
                 'feedback_text': feedback_text,
