@@ -72,7 +72,7 @@ def _run_judge(
         format_obj=JudgeOutput,
     )
 
-    print(f"Debug: judge generation: {str(raw)[:200]} with {type(raw)}")
+    print(f"Debug: judge generation: {str(raw)} with {type(raw)}")
     try:
         if isinstance(raw, str):
             raw = json.loads(raw)
@@ -208,7 +208,7 @@ def run_score_extract(
         format_obj=FullScoreOutput,
     )
     
-    print(f"Debug: SCORE EXTRACT generation: {str(raw)[:200]} with {type(raw)}")
+    print(f"Debug: SCORE EXTRACT generation: {str(raw)} with {type(raw)}")
     try:
         if isinstance(raw, str):
             raw = json.loads(raw)
