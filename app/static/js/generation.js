@@ -51,6 +51,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       uploadText.textContent = file.name;
+      if (textarea) textarea.value = "Processing...";
+      sessionStorage.setItem(INPUT_CACHE_KEYS[type], "");
+      sessionStorage.removeItem(`asset_id_${type}`);
 
       // Local blob preview (image only)
       if (previewImg && file.type.startsWith("image/")) {
@@ -218,23 +221,23 @@ function initHover() {
   document.addEventListener("mouseover", (e) => {
     const span = e.target.closest("span[title]");
     if (!span) return;
-  
+
     const container = span.closest(
       "#style-keywords-display, #feedback-pattern-display"
     );
     if (!container) return;
-  
+
     const titleText = span.getAttribute("title");
     if (!titleText) return;
-  
+
     span.dataset.savedTitle = titleText;
     span.removeAttribute("title");
-  
+
     const idx = titleText.indexOf(":");
     const shortDesc =
       idx >= 0 ? titleText.slice(idx + 1).trim() : titleText.trim();
     if (!shortDesc) return;
-  
+
     activeSpan = span;
     show(shortDesc, e.clientX, e.clientY);
   });
@@ -244,10 +247,10 @@ function initHover() {
     tooltip.style.left = `${e.clientX + 12}px`;
     tooltip.style.top = `${e.clientY + 12}px`;
   });
-  
+
   document.addEventListener("mouseout", (e) => {
     if (!activeSpan) return;
-  
+
     if (!activeSpan.contains(e.relatedTarget)) {
       if (activeSpan.dataset.savedTitle) {
         activeSpan.setAttribute("title", activeSpan.dataset.savedTitle);

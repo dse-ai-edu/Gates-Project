@@ -1,131 +1,177 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
     <title>Auto Feedback Generation</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/generation.css') }}">
-</head>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/general.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/feedback_input_function.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/generation.css') }}"
+    />
+  </head>
 
-<body data-page="page_final_example">
-
+  <body data-page="page_final_example">
     <h1 class="page-title">Auto Feedback Generation</h1>
-   <!-- Display current tid at top right -->
-    <div id="tid-display" style="position: absolute; top: 1rem; right: 2rem; color: #999; font-size: 0.9rem;">
-        Current tid is: <span id="tid-value">N/A</span>
+    <!-- Display current tid at top right -->
+    <div
+      id="tid-display"
+      style="
+        position: absolute;
+        top: 1rem;
+        right: 2rem;
+        color: #999;
+        font-size: 0.9rem;
+      "
+    >
+      Current tid is: <span id="tid-value">N/A</span>
     </div>
 
     <div class="container">
-        <!-- Navigation Buttons -->
-        <div class="navigation-buttons">
-            <button class="back-button" onclick="goBack()">Back</button>
-            <button class="save-button" onclick="saveConfiguration()">Save & Complete</button>
-        </div>
+      <!-- Navigation Buttons -->
+      <div class="navigation-buttons">
+        <button class="back-button" onclick="goBack()">Back</button>
+        <button class="save-button" onclick="saveConfiguration()">
+          Save & Complete
+        </button>
+      </div>
 
-        <!-- System Configuration Display -->
-        <div class="section" id="details-display">
-            <h2>Your Feedback System Configuration:</h2>
+      <!-- System Configuration Display -->
+      <div class="section" id="details-display">
+        <h2>Your Selected Feedback Configuration:</h2>
 
-            <div class="four-panel-layout">
-                
-                <!-- Panel 1: Style Keywords -->
-                <div class="panel-display" id="panel-style-keywords">
-                    <h3>Style Keywords</h3>
-                    <div class="panel-content-display" id="style-keywords-display"></div>
-                </div>
+        <div class="four-panel-layout">
+          <!-- Panel 1: Tone of Voice and Style of Feedback -->
+          <div class="panel-display" id="panel-style-keywords">
+            <h3>Tone of Voice and Style of Feedback</h3>
+            <div
+              class="panel-content-display"
+              id="style-keywords-display"
+            ></div>
+          </div>
 
-                <!-- Panel 2: Feedback Templates -->
-                <div class="panel-display" id="panel-feedback-templates">
-                    <h3>Feedback Template</h3>
-                    <div class="panel-content-display" id="feedback-templates-display"></div>
-                </div>
+          <!-- Panel 2: Feedback Components -->
+          <div class="panel-display" id="panel-feedback-templates">
+            <h3>Feedback Components (Fixed)</h3>
+            <div
+              class="panel-content-display"
+              id="feedback-templates-display"
+            ></div>
+          </div>
 
-                <!-- Panel 3: Teaching Style -->
-                <div class="panel-display" id="panel-feedback-pattern">
-                    <h3>Feedback Pattern</h3>
-                    <div class="panel-content-display" id="feedback-pattern-display"></div>
-                </div>
+          <!-- Panel 3: Teaching Style -->
+          <div class="panel-display" id="panel-feedback-pattern">
+            <h3>Pre-Defined Feedback Focus</h3>
+            <div
+              class="panel-content-display"
+              id="feedback-pattern-display"
+            ></div>
+          </div>
 
-                <!-- Panel 4: Teaching Example -->
-                <!-- <div class="panel-display" id="panel-teach-example">
+          <!-- Panel 4: Teaching Example -->
+          <!-- <div class="panel-display" id="panel-teach-example">
                     <h3>Your Feedback Example</h3>
                     <div class="panel-content-display" id="teach-example-display"></div>
                 </div> -->
-                <div class="panel-display" id="panel-custom-rubric">
-                    <h3>Custom Feedback Rubric</h3>
-                    <div class="panel-content-display" id="custom-rubric-display">
-                        <em>Not Applicable</em>
-                    </div>
-                </div>
-
+          <div class="panel-display" id="panel-custom-rubric">
+            <h3>Preferred Feedback Focus</h3>
+            <div class="panel-content-display" id="custom-rubric-display">
+              <em>Not Applicable</em>
             </div>
+          </div>
         </div>
+      </div>
 
-        <!-- Student Answer Input -->
-        <div class="section" id="question-input">
-            <h2>Question</h2>
-            <div id="sampleQuestionButtons" style="margin-bottom: 15px;">
-                <button class="sample-q-btn" data-index="0">Question 1</button>
-                <button class="sample-q-btn" data-index="1">Question 2</button>
-                <button class="sample-q-btn" data-index="2">Question 3</button>
-                <button class="sample-q-btn" data-index="3">Question 4</button>
-                <button class="sample-q-btn" data-index="4">Question 5</button>
-            </div>
-            <div id="questionTextArea">
-                <textarea id="question-text" placeholder="Question content will appear here..."></textarea>
-            </div>
+      <!-- Student Answer Input -->
+      <div class="section" id="question-input">
+        <h2>Question</h2>
+        <div id="sampleQuestionButtons" style="margin-bottom: 15px">
+          <button class="sample-q-btn" data-index="0">Question 1</button>
+          <button class="sample-q-btn" data-index="1">Question 2</button>
+          <button class="sample-q-btn" data-index="2">Question 3</button>
+          <button class="sample-q-btn" data-index="3">Question 4</button>
+          <button class="sample-q-btn" data-index="4">Question 5</button>
         </div>
-
-        <!-- Student Answer Input -->
-        <div class="section" id="student-input">
-            <h2>Student Solution Input</h2>
-            <div id="sampleAnswerButtons" style="margin-bottom: 15px;">
-                <button class="sample-a-btn" data-index="0">Solution 1</button>
-                <button class="sample-a-btn" data-index="1">Solution 2</button>
-                <button class="sample-a-btn" data-index="2">Solution 3</button>
-                <button class="sample-a-btn" data-index="3">Solution 4</button>
-                <button class="sample-a-btn" data-index="4">Solution 5</button>
-            </div>
-            <div id="textInputArea">
-                <!-- Answer Code Preview -->
-                <textarea id="student-answer" placeholder="Write the student answer here..."></textarea>
-
-                <!-- Answer Image Preview -->
-                <div id="answer-image-wrapper" style="margin-top:10px; display:none;">
-                    <img id="answer-image"
-                        style="
-                            width:400px;
-                            height:200px;
-                            object-fit:contain;
-                            border:1px solid #ccc;
-                        ">
-                </div>
-            </div>
-            <br>
-            <button id="generateFeedbackBtn">Generate Feedback</button>
+        <div id="questionTextArea">
+          <textarea
+            id="question-text"
+            placeholder="Question content will appear here..."
+          ></textarea>
         </div>
+      </div>
 
-        <!-- Feedback Result Display -->
-        <div class="section" id="feedback-display" style="display: none;">
-            <h2>Generated Feedback</h2>
-            <div id="result-textarea"
-                style="white-space: pre-line;
-                        border: 1px solid #ccc;
-                        padding: 8px;
-                        min-height: 120px;
-                        font-family: inherit;
-                        background-color: #f9f9f9;
-                        overflow-y: auto;">
-                Generating Feedback... Please  Wait a Minute...
-            </div>
+      <!-- Student Answer Input -->
+      <div class="section" id="student-input">
+        <h2>Student Solution Input</h2>
+        <div id="sampleAnswerButtons" style="margin-bottom: 15px">
+          <button class="sample-a-btn" data-index="0">Solution 1</button>
+          <button class="sample-a-btn" data-index="1">Solution 2</button>
+          <button class="sample-a-btn" data-index="2">Solution 3</button>
+          <button class="sample-a-btn" data-index="3">Solution 4</button>
+          <button class="sample-a-btn" data-index="4">Solution 5</button>
         </div>
+        <div id="textInputArea">
+          <!-- Answer Code Preview -->
+          <textarea
+            id="student-answer"
+            placeholder="Write the student answer here..."
+          ></textarea>
+
+          <!-- Answer Image Preview -->
+          <div
+            id="answer-image-wrapper"
+            style="margin-top: 10px; display: none"
+          >
+            <img
+              id="answer-image"
+              style="
+                width: 400px;
+                height: 200px;
+                object-fit: contain;
+                border: 1px solid #ccc;
+              "
+            />
+          </div>
+        </div>
+        <br />
+        <button id="generateFeedbackBtn">Generate Feedback</button>
+      </div>
+
+      <!-- Feedback Result Display -->
+      <div class="section" id="feedback-display" style="display: none">
+        <h2>Generated Feedback</h2>
+        <div
+          id="result-textarea"
+          style="
+            white-space: pre-line;
+            border: 1px solid #ccc;
+            padding: 8px;
+            min-height: 120px;
+            font-family: inherit;
+            background-color: #f9f9f9;
+            overflow-y: auto;
+          "
+        >
+          Generating Feedback... Please Wait a Minute...
+        </div>
+      </div>
     </div>
+
+    <!-- Hover -->
+    <div id="custom-tooltip" class="custom-tooltip"></div>
 
     <script src="{{ url_for('static', filename='js/feedback_input_function_old.js') }}"></script>
     <script src="{{ url_for('static', filename='js/generation_old.js') }}"></script>
-</body>
+  </body>
 </html>

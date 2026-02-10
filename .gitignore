@@ -216,4 +216,5 @@ __marimo__/
 # user data
 assets/
 tmp*.json
-tmp*.jsonl
+tmp*.jsonlapp/tmp/
+app/tmp/*

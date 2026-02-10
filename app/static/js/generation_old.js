@@ -1,529 +1,602 @@
 // User authentication check
 function checkAuthentication() {
-    const user = localStorage.getItem('user');
-    if (!user) {
-        alert('Please login first to access this page.');
-        window.location.href = '/login';
-        return false;
-    }
-    return true;
+  const user = localStorage.getItem("user");
+  if (!user) {
+    alert("Please login first to access this page.");
+    window.location.href = "/login";
+    return false;
+  }
+  return true;
 }
 
 // Initialize authentication check on page load
 if (!checkAuthentication()) {
-    throw new Error('Authentication required');
+  throw new Error("Authentication required");
 }
-
 
 // Global variables - keyword info
 const INFO_CACHE = {};
 
 async function loadInfoByType(type) {
-    if (!type || typeof type !== 'string') {
-        throw new Error('type must be a non-empty string');
-    }
-    const key = type.toLowerCase();
-    if (INFO_CACHE[key]) {
-        return INFO_CACHE[key];
-    }
-    const url = `/static/data/${key}_info.json`;
-    const resp = await fetch(url);
-    if (!resp.ok) {
-        throw new Error(`Failed to load ${url}`);
-    }
-    const data = await resp.json();
-    INFO_CACHE[key] = data;
-    return data;
+  if (!type || typeof type !== "string") {
+    throw new Error("type must be a non-empty string");
+  }
+  const key = type.toLowerCase();
+  if (INFO_CACHE[key]) {
+    return INFO_CACHE[key];
+  }
+  const url = `/static/data/${key}_info.json`;
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    throw new Error(`Failed to load ${url}`);
+  }
+  const data = await resp.json();
+  INFO_CACHE[key] = data;
+  return data;
 }
-
 
 // Display for keyword(s) and pattern(s)
 async function buildInfoDisplayText(type, value) {
-    let info = {};
-    try {
-        info = await loadInfoByType(type);
-    } catch (e) {
-        console.error(e);
-        return 'N/A*';
-    }
-    const resolveName = (key) => info?.[key]?.name || key;
-    const resolveDescr = (key) => info?.[key]?.short || '';
-    const makeLine = (key) => {
-        const name = resolveName(key);
-        const descr = resolveDescr(key);
-        return `- <span title="${name}: ${descr.replace(/"/g, '&quot;')}">${name}</span>`;
-    };
-    let lines = [];
-    if (Array.isArray(value)) {
-        lines = value.map(k => makeLine(k));
-    } else if (typeof value === 'string' && value.trim() !== '') {
-        lines = value
-            .split(',')
-            .map(k => k.trim())
-            .filter(k => k.length > 0)
-            .map(k => makeLine(k));
-    } else {
-        console.log('Unrecognized Info, its type/value are: ', type, '&&', value);
-        lines = ['N/A**'];
-    }
-    return lines.join('\n');
+  let info = {};
+  try {
+    info = await loadInfoByType(type);
+  } catch (e) {
+    console.error(e);
+    return "N/A*";
+  }
+  const resolveName = (key) => info?.[key]?.name || key;
+  const resolveDescr = (key) => info?.[key]?.short || "";
+  const makeLine = (key) => {
+    const name = resolveName(key);
+    const descr = resolveDescr(key);
+    return `- <span title="${name}: ${descr.replace(
+      /"/g,
+      "&quot;"
+    )}">${name}</span>`;
+  };
+  let lines = [];
+  if (Array.isArray(value)) {
+    lines = value.map((k) => makeLine(k));
+  } else if (typeof value === "string" && value.trim() !== "") {
+    lines = value
+      .split(",")
+      .map((k) => k.trim())
+      .filter((k) => k.length > 0)
+      .map((k) => makeLine(k));
+  } else {
+    console.log("Unrecognized Info, its type/value are: ", type, "&&", value);
+    lines = ["N/A**"];
+  }
+  return lines.join("\n");
 }
 
-
 // Global variables - avoid redeclaration conflict with feedback_input_function.js
-let isStyleLocked = false;  // From backend data (renamed to avoid conflict)
-let lockedStyleTmp = true;  // Local variable for UI control (renamed to avoid conflict)
+let isStyleLocked = false; // From backend data (renamed to avoid conflict)
+let lockedStyleTmp = true; // Local variable for UI control (renamed to avoid conflict)
 
 let currentConfig = {
-    style_keywords: ['calculus  teacher'],
-    feedback_templates: ['strength', 'weakness', 'improvement'],
-    feedback_pattern: '',
-    custom_rubric: ''
+  style_keywords: ["calculus  teacher"],
+  feedback_templates: ["strength", "weakness", "improvement"],
+  feedback_pattern: "",
+  custom_rubric: "",
 };
 
-sessionStorage['userId'] = 'test';
+sessionStorage["userId"] = "test";
 
 // Navigation functions
 function goBack() {
-    window.location.href = '/page_2';
+  window.location.href = "/page_2";
 }
 
 function saveConfiguration() {
-    const finalConfig = {
-        'tid': sessionStorage.getItem('tid') || crypto.randomUUID(),
-        'finalConfiguration': {
-            'timestamp': new Date().toISOString(),
-            'completed': true
-        }
-    };
-    
-    fetch('/api/configuration/final', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(finalConfig)
-    }).then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            alert('✅ Configuration saved successfully! Your feedback system is ready to use.');
-        } else {
-            alert('❗ Save failed. Please try again.');
-        }
-    }).catch(error => {
-        console.error('Save error:', error);
-        alert('❗ An error occurred while saving. Please try again.');
+  const finalConfig = {
+    tid: sessionStorage.getItem("tid") || crypto.randomUUID(),
+    finalConfiguration: {
+      timestamp: new Date().toISOString(),
+      completed: true,
+    },
+  };
+
+  fetch("/api/configuration/final", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(finalConfig),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.success) {
+        alert(
+          "✅ Configuration saved successfully! Your feedback system is ready to use."
+        );
+      } else {
+        alert("❗ Save failed. Please try again.");
+      }
+    })
+    .catch((error) => {
+      console.error("Save error:", error);
+      alert("❗ An error occurred while saving. Please try again.");
     });
 }
 
-
 // Load configuration data from stored sources
-function loadConfiguredSystem() {
-    const configData = window.feedbackInputFunctions.getStoredConfigData();
-    
-    currentConfig = {
-        style_keywords: configData.style_keywords || [],
-        feedback_templates: configData.feedback_templates || [],
-        feedback_pattern: configData.feedback_pattern || '',
-        custom_rubric: configData.custom_rubric || ''
-    };
-    
-    // Check if style is locked from previous steps
-    isStyleLocked = configData.locked_style === true;
-    
-    // Initialize UI state
-    // updateLockButtonState();
-    
-    console.log('Loaded configuration:', currentConfig);
-    
-    // Display configuration
-    displayConfigurationAsText();
-}
+async function loadConfiguredSystem() {
+  const configData = window.feedbackInputFunctions.getStoredConfigData();
 
+  currentConfig = {
+    style_keywords: configData.style_keywords || [],
+    feedback_templates: configData.feedback_templates || [],
+    feedback_pattern: configData.feedback_pattern || "",
+    custom_rubric: configData.custom_rubric || "",
+  };
+
+  // Check if style is locked from previous steps
+  isStyleLocked = configData.locked_style === true;
+
+  // Initialize UI state
+  // updateLockButtonState();
+
+  console.log("Loaded configuration:", currentConfig);
+
+  // Display configuration
+  await displayConfigurationAsText();
+}
 
 // Display configuration as text in four panels
 async function displayConfigurationAsText() {
+  // 1 Selected Keyword
+  const styleDisplay = document.getElementById("style-keywords-display");
+  const keywords = currentConfig.style_keywords;
+  const keyword_text_show = await buildInfoDisplayText("keyword", keywords);
+  styleDisplay.style.whiteSpace = "pre-line";
+  styleDisplay.innerHTML = keyword_text_show;
 
-    // 1 Selected Keyword
-    const styleDisplay = document.getElementById('style-keywords-display');
-    const keywords = currentConfig.style_keywords;
-    const keyword_text_show = await buildInfoDisplayText('keyword', keywords);
-    styleDisplay.style.whiteSpace = 'pre-line';
-    styleDisplay.innerHTML = keyword_text_show;
+  // 2 Feedback Templates
+  const templateDisplay = document.getElementById("feedback-templates-display");
+  const templateDefault = ["`Strength", "`Weakness", "`Improvement"];
 
-    // 2 Feedback Templates  
-    const templateDisplay = document.getElementById('feedback-templates-display');
-    const templateDefault = ['`Strength', '`Weakness', '`Improvement'];
-
-    let tp_lines;
-    let templates = currentConfig.feedback_templates;
-    if (typeof templates === 'string') {
-        try {
-            templates = JSON.parse(templates);
-        } catch (e) {
-            templates = [];
-        }
+  let tp_lines;
+  let templates = currentConfig.feedback_templates;
+  if (typeof templates === "string") {
+    try {
+      templates = JSON.parse(templates);
+    } catch (e) {
+      templates = [];
     }
+  }
 
-    if (Array.isArray(templates) &&
-        templates.length > 0) {
-        tp_lines = templates.map((t, i) => `${i + 1}. ${t}`);
-    } else {
-        tp_lines = [
-            '[Default Template]',
-            ...templateDefault.map((t, i) => `${i + 1}. ${t}`)
-        ];
-    }
+  if (Array.isArray(templates) && templates.length > 0) {
+    tp_lines = templates.map((t, i) => `${i + 1}. ${t}`);
+  } else {
+    tp_lines = [
+      "[Default Template]",
+      ...templateDefault.map((t, i) => `${i + 1}. ${t}`),
+    ];
+  }
 
-    const templateText = tp_lines.join('\n');
-    templateDisplay.style.whiteSpace = 'pre-line';
-    templateDisplay.textContent = templateText;
-    // templateDisplay.textContent = "- Strength  - Weakness  - Improvement";
-    
-    // 3 Pattern
-    const patternDisplay = document.getElementById('feedback-pattern-display');
-    const pattern = currentConfig.feedback_pattern;
-    let pattern_custom_flag = false;
+  const templateText = tp_lines.join("\n");
+  templateDisplay.style.whiteSpace = "pre-line";
+  templateDisplay.textContent = templateText;
+  // templateDisplay.textContent = "- Strength  - Weakness  - Improvement";
 
-    let pattern_text_show = '';
-    if (
-        typeof pattern === 'string' &&
-        (
-            pattern.toLowerCase().includes('custom') ||
-            pattern.trim() === ''
-        )
-    ) {
-        pattern_text_show = 'Your Custom Pattern';
-        pattern_custom_flag = true;
-    } else {
-        pattern_text_show = await buildInfoDisplayText('pattern', pattern);
-    }
-    patternDisplay.style.whiteSpace = 'pre-line';
-    patternDisplay.innerHTML = pattern_text_show;
+  // 3 Pattern
+  const patternDisplay = document.getElementById("feedback-pattern-display");
+  const pattern = currentConfig.feedback_pattern;
+  let pattern_custom_flag = false;
 
-    // 4 custom content
-    const customDisplay = document.getElementById('custom-rubric-display');
-    customDisplay.style.whiteSpace = 'pre-line';
+  let pattern_text_show = "";
+  if (
+    typeof pattern === "string" &&
+    (pattern.toLowerCase().includes("custom") || pattern.trim() === "")
+  ) {
+    pattern_text_show = "Your Custom Pattern";
+    pattern_custom_flag = true;
+  } else {
+    pattern_text_show = await buildInfoDisplayText("pattern", pattern);
+  }
+  patternDisplay.style.whiteSpace = "pre-line";
+  patternDisplay.innerHTML = pattern_text_show;
 
-    if (pattern_custom_flag === false) {
-        customDisplay.textContent = '<Not Applicable>';
-    } else {
-        const custom_tmp = currentConfig.custom_rubric;
-        customDisplay.textContent =
-            custom_tmp && custom_tmp.trim()
-                ? custom_tmp
-                : '<Custom Content Not Found>';
-    }
+  // 4 custom content
+  const customDisplay = document.getElementById("custom-rubric-display");
+  customDisplay.style.whiteSpace = "pre-line";
+
+  if (pattern_custom_flag === false) {
+    customDisplay.textContent = "<Not Applicable>";
+  } else {
+    const custom_tmp = currentConfig.custom_rubric;
+    customDisplay.textContent =
+      custom_tmp && custom_tmp.trim()
+        ? custom_tmp
+        : "<Custom Content Not Found>";
+  }
 }
-
 
 // Load editable components (when unlocked)
 async function loadEditableComponents() {
-    try {
-        // This is a placeholder - in practice, you'd load the component HTML files
-        // and initialize them for editing
-        console.log('Loading editable components...');
-        
-        // For now, just switch back to display mode
-        displayConfigurationAsText();
-        
-    } catch (error) {
-        console.error('Failed to load editable components:', error);
-    }
+  try {
+    // This is a placeholder - in practice, you'd load the component HTML files
+    // and initialize them for editing
+    console.log("Loading editable components...");
+
+    // For now, just switch back to display mode
+    displayConfigurationAsText();
+  } catch (error) {
+    console.error("Failed to load editable components:", error);
+  }
 }
 
 function updateCurrentConfigFromUI() {
-    // This would update currentConfig with current UI values when in edit mode
-    // For now, keep existing values
-    console.log('Updating config from UI...');
+  // This would update currentConfig with current UI values when in edit mode
+  // For now, keep existing values
+  console.log("Updating config from UI...");
 }
 
 // Save current configuration to backend
 function saveCurrentConfiguration() {
-    const tid = sessionStorage.getItem('tid') || crypto.randomUUID();
-    
-    const styleData = {
-        'tid': tid,
-        'style_keywords': currentConfig.style_keywords,
-        'feedback_templates': currentConfig.feedback_templates,
-        'feedback_pattern': currentConfig.feedback_pattern,
-        'custom_rubric': currentConfig.custom_rubric
-    };
+  const tid = sessionStorage.getItem("tid") || crypto.randomUUID();
 
-    console.log('Saving configuration:', styleData);
-    
-    fetch('/api/comment/update_style', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(styleData)
-    }).then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            console.log('Configuration saved successfully');
-        } else {
-            console.error('Failed to save configuration:', result);
-        }
-    }).catch(error => {
-        console.error('Error saving configuration:', error);
+  const styleData = {
+    tid: tid,
+    style_keywords: currentConfig.style_keywords,
+    feedback_templates: currentConfig.feedback_templates,
+    feedback_pattern: currentConfig.feedback_pattern,
+    custom_rubric: currentConfig.custom_rubric,
+  };
+
+  console.log("Saving configuration:", styleData);
+
+  fetch("/api/comment/update_style", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(styleData),
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      if (result.success) {
+        console.log("Configuration saved successfully");
+      } else {
+        console.error("Failed to save configuration:", result);
+      }
+    })
+    .catch((error) => {
+      console.error("Error saving configuration:", error);
     });
 }
+//Hover 
 
-// Student input and feedback generation functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const generateFeedbackBtn = document.getElementById('generateFeedbackBtn');
-    const feedbackDisplay = document.getElementById("feedback-display");
-    const tid = sessionStorage.getItem('tid') || 'N/A***';
-    
-    document.getElementById('tid-value').textContent = tid;
-
-    generateFeedbackBtn.addEventListener('click', function () {
-        const studentAnswer = document.getElementById('student-answer').value.trim();
-        if (!studentAnswer) {
-            alert('Please enter a student answer before generating feedback.');
-            return;
-        }
-        
-        feedbackDisplay.style.display = 'block';
-        document.getElementById('result-textarea').value = 'Generating Feedback...';
-        generatePersonalizedFeedback();
+function initHover() {
+    const tooltip = document.getElementById("custom-tooltip");
+    if (!tooltip) return;
+  
+    let activeSpan = null;
+  
+    function show(text, x, y) {
+      tooltip.textContent = text;
+      tooltip.style.display = "block";
+      tooltip.style.left = `${x + 12}px`;
+      tooltip.style.top = `${y + 12}px`;
+    }
+  
+    function hide() {
+      tooltip.style.display = "none";
+      tooltip.textContent = "";
+      activeSpan = null;
+    }
+  
+    document.addEventListener("mouseover", (e) => {
+      const span = e.target.closest("span[title]");
+      if (!span) return;
+  
+      const container = span.closest(
+        "#style-keywords-display, #feedback-pattern-display"
+      );
+      if (!container) return;
+  
+      const titleText = span.getAttribute("title");
+      if (!titleText) return;
+  
+      span.dataset.savedTitle = titleText;
+      span.removeAttribute("title");
+  
+      const idx = titleText.indexOf(":");
+      const shortDesc = idx >= 0 ? titleText.slice(idx + 1).trim() : titleText.trim();
+      if (!shortDesc) return;
+  
+      activeSpan = span;
+      show(shortDesc, e.clientX, e.clientY);
     });
-    
-    // Load configuration when page loads
-    loadConfiguredSystem();
+  
+    document.addEventListener("mousemove", (e) => {
+      if (!activeSpan) return;
+      tooltip.style.left = `${e.clientX + 12}px`;
+      tooltip.style.top = `${e.clientY + 12}px`;
+    });
+  
+    document.addEventListener("mouseout", (e) => {
+      const span = e.target.closest("span");
+      if (!span) return;
+  
+      if (span === activeSpan) {
+        if (span.dataset.savedTitle) {
+          span.setAttribute("title", span.dataset.savedTitle);
+          delete span.dataset.savedTitle;
+        }
+        hide();
+      }
+    });
+  
+    window.addEventListener("scroll", hide, { passive: true });
+  }
+  
+// Student input and feedback generation functionality
+document.addEventListener("DOMContentLoaded", async function () {
+  const generateFeedbackBtn = document.getElementById("generateFeedbackBtn");
+  const feedbackDisplay = document.getElementById("feedback-display");
+  const tid = sessionStorage.getItem("tid") || "N/A***";
+
+  const tidEl = document.getElementById("tid-value");
+  if (tidEl) tidEl.textContent = tid;
+
+  if (generateFeedbackBtn) {
+    generateFeedbackBtn.addEventListener("click", function () {
+      const studentAnswer = document
+        .getElementById("student-answer")
+        ?.value.trim();
+      if (!studentAnswer) {
+        alert("Please enter a student answer before generating feedback.");
+        return;
+      }
+
+      if (feedbackDisplay) feedbackDisplay.style.display = "block";
+
+      const resultBox = document.getElementById("result-textarea");
+      if (resultBox) resultBox.textContent = "Generating Feedback...";
+
+      generatePersonalizedFeedback();
+    });
+  }
+
+  // Load configuration when page loads
+  await loadConfiguredSystem();
+  initHover();
 });
 
-
-
 function estimateExpectation(currentConfig) {
-    const text1 = currentConfig.feedback_pattern != null
-        ? String(currentConfig.feedback_pattern)
-        : '';
-    const text2 = currentConfig.custom_rubric != null
-        ? (typeof currentConfig.custom_rubric === 'string'
-            ? currentConfig.custom_rubric
-            : JSON.stringify(currentConfig.custom_rubric))
-        : '';
-    const len_estimate = text1.length + text2.length * 10;
-    const mean = 12 + (len_estimate - 3000) / 3000;
-    const std = 2;
-    const u1 = Math.random();
-    const u2 = Math.random();
-    let expectation =
-        mean + std * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    expectation = Math.min(15, Math.max(10, expectation));
-    return Number(expectation.toFixed(1));
+  const text1 =
+    currentConfig.feedback_pattern != null
+      ? String(currentConfig.feedback_pattern)
+      : "";
+  const text2 =
+    currentConfig.custom_rubric != null
+      ? typeof currentConfig.custom_rubric === "string"
+        ? currentConfig.custom_rubric
+        : JSON.stringify(currentConfig.custom_rubric)
+      : "";
+  const len_estimate = text1.length + text2.length * 10;
+  const mean = 12 + (len_estimate - 3000) / 3000;
+  const std = 2;
+  const u1 = Math.random();
+  const u2 = Math.random();
+  let expectation =
+    mean + std * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  expectation = Math.min(15, Math.max(10, expectation));
+  return Number(expectation.toFixed(1));
 }
-
 
 function generatePersonalizedFeedback() {
-    const questionContent = document.getElementById('question-text').value;
-    const studentAnswer = document.getElementById('student-answer').value;
-    const resultBox = document.getElementById('result-textarea');
-    const tid = sessionStorage.getItem('tid') || crypto.randomUUID();
-    const archive_tid = sessionStorage.getItem('archive_tid') || '';
-    const predefined_flag = sessionStorage.getItem('predefined_conf') || '';
-    const expectation = estimateExpectation(currentConfig);
+  const questionContent = document.getElementById("question-text").value;
+  const studentAnswer = document.getElementById("student-answer").value;
+  const resultBox = document.getElementById("result-textarea");
+  const tid = sessionStorage.getItem("tid") || crypto.randomUUID();
+  const archive_tid = sessionStorage.getItem("archive_tid") || "";
+  const predefined_flag = sessionStorage.getItem("predefined_conf") || "";
+  const expectation = estimateExpectation(currentConfig);
 
-    // === timer ===
-    const startTime = Date.now();
-    let timerId = null;
+  // === timer ===
+  const startTime = Date.now();
+  let timerId = null;
 
-    function updateRunningTime() {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
-        resultBox.innerHTML =
-            `Generating New Feedback... Please Wait (expect ${expectation} seconds)...<br>` +
-            `Running ${elapsed} seconds...`;
-    }
+  function updateRunningTime() {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    resultBox.innerHTML =
+      `Generating New Feedback... Please Wait (expect ${expectation} seconds)...<br>` +
+      `Running ${elapsed} seconds...`;
+  }
 
-    updateRunningTime();
-    timerId = setInterval(updateRunningTime, 1000);
+  updateRunningTime();
+  timerId = setInterval(updateRunningTime, 1000);
 
-    const submitData = {
-        tid: tid,
-        archive_tid: archive_tid,
-        question: questionContent,
-        student_answer: studentAnswer,
-        // style_keywords: currentConfig.style_keywords,
-        // feedback_templates: currentConfig.feedback_templates,
-        // feedback_pattern: currentConfig.feedback_pattern,
-        // custom_rubric: currentConfig.custom_rubric,
-        predefined_flag: predefined_flag
-    };
+  const submitData = {
+    tid: tid,
+    archive_tid: archive_tid,
+    question: questionContent,
+    student_answer: studentAnswer,
+    // style_keywords: currentConfig.style_keywords,
+    // feedback_templates: currentConfig.feedback_templates,
+    // feedback_pattern: currentConfig.feedback_pattern,
+    // custom_rubric: currentConfig.custom_rubric,
+    predefined_flag: predefined_flag,
+  };
 
-    console.log('Submitting feedback request:', submitData);
-    
-    fetch('/api/comment/submit_old', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData)
+  console.log("Submitting feedback request:", submitData);
+
+  fetch("/api/comment/submit_old", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(submitData),
+  })
+    .then((response) => response.json())
+    .then((submitResult) => {
+      if (submitResult.success) {
+        let attempt_id = submitResult.attempt_id;
+        return fetch(`/api/comment/load?tid=${tid}&attempt_id=${attempt_id}`);
+      } else {
+        throw new Error(submitResult.error || "Feedback generation failed");
+      }
     })
-    .then(response => response.json())
-    .then(submitResult => {
-        if (submitResult.success) {
-            let attempt_id = submitResult.attempt_id;
-            return fetch(`/api/comment/load?tid=${tid}&attempt_id=${attempt_id}`);
-        } else {
-            throw new Error(submitResult.error || 'Feedback generation failed');
-        }
+    .then((response) => response.json())
+    .then((loadResult) => {
+      if (!loadResult.success) {
+        throw new Error(
+          loadResult.error || "Failed to load formatted feedback"
+        );
+      }
+
+      if (timerId) clearInterval(timerId);
+
+      const htmlText = loadResult.response;
+      resultBox.innerHTML = htmlText;
+
+      // keyword showing
+      const keywordText =
+        typeof loadResult.keyword_text === "string" &&
+        loadResult.keyword_text.trim() !== ""
+          ? `${loadResult.keyword_text}`
+          : "NA[Default]";
+
+      // Template showing
+      const templateText =
+        typeof loadResult.template_text === "string" &&
+        loadResult.template_text.trim() !== ""
+          ? `${loadResult.template_text}`
+          : "NA[Default]";
+
+      // Pattern showing
+      let pattern_custom_flag = false;
+
+      const patternText =
+        typeof loadResult.pattern_text === "string" &&
+        loadResult.pattern_text.trim() !== ""
+          ? `${loadResult.pattern_text}`
+          : "NA[Default]";
+
+      if (
+        typeof loadResult.pattern_text === "string" &&
+        (loadResult.pattern_text.toLowerCase().includes("custom") ||
+          loadResult.pattern_text.trim() === "")
+      ) {
+        pattern_custom_flag = true;
+      }
+
+      // Custom Rubric showing
+      const rubricText =
+        typeof loadResult.custom_rubric === "string" &&
+        loadResult.custom_rubric.trim() !== "" &&
+        pattern_custom_flag === true
+          ? `Your Custom Rubric: ${loadResult.custom_rubric}`
+          : null;
+
+      // Pattern text showing
+      const patternFullText = "";
+      //     (typeof loadResult.pattern_body === 'string' &&
+      //     loadResult.pattern_body.trim() !== '' && pattern_custom_flag === false)
+      //         ? `Rubric of Current Pattern: ${loadResult.pattern_body}`
+      //         : null;
+      // const custom_patternFullText =
+      //     (pattern_custom_flag === true)
+      //         ? `Rubric of Current Pattern: ${loadResult.pattern_body}`
+      //         : null;
+
+      // Showing All Setting
+      // resultBox.innerHTML += `
+      //     <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
+      //     <div style="color:#fb827a;">
+      //     Generate Feedback with:<br>
+      //     &nbsp;&nbsp;- Character Keywords: "${keywordText}"<br>
+      //     &nbsp;&nbsp;- Feedback Template: "${templateText}"<br>
+      //     &nbsp;&nbsp;- Feedback Pattern: "${patternText}" Style<br>
+      //     ${rubricText ? '&nbsp;&nbsp;- ' + rubricText + '<br>' : ''}
+      //     ${patternFullText ? '&nbsp;&nbsp;- ' + patternFullText + '<br>' : ''}
+      //     </div>`;
     })
-    .then(response => response.json())
-    .then(loadResult => {
-        if (!loadResult.success) {
-            throw new Error(loadResult.error || 'Failed to load formatted feedback');
-        }
-
-        if (timerId) clearInterval(timerId);
-
-        const htmlText = loadResult.response;
-        resultBox.innerHTML = htmlText;
-
-        // keyword showing
-        const keywordText =
-            (typeof loadResult.keyword_text === 'string' &&
-            loadResult.keyword_text.trim() !== '')
-                ? `${loadResult.keyword_text}`
-                : 'NA[Default]';
-
-        // Template showing
-        const templateText =
-            (typeof loadResult.template_text === 'string' &&
-            loadResult.template_text.trim() !== '')
-                ? `${loadResult.template_text}`
-                : 'NA[Default]';
-
-        // Pattern showing
-        let pattern_custom_flag = false;
-
-        const patternText =
-            (typeof loadResult.pattern_text === 'string' &&
-            loadResult.pattern_text.trim() !== '')
-                ? `${loadResult.pattern_text}`
-                : 'NA[Default]';
-
-        if (typeof loadResult.pattern_text === 'string' && (loadResult.pattern_text.toLowerCase().includes('custom') || loadResult.pattern_text.trim() === '')) 
-            {
-                pattern_custom_flag = true;
-            }
-
-        // Custom Rubric showing
-        const rubricText =
-            (typeof loadResult.custom_rubric === 'string' &&
-            loadResult.custom_rubric.trim() !== '' && pattern_custom_flag === true) 
-                ? `Your Custom Rubric: ${loadResult.custom_rubric}`
-                : null;
-
-        // Pattern text showing
-        const patternFullText = '';
-        //     (typeof loadResult.pattern_body === 'string' &&
-        //     loadResult.pattern_body.trim() !== '' && pattern_custom_flag === false)
-        //         ? `Rubric of Current Pattern: ${loadResult.pattern_body}`
-        //         : null;
-        // const custom_patternFullText = 
-        //     (pattern_custom_flag === true)
-        //         ? `Rubric of Current Pattern: ${loadResult.pattern_body}`
-        //         : null;
-
-        // Showing All Setting
-        // resultBox.innerHTML += `
-        //     <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
-        //     <div style="color:#fb827a;">
-        //     Generate Feedback with:<br>
-        //     &nbsp;&nbsp;- Character Keywords: "${keywordText}"<br>
-        //     &nbsp;&nbsp;- Feedback Template: "${templateText}"<br>
-        //     &nbsp;&nbsp;- Feedback Pattern: "${patternText}" Style<br>
-        //     ${rubricText ? '&nbsp;&nbsp;- ' + rubricText + '<br>' : ''}
-        //     ${patternFullText ? '&nbsp;&nbsp;- ' + patternFullText + '<br>' : ''}
-        //     </div>`;
-    })
-    .catch(error => {
-        if (timerId) clearInterval(timerId);
-        console.error('Error generating feedback:', error);
-        resultBox.innerText =
-            `❌ Error generating feedback: ${error.message}. Please try again or check your configuration.`;
+    .catch((error) => {
+      if (timerId) clearInterval(timerId);
+      console.error("Error generating feedback:", error);
+      resultBox.innerText = `❌ Error generating feedback: ${error.message}. Please try again or check your configuration.`;
     });
 }
-
-
 
 // Store answers loaded from backend
 let currentSampleAnswers = [];
 let currentSampleAnswerImages = [];
 
 // -------------------------------------
-document.querySelectorAll('.sample-a-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-        const index = parseInt(this.dataset.index);
+document.querySelectorAll(".sample-a-btn").forEach((btn) => {
+  btn.addEventListener("click", function () {
+    const index = parseInt(this.dataset.index);
 
-        // Guard: no question loaded
-        if (!currentSampleAnswers.length) return;
+    // Guard: no question loaded
+    if (!currentSampleAnswers.length) return;
 
-        // 1. Fill answer text
-        document.getElementById('student-answer').value =
-            currentSampleAnswers[index] || '';
+    // 1. Fill answer text
+    document.getElementById("student-answer").value =
+      currentSampleAnswers[index] || "";
 
-        // 2. Handle answer image
-        const imgWrapper = document.getElementById('answer-image-wrapper');
-        const imgElem = document.getElementById('answer-image');
+    // 2. Handle answer image
+    const imgWrapper = document.getElementById("answer-image-wrapper");
+    const imgElem = document.getElementById("answer-image");
 
-        const imgPath = currentSampleAnswerImages[index];
-        if (imgPath) {
-            const filename = imgPath.split('/').pop();
-            imgElem.src = `/static/images/Images_aug/${filename}`;
-            imgWrapper.style.display = 'block';
-        } else {
-            imgElem.src = '';
-            imgWrapper.style.display = 'none';
-        }
-    });
+    const imgPath = currentSampleAnswerImages[index];
+    if (imgPath) {
+      const filename = imgPath.split("/").pop();
+      imgElem.src = `/static/images/Images_aug/${filename}`;
+      imgWrapper.style.display = "block";
+    } else {
+      imgElem.src = "";
+      imgWrapper.style.display = "none";
+    }
+  });
 });
 
 // -------------------------------------
 // Step 1: Question buttons
 // -------------------------------------
-document.querySelectorAll('.sample-q-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-        const qIndex = parseInt(this.dataset.index);
+document.querySelectorAll(".sample-q-btn").forEach((btn) => {
+  btn.addEventListener("click", function () {
+    const qIndex = parseInt(this.dataset.index);
 
-        fetch('/api/demo/calculus', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ question_index: qIndex })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (!result.success) {
-                throw new Error(result.error || 'Failed to load demo question');
-            }
+    fetch("/api/demo/calculus", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question_index: qIndex }),
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        if (!result.success) {
+          throw new Error(result.error || "Failed to load demo question");
+        }
 
-            // 1. Fill question
-            document.getElementById('question-text').value =
-                result.question_code || '';
+        // 1. Fill question
+        document.getElementById("question-text").value =
+          result.question_code || "";
 
-            // 2. Cache answers
-            currentSampleAnswers = Array.isArray(result.answer_code_list)
-                ? result.answer_code_list
-                : [];
+        // 2. Cache answers
+        currentSampleAnswers = Array.isArray(result.answer_code_list)
+          ? result.answer_code_list
+          : [];
 
-            currentSampleAnswerImages = Array.isArray(result.answer_img_list)
-                ? result.answer_img_list
-                : [];
+        currentSampleAnswerImages = Array.isArray(result.answer_img_list)
+          ? result.answer_img_list
+          : [];
 
-            // 3. Clear previous student answer
-            document.getElementById('student-answer').value = '';
+        // 3. Clear previous student answer
+        document.getElementById("student-answer").value = "";
 
-            // 4. Reset image area
-            const imgWrapper = document.getElementById('answer-image-wrapper');
-            const imgElem = document.getElementById('answer-image');
-            if (imgWrapper && imgElem) {
-                imgElem.src = '';
-                imgWrapper.style.display = 'none';
-            }
-        })
-        .catch(err => {
-            console.error('Error loading demo question:', err);
-            alert('Failed to load demo question.');
-        });
-    });
+        // 4. Reset image area
+        const imgWrapper = document.getElementById("answer-image-wrapper");
+        const imgElem = document.getElementById("answer-image");
+        if (imgWrapper && imgElem) {
+          imgElem.src = "";
+          imgWrapper.style.display = "none";
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading demo question:", err);
+        alert("Failed to load demo question.");
+      });
+  });
 });
