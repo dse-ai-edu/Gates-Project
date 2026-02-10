@@ -358,3 +358,24 @@ button:hover {
     object-fit: contain;
     display: none; 
 }
+
+#style-keywords-display span[title],
+#feedback-pattern-display span[title] {
+  cursor: help;
+  border-bottom: 1px dotted #888;
+}
+
+.custom-tooltip {
+  position: fixed;
+  z-index: 9999;
+  max-width: 360px;
+  padding: 10px 14px;
+  background: rgba(20, 20, 20, 0.95);
+  color: #fff;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  line-height: 1.3;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  pointer-events: none;
+  display: none;
+}

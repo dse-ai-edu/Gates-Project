@@ -21,6 +21,7 @@
       href="{{ url_for('static', filename='css/generation.css') }}"
     />
 
+
     <script>
       window.MathJax = {
         tex: {
@@ -315,6 +316,10 @@
         <div id="thankyou-toast" style="display: none">Thank you!</div>
       </div>
     </div>
+
+
+    <!-- Hover -->
+    <div id="custom-tooltip" class="custom-tooltip"></div>
 
     <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
     <script src="{{ url_for('static', filename='js/generation.js') }}"></script>
