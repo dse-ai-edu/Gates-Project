@@ -1,275 +1,322 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
     <title>Auto Feedback Generation</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/generation.css') }}">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/general.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/feedback_input_function.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/generation.css') }}"
+    />
 
     <script>
-    window.MathJax = {
+      window.MathJax = {
         tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-        }
-    };
+          inlineMath: [
+            ["$", "$"],
+            ["\\(", "\\)"],
+          ],
+          displayMath: [
+            ["$$", "$$"],
+            ["\\[", "\\]"],
+          ],
+        },
+      };
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  </head>
 
-</head>
-
-<body data-page="page_final">
-
+  <body data-page="page_final">
     <h1 class="page-title">Auto Feedback Generation</h1>
-   <!-- Display current tid at top right -->
-    <div id="tid-display" style="position: absolute; top: 1rem; right: 2rem; color: #999; font-size: 0.9rem;">
-        Current tid is: <span id="tid-value">N/A</span>
+    <!-- Display current tid at top right -->
+    <div
+      id="tid-display"
+      style="
+        position: absolute;
+        top: 1rem;
+        right: 2rem;
+        color: #999;
+        font-size: 0.9rem;
+      "
+    >
+      Current tid is: <span id="tid-value">N/A</span>
     </div>
 
     <div class="container">
-        <!-- Navigation Buttons -->
-        <div class="navigation-buttons">
-            <button class="back-button" onclick="goBack()">Back</button>
-            <button class="save-button" onclick="saveConfiguration()">Save & Complete</button>
-        </div>
+      <!-- Navigation Buttons -->
+      <div class="navigation-buttons">
+        <button class="back-button" onclick="goBack()">Back</button>
+        <button class="save-button" onclick="saveConfiguration()">
+          Save & Complete
+        </button>
+      </div>
 
-        <!-- System Configuration Display -->
-        <div class="section" id="details-display">
-            <h2>Your Feedback System Configuration:</h2>
+      <!-- System Configuration Display -->
+      <div class="section" id="details-display">
+        <h2>Your Selected Feedback Configuration:</h2>
 
-            <div class="four-panel-layout">
-                
-                <!-- Panel 1: Style Keywords -->
-                <div class="panel-display" id="panel-style-keywords">
-                    <h3>Style Keywords</h3>
-                    <div class="panel-content-display" id="style-keywords-display"></div>
-                </div>
+        <div class="four-panel-layout">
+          <!-- Panel 1: Style Keywords -->
+          <div class="panel-display" id="panel-style-keywords">
+            <h3>Tone of Voice and Style of Feedback</h3>
+            <div
+              class="panel-content-display"
+              id="style-keywords-display"
+            ></div>
+          </div>
 
-                <!-- Panel 2: Feedback Templates -->
-                <div class="panel-display" id="panel-feedback-templates">
-                    <h3>Feedback Template</h3>
-                    <div class="panel-content-display" id="feedback-templates-display"></div>
-                </div>
+          <!-- Panel 2: Feedback Components -->
+          <div class="panel-display" id="panel-feedback-templates">
+            <h3>Feedback Components (Fixed)</h3>
+            <div
+              class="panel-content-display"
+              id="feedback-templates-display"
+            ></div>
+          </div>
 
-                <!-- Panel 3: Teaching Style -->
-                <div class="panel-display" id="panel-feedback-pattern">
-                    <h3>Feedback Pattern</h3>
-                    <div class="panel-content-display" id="feedback-pattern-display"></div>
-                </div>
+          <!-- Panel 3: Teaching Style -->
+          <div class="panel-display" id="panel-feedback-pattern">
+            <h3>Pre-Defined Feedback Focus</h3>
+            <div
+              class="panel-content-display"
+              id="feedback-pattern-display"
+            ></div>
+          </div>
 
-                <!-- Panel 4: Teaching Example -->
-                <!-- <div class="panel-display" id="panel-teach-example">
+          <!-- Panel 4: Teaching Example -->
+          <!-- <div class="panel-display" id="panel-teach-example">
                     <h3>Your Feedback Example</h3>
                     <div class="panel-content-display" id="teach-example-display"></div>
                 </div> -->
-                <div class="panel-display" id="panel-custom-rubric">
-                    <h3>Custom Feedback Rubric</h3>
-                    <div class="panel-content-display" id="custom-rubric-display">
-                        <em>Not Applicable</em>
-                    </div>
-                </div>
-
+          <div class="panel-display" id="panel-custom-rubric">
+            <h3>Preferred Feedback Focus</h3>
+            <div class="panel-content-display" id="custom-rubric-display">
+              <em>Not Applicable</em>
             </div>
+          </div>
         </div>
+      </div>
     </div>
 
-
-    <!-- Information Input Section -->
+    <!-- Assignment Information Section -->
     <div class="section" id="information-input">
-        <h2>Input Information</h2>
+      <h2>Assignment Information</h2>
 
-        <!-- Question -->
-        <div class="information_box" data-type="question">
-            <div class="info-title">Question</div>
+      <!-- Question -->
+      <div class="information_box" data-type="question">
+        <div class="info-title">Question</div>
 
-            <div class="upload-row">
-                <button class="upload-btn">Upload</button>
-                <span class="file-name" title=""></span>
-            </div>
-
-            <div class="content-split">
-                <textarea
-                    class="info-textarea"
-                    placeholder="Load the question here..."></textarea>
-
-                <div class="image-preview">
-                    <img class="preview-img" alt="" />
-                </div>
-            </div>
-
-            <input
-                type="file"
-                class="hidden-file-input"
-                accept=".png,.jpg,.jpeg,.pdf"
-                style="display:none;">
+        <div class="upload-row">
+          <button class="upload-btn">Upload</button>
+          <span class="file-name" title=""></span>
         </div>
 
-        <!-- Assessment -->
-        <div class="information_box" data-type="assessment">
-            <div class="info-title">Grading Rubric</div>
+        <div class="content-split">
+          <textarea
+            class="info-textarea"
+            placeholder="Load the question here..."
+          ></textarea>
 
-            <div class="upload-row">
-                <button class="upload-btn">Upload</button>
-                <span class="file-name" title=""></span>
-            </div>
-
-            <div class="content-split">
-                <textarea
-                    class="info-textarea"
-                    placeholder="Load the rubric here..."></textarea>
-
-                <div class="image-preview">
-                    <img class="preview-img" alt="" />
-                </div>
-            </div>
-
-            <input
-                type="file"
-                class="hidden-file-input"
-                accept=".png,.jpg,.jpeg,.pdf"
-                style="display:none;">
+          <div class="image-preview">
+            <img class="preview-img" alt="" />
+          </div>
         </div>
 
-        <!-- Answer -->
-        <div class="information_box" data-type="answer">
-            <div class="info-title">Student Solution</div>
+        <input
+          type="file"
+          class="hidden-file-input"
+          accept=".png,.jpg,.jpeg,.pdf"
+          style="display: none"
+        />
+      </div>
 
-            <div class="upload-row">
-                <button class="upload-btn">Upload</button>
-                <span class="file-name" title=""></span>
-            </div>
+      <!-- Assessment -->
+      <div class="information_box" data-type="assessment">
+        <div class="info-title">Grading Rubric</div>
 
-            <div class="content-split">
-                <textarea
-                    class="info-textarea"
-                    placeholder="Load the answer here..."></textarea>
-
-                <div class="image-preview">
-                    <img class="preview-img" alt="" />
-                </div>
-            </div>
-
-            <div class="answer-upload-hint">
-                Upload one PNG / JPG / PDF file.
-            </div>
-
-            <input
-                type="file"
-                class="hidden-file-input"
-                accept=".png,.jpg,.jpeg,.pdf"
-                style="display:none;">
+        <div class="upload-row">
+          <button class="upload-btn">Upload</button>
+          <span class="file-name" title=""></span>
         </div>
 
-        <br>
-        <button id="generateFeedbackBtn">Grade and Generate Feedback</button>
+        <div class="content-split">
+          <textarea
+            class="info-textarea"
+            placeholder="Load the rubric here..."
+          ></textarea>
 
-        <!-- Feedback Result Display -->
-        <div class="section" id="feedback-display" style="display: none;">
-            <h2>Generated Feedback</h2>
-
-            <div class="feedback-container">
-                <div class="feedback-actions" id="enhancement-display">
-
-                <!-- Grading -->
-                <div class="action-group" id="grading-rating-group" data-type="grading">
-                    <button
-                        class="thumb-btn down"
-                        id="grading-thumb-down"
-                        data-value="down"
-                        aria-label="Grading thumbs down">
-                        👎
-                    </button>
-
-                    <button
-                        class="thumb-btn"
-                        id="debate-main-btn"
-                        type="button"
-                        tabindex="-1"
-                        style="color: #0b3c8a;"
-                        >
-                        &nbsp;GRADING&nbsp;
-                    </button>
-
-                    <button
-                        class="thumb-btn up"
-                        id="grading-thumb-up"
-                        data-value="up"
-                        aria-label="Grading thumbs up">
-                        👍
-                    </button>
-                </div>
-
-                <!-- Feedback -->
-                <div class="action-group" id="feedback-rating-group" data-type="feedback">
-                    <button
-                        class="thumb-btn down"
-                        id="feedback-thumb-down"
-                        data-value="down"
-                        aria-label="Feedback thumbs down">
-                        👎
-                    </button>
-
-                    <button
-                        class="action-label-btn"
-                        type="button"
-                        tabindex="-1"
-                        disabled>
-                        FEEDBACK
-                    </button>
-
-                    <button
-                        class="thumb-btn up"
-                        id="feedback-thumb-up"
-                        data-value="up"
-                        aria-label="Feedback thumbs up">
-                        👍
-                    </button>
-                </div>
-
-
-                </div>
-
-                <div id="result-textarea">
-                    Generating Feedback... Please Wait a Minute...
-                </div>
-            </div>
-
-            <div id="suggestion-modal" style="display: none;">
-                <div class="modal-content">
-                    <h3 id="suggestion-title">Suggestions</h3>
-                    <textarea id="suggestion-textarea"
-                            style="width: 80%; min-height: 100px;"></textarea>
-                    <div class="modal-actions">
-                        <button id="suggestion-save-btn">Save</button>
-                        <button id="suggestion-cancel-btn">Cancel</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="debate-modal" style="display: none;">
-                <div class="modal-content">
-                    <h3 id="debate-title">Grading Debate History</h3>
-                    <textarea id="debate-textarea"
-                            style="width: 80%; min-height: 100px;"></textarea>
-                    <div class="modal-actions">
-                        <button id="debate-exit-btn">Exit</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="thankyou-toast" style="display: none;">Thank you!</div>
-
+          <div class="image-preview">
+            <img class="preview-img" alt="" />
+          </div>
         </div>
 
+        <input
+          type="file"
+          class="hidden-file-input"
+          accept=".png,.jpg,.jpeg,.pdf"
+          style="display: none"
+        />
+      </div>
+
+      <!-- Answer -->
+      <div class="information_box" data-type="answer">
+        <div class="info-title">Student Solution</div>
+
+        <div class="upload-row">
+          <button class="upload-btn">Upload</button>
+          <span class="file-name" title=""></span>
+        </div>
+
+        <div class="content-split">
+          <textarea
+            class="info-textarea"
+            placeholder="Load the answer here..."
+          ></textarea>
+
+          <div class="image-preview">
+            <img class="preview-img" alt="" />
+          </div>
+        </div>
+
+        <div class="answer-upload-hint">Upload one PNG / JPG / PDF file.</div>
+
+        <input
+          type="file"
+          class="hidden-file-input"
+          accept=".png,.jpg,.jpeg,.pdf"
+          style="display: none"
+        />
+      </div>
+
+      <br />
+      <button id="generateFeedbackBtn">Grade and Generate Feedback</button>
+
+      <!-- Feedback Result Display -->
+      <div class="section" id="feedback-display" style="display: none">
+        <h2>Generated Feedback</h2>
+
+        <div class="feedback-container">
+          <div class="feedback-actions" id="enhancement-display">
+            <!-- Grading -->
+            <div
+              class="action-group"
+              id="grading-rating-group"
+              data-type="grading"
+            >
+              <button
+                class="thumb-btn down"
+                id="grading-thumb-down"
+                data-value="down"
+                aria-label="Grading thumbs down"
+              >
+                👎
+              </button>
+
+              <button
+                class="thumb-btn"
+                id="debate-main-btn"
+                type="button"
+                tabindex="-1"
+                style="color: #0b3c8a"
+              >
+                &nbsp;GRADING&nbsp;
+              </button>
+
+              <button
+                class="thumb-btn up"
+                id="grading-thumb-up"
+                data-value="up"
+                aria-label="Grading thumbs up"
+              >
+                👍
+              </button>
+            </div>
+
+            <!-- Feedback -->
+            <div
+              class="action-group"
+              id="feedback-rating-group"
+              data-type="feedback"
+            >
+              <button
+                class="thumb-btn down"
+                id="feedback-thumb-down"
+                data-value="down"
+                aria-label="Feedback thumbs down"
+              >
+                👎
+              </button>
+
+              <button
+                class="action-label-btn"
+                type="button"
+                tabindex="-1"
+                disabled
+              >
+                FEEDBACK
+              </button>
+
+              <button
+                class="thumb-btn up"
+                id="feedback-thumb-up"
+                data-value="up"
+                aria-label="Feedback thumbs up"
+              >
+                👍
+              </button>
+            </div>
+          </div>
+
+          <div id="result-textarea">
+            Generating Feedback... Please Wait a Minute...
+          </div>
+        </div>
+
+        <div id="suggestion-modal" style="display: none">
+          <div class="modal-content">
+            <h3 id="suggestion-title">Suggestions</h3>
+            <textarea
+              id="suggestion-textarea"
+              style="width: 80%; min-height: 100px"
+            ></textarea>
+            <div class="modal-actions">
+              <button id="suggestion-save-btn">Save</button>
+              <button id="suggestion-cancel-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="debate-modal" style="display: none">
+          <div class="modal-content">
+            <h3 id="debate-title">Grading Debate History</h3>
+            <textarea
+              id="debate-textarea"
+              style="width: 80%; min-height: 100px"
+            ></textarea>
+            <div class="modal-actions">
+              <button id="debate-exit-btn">Exit</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="thankyou-toast" style="display: none">Thank you!</div>
+      </div>
     </div>
-
 
     <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
     <script src="{{ url_for('static', filename='js/generation.js') }}"></script>
-</body>
+  </body>
 </html>

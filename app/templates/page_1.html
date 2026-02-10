@@ -1,146 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Keywords and Templates</title>
 
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
-</head>
+    <link
+      rel="shortcut icon"
+      href="{{ url_for('static', filename='favicon.ico') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/general.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/feedback_input_function.css') }}"
+    />
+  </head>
 
-<body data-page="page_1">
+  <body data-page="page_1">
+    <h1 class="page-title">Auto Feedback Generation</h1>
 
-<h1 class="page-title">Auto Feedback Generation</h1>
-
-<div class="container">
-
-    <!-- ================= Left Control Panel ================= -->
-    <div class="left-section">
-        <h2 style="text-decoration: underline;">Keyword Setting</h2>
+    <div class="container">
+      <!-- ================= Left Control Panel ================= -->
+      <div class="left-section">
         <p id="save-status"></p>
 
         <div class="traverse-buttons">
-            <button class="t-button" onclick="saveAndProceed_page1()">Save</button>
-            <!-- <button class="t-button"
+          <button class="t-button" onclick="saveAndProceed_page1()">
+            Save
+          </button>
+          <!-- <button class="t-button"
                     style="background-color:#ff9800;"
                     onclick="window.feedbackInputFunctions.loadPriorSetting()">
                 Load Prior Setting
             </button> -->
         </div>
-    </div>
+      </div>
 
-    <!-- ================= Right Content Panel ================= -->
-    <div class="right-section">
-
+      <!-- ================= Right Content Panel ================= -->
+      <div class="right-section">
         <!-- ===== Component 1: Feedback Keywords (step11–step14) ===== -->
         <div class="content-section" id="style-keywords-section">
-            <h2>Set Feedback Keywords</h2>
-            <p>Choose one keyword from each group:</p>
+          <h2>Tone of Voice and Style of Feedback</h2>
+          <p>Option:</p>
 
-                <div class="style-keywords-row">
-                    <div class="style-keywords-col" id="feedback-function-1A-container">
-                        {% set subgroup_idx = 1 %}
-                        {% set keywords = subgroup1_keywords %}
-                        {% include "components/feedback_function_1_template.html" %}
-                    </div>
-                    <div class="style-keywords-col" id="feedback-function-1B-container">
-                        {% set subgroup_idx = 2 %}
-                        {% set keywords = subgroup2_keywords %}
-                        {% include "components/feedback_function_1_template.html" %}
-                    </div>
-                    <div class="style-keywords-col" id="feedback-function-1C-container">
-                        {% set subgroup_idx = 3 %}
-                        {% set keywords = subgroup3_keywords %}
-                        {% include "components/feedback_function_1_template.html" %}
-                    </div>
-                    <div class="style-keywords-col" id="feedback-function-1D-container">
-                        {% set subgroup_idx = 4 %}
-                        {% set keywords = subgroup4_keywords %}
-                        {% include "components/feedback_function_1_template.html" %}
-                    </div>
-                </div>
-
+          <div class="style-keywords-row">
+            <div class="style-keywords-col" id="feedback-function-1A-container">
+              <h3 class="style-group-title">Point of View</h3>
+              {% set subgroup_idx = 1 %} {% set keywords = subgroup1_keywords %}
+              {% include "components/feedback_function_1_template.html" %}
+            </div>
+            <div class="style-keywords-col" id="feedback-function-1B-container">
+              <h3 class="style-group-title">Interpersonal Quality</h3>
+              {% set subgroup_idx = 2 %} {% set keywords = subgroup2_keywords %}
+              {% include "components/feedback_function_1_template.html" %}
+            </div>
+            <div class="style-keywords-col" id="feedback-function-1C-container">
+              <h3 class="style-group-title">Directness</h3>
+              {% set subgroup_idx = 3 %} {% set keywords = subgroup3_keywords %}
+              {% include "components/feedback_function_1_template.html" %}
+            </div>
+            <div class="style-keywords-col" id="feedback-function-1D-container">
+              <h3 class="style-group-title">Motivational Framing</h3>
+              {% set subgroup_idx = 4 %} {% set keywords = subgroup4_keywords %}
+              {% include "components/feedback_function_1_template.html" %}
+            </div>
+          </div>
         </div>
 
-        <hr style="margin:2rem 0; border:1px solid #ddd;">
+        <hr style="margin: 2rem 0; border: 1px solid #ddd" />
 
         <!-- ===== Component 2: Feedback Templates (step2, read-only) ===== -->
         <div class="content-section" id="feedback-templates-section">
-            <h2>Templates of Feedback Response</h2>
-            <div id="feedback-function-2-container"></div>
+          <h2>Feedback Components (Fixed)</h2>
+          <div id="feedback-function-2-container"></div>
         </div>
-
+      </div>
     </div>
-</div>
 
-<!-- ================= Shared Logic ================= -->
-<script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
+    <!-- ================= Shared Logic ================= -->
+    <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
 
-<script>
-/* ---------- Authentication ---------- */
-(function checkAuthentication() {
-    const user = localStorage.getItem('user');
-    if (!user) {
-        alert('Please login first.');
-        window.location.href = '/login';
-        throw new Error('Authentication required');
-    }
-})();
+    <script>
+      /* ---------- Authentication ---------- */
+      (function checkAuthentication() {
+        const user = localStorage.getItem("user");
+        if (!user) {
+          alert("Please login first.");
+          window.location.href = "/login";
+          throw new Error("Authentication required");
+        }
+      })();
 
-/* ---------- Load Components ---------- */
-async function loadComponents() {
-    try {
-        const r = await fetch(`{{ url_for('static', filename='components/feedback_function_2.html') }}`);
-        document.getElementById('feedback-function-2-container').innerHTML = await r.text();
+      /* ---------- Load Components ---------- */
+      async function loadComponents() {
+        try {
+          const r = await fetch(
+            `{{ url_for('static', filename='components/feedback_function_2.html') }}`
+          );
+          document.getElementById("feedback-function-2-container").innerHTML =
+            await r.text();
 
-        const init = () => {
+          const init = () => {
             initStyleKeywordsComponent();
             initFeedbackTemplatesComponent();
-        };
+          };
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
+          if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", init);
+          } else {
             init();
+          }
+        } catch (e) {
+          console.error("Component loading failed:", e);
+        }
+      }
+
+      /* ---------- Save & Proceed ---------- */
+      function saveAndProceed_page1() {
+        const steps = ["step11", "step12", "step13", "step14"];
+        const missing = steps.filter((k) => !sessionStorage.getItem(k));
+
+        if (missing.length > 0) {
+          alert("❗ Please select one keyword in each group.");
+          return;
         }
 
-    } catch (e) {
-        console.error('Component loading failed:', e);
-    }
-}
+        const step2 = sessionStorage.getItem("step2");
+        if (!step2 || !/[a-zA-Z]/.test(step2)) {
+          alert("❗ Feedback template is invalid.");
+          return;
+        }
 
-/* ---------- Save & Proceed ---------- */
-function saveAndProceed_page1() {
-    const steps = ['step11', 'step12', 'step13', 'step14'];
-    const missing = steps.filter(k => !sessionStorage.getItem(k));
+        const status = document.getElementById("save-status");
+        status.textContent = "✔ Saved";
+        status.style.color = "green";
 
-    if (missing.length > 0) {
-        alert('❗ Please select one keyword in each group.');
-        return;
-    }
+        setTimeout(() => {
+          window.location.href = "/page_2";
+        }, 800);
+      }
 
-    const step2 = sessionStorage.getItem('step2');
-    if (!step2 || !/[a-zA-Z]/.test(step2)) {
-        alert('❗ Feedback template is invalid.');
-        return;
-    }
-
-    const status = document.getElementById('save-status');
-    status.textContent = '✔ Saved';
-    status.style.color = 'green';
-
-    setTimeout(() => {
-        window.location.href = '/page_2';
-    }, 800);
-}
-
-/* ---------- Init ---------- */
-window.addEventListener('load', () => {
-    loadComponents();
-});
-</script>
-
-</body>
+      /* ---------- Init ---------- */
+      window.addEventListener("load", () => {
+        loadComponents();
+      });
+    </script>
+  </body>
 </html>
