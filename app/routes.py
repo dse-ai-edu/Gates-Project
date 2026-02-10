@@ -4,6 +4,7 @@ import json
 import uuid
 import shutil
 import time
+import hashlib
 import traceback
 from datetime import datetime
 import random
@@ -11,6 +12,8 @@ import string
 import pytz
 
 from flask import render_template, request, jsonify, send_file
+from flask import Response, abort
+
 from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
@@ -22,7 +25,9 @@ from app import app, database
 from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
+from pymongo.errors import DuplicateKeyError
 from bson import ObjectId
+from bson.binary import Binary
 import io
 
 from app.question_image_prompt import QUESTION_RECOGNITION, ASSESSMENT_RECOGNITION
@@ -110,6 +115,9 @@ def step2():
 def page_final():
     return render_template('page_final.html')
 
+@app.route('/page_final_example')
+def page_example_final():
+    return render_template('page_final_example.html')
 # @app.route("/segment")
 # def segment_page():
 #     return render_template("segment.html")
@@ -393,8 +401,12 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
         locked_style = system_info.get('locked_style', False)
         
         print(f"Debug 3: Input Suggestion: {suggestion}")
-        grading_suggestion = suggestion.get("grading")
-        feedback_suggestion = suggestion.get("feedback")
+        if suggestion is not None:
+            grading_suggestion = suggestion.get("grading")
+            feedback_suggestion = suggestion.get("feedback")
+        else:
+            grading_suggestion = None
+            feedback_suggestion = None
         
         print(f"debug: before judgement: grading_suggestion = {grading_suggestion}\n")
         judge_input_text = f"# Question:\n{question_text}\n\n# Assessment Rubric:\n{reference_text}\n\n# Student Answer:\n{answer_text}\n\n"
@@ -416,6 +428,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'custom_rubric': custom_rubric,
                 "grade_success": True,
                 "grade": None,
+                "grade_history": grading_result.get("dialogue_history", []),
                 }
             
         print(f"debug: before grading extraction")
@@ -434,6 +447,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'custom_rubric': custom_rubric,
                 "grade_success": True, 
                 "grade": grading_result['score'],
+                "grade_history": grading_result.get("dialogue_history", []),
                 }
             
             
@@ -479,7 +493,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             have_log=True
             )
         score_text = re.sub(r'-(\d)', r'- \1', str(grading_result['score']))
-        feedback_text = f"<<< Score: {score_text} >>>\n\n" + feedback_text
+        feedback_text = feedback_text + f"\n\n<<< Grade: {score_text} >>>\n\n"
         
         return {
                 'success': True,
@@ -492,6 +506,66 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'pattern_body': pattern_body,
                 "grade_success": True, 
                 "grade": grading_result['score'],
+                "grade_history": grading_result.get("dialogue_history", []),
+            }
+        
+    except Exception as e:
+        traceback.print_exc()
+        print(system_info)
+        return {'success': False, 'error': str(e)}
+   
+   
+   
+
+def comment_generate_old(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
+    try:
+        style_keywords = system_info.get('style_keywords', [])
+        feedback_templates = system_info.get('feedback_templates', [])
+        feedback_pattern = system_info.get('feedback_pattern', "")
+        custom_rubric = system_info.get('custom_rubric', "")
+        locked_style = system_info.get('locked_style', False)
+        
+        print(f"debug: before parse_feedback_pattern")
+        pattern_dict = utils.parse_feedback_pattern(
+            feedback_pattern=feedback_pattern,
+            custom_rubric=custom_rubric,
+            )
+        
+        pattern_key = pattern_dict.get("pattern_key", None)
+        pattern_body = pattern_dict.get("pattern_body", None)
+        print(f"debug: selected feedback_pattern: `{pattern_key}`; `{str(pattern_body)[:200]}`")
+        
+        
+        if reference_text is not None and len(reference_text.strip()) > 0:
+            question_text = question_text + "\n ## Reference Answer(s): " + reference_text
+        answer_text = answer_text.strip()
+        
+        user_prompt = utils.parse_teaching_text(
+            question=question_text,
+            answer=answer_text,
+            style_keywords=style_keywords,
+            feedback_templates=feedback_templates,
+            )
+        
+        print(f"debug: before utils.llm_generate")
+        # Generate feedback using LLM
+        feedback_text, feedback_prob = utils.llm_generate(
+            input_text=user_prompt,
+            system_text=pattern_body,
+            model='gpt-4o-mini',
+            max_tokens=2048,
+            have_log=True
+            )
+        
+        return {
+                'success': True,
+                'feedback_text': feedback_text,
+                'feedback_prob': feedback_prob,
+                'style_keywords': style_keywords,
+                'feedback_templates': feedback_templates,
+                'feedback_pattern': feedback_pattern,
+                'custom_rubric': custom_rubric,
+                'pattern_body': pattern_body,
             }
         
     except Exception as e:
@@ -499,6 +573,8 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
         print(system_info)
         return {'success': False, 'error': str(e)}
     
+    
+     
 @app.route('/api/comment/submit', methods=['POST'])
 def comment_submit():
     """Generate personalized feedback response for student answer (no scoring involved)"""
@@ -549,7 +625,8 @@ def comment_submit():
         else:
             current_record = database['comment_config'].find_one({'tid': tid})
             if not current_record:
-                raise ValueError(f'Feedback system not found: {tid}')
+                print(f"Debug: No config record found for tid {tid}")
+                raise ValueError(f'Feedback system not found')
 
             current_system_info = current_record['config']
             system_info = (
@@ -580,7 +657,7 @@ def comment_submit():
             suggestion={"grading": grading_suggestion, "feedback": feedback_suggestion}
         )
 
-        if not generate_result['success']:
+        if not generate_result['success']: # save directly if failed in generation
             return jsonify(generate_result)
 
         # ===============================
@@ -603,6 +680,7 @@ def comment_submit():
             'attempt_id': next_attempt_id,
             'student_answer': answer_text,
             'generated_response': generate_result['feedback_text'],
+            'grade_history': generate_result['grade_history'],
             'system_config': {
                 'style_keywords': generate_result['style_keywords'],
                 'feedback_templates': generate_result['feedback_templates'],
@@ -629,6 +707,98 @@ def comment_submit():
 
 
 
+@app.route('/api/comment/submit_old', methods=['POST'])
+def comment_submit_old():
+    """Generate personalized feedback response for student answer (no scoring involved)"""
+    data = request.get_json()
+    tid = data.get('tid')
+    archive_tid = data.get('archive_tid', "").strip()
+    aid = data.get('aid', str(uuid.uuid4()))
+    qid = data.get('qid')
+    answer_text = data.get("student_answer", "")
+    question_this = data.get("question", "")
+    predefined_flag = data.get("predefined_flag", "")
+    reference_this = data.get("reference", "")
+    
+    # style_keywords = data.get("style_keywords", [])
+    # feedback_templates = data.get("feedback_templates", [])
+    # feedback_pattern = data.get("feedback_pattern", "")
+    # custom_rubric = data.get("custom_rubric", "")
+    
+    history_prompt_dict = None
+    
+    try:
+       # Determine which system_info to use
+        if archive_tid:
+            history_record = database['comment_config'].find_one({'tid': archive_tid})
+            if not history_record:
+                raise ValueError(f'Archive system not found: {archive_tid}')
+            history_system_info = history_record['config']
+            system_info = history_system_info[-1] if isinstance(history_system_info, list) else history_system_info
+
+            try:
+                history_prompt_record = database['comment'].find_one({'tid': archive_tid}, sort=[('_id', -1)])
+                history_prompt_dict = history_prompt_record['system_config']
+            except:
+                history_prompt_dict = None
+        else:
+            current_record = database['comment_config'].find_one({'tid': tid})
+            if not current_record:
+                raise ValueError(f'Feedback system not found: {tid}')
+            current_system_info = current_record['config']
+            system_info = current_system_info[-1] if isinstance(current_system_info, list) else current_system_info
+        
+        if not answer_text.strip():
+            return jsonify({'success': False, 'error': 'Student answer cannot be empty'})
+        
+       # Generate feedback
+        generate_result = comment_generate_old(
+            system_info=system_info,
+            answer_text=answer_text,
+            question_text=question_this,
+            reference_text=reference_this,
+            history_prompt_dict = history_prompt_dict,
+            predefined_flag = predefined_flag
+        )
+        
+        if not generate_result['success']:
+            return jsonify(generate_result)
+        
+       # Store feedback in database
+        max_attempt_record = database['comment'].find_one(
+            {'tid': tid},
+            sort=[('attempt_id', -1)]
+        )
+        
+        next_attempt_id = (max_attempt_record.get('attempt_id', -1) + 1) if max_attempt_record else 0
+
+        database['comment'].insert_one({
+            'tid': tid,
+            'aid': aid,
+            'question': qid,
+            'attempt_id': next_attempt_id,
+            'student_answer': answer_text,
+            'generated_response': generate_result['feedback_text'],
+            'system_config': {
+                'style_keywords': generate_result['style_keywords'],
+                'feedback_templates': generate_result['feedback_templates'],
+                'feedback_pattern': generate_result['feedback_pattern'],
+                'custom_rubric': generate_result['custom_rubric'],
+                'pattern_body': generate_result['pattern_body'],
+            },
+            'feedback_prob': generate_result['feedback_prob'],
+            'generated_at': datetime.utcnow()
+        })
+        
+        response = {'success': True, 'tid': tid, 'aid': aid, 'attempt_id': next_attempt_id}
+            
+    except Exception as e:
+        traceback.print_exc()
+        response = {'success': False, 'error': str(e)}
+
+    return jsonify(response)
+
+
 @app.route('/api/comment/load', methods=['GET'])
 def comment_load():
     """Load generated feedback response by answer ID"""
@@ -642,6 +812,7 @@ def comment_load():
         print(f"want to find one record with tid {tid} and atmp_id {attempt_id}")
         result = database['comment'].find_one({'tid': tid, 'attempt_id': int(attempt_id)})
         response_text = result.get('generated_response', '')
+        grade_history_body = result.get('grade_history', None)
         
         system_config = result.get('system_config', dict())
         
@@ -676,6 +847,7 @@ def comment_load():
             return_data = {'success': True,
                             'response': formatted_response,
                             # 'response_text': response_text,
+                            'grade_history': grade_history_body,
                             'keyword_text': str(style_keywords_text),
                             'template_text': str(feedback_templates),
                             'pattern_text': str(style_pattern_text),
@@ -793,13 +965,13 @@ def download_all():
         return jsonify({"success": False})
 
 
-
+# Image component
 @app.route('/api/image/convert', methods=['POST'])
 def api_image_convert():
     """
     Image / PDF recognition endpoint.
-    Accepts: multipart/form-data with field `file`
-    Returns: { success: true, text: "..." }
+    - Image: stored in MongoDB and reused (no tmp)
+    - PDF: stored in MongoDB, restored to tmp only for processing
     """
     try:
         if 'file' not in request.files:
@@ -818,53 +990,81 @@ def api_image_convert():
             return jsonify({'success': False, 'error': 'Unsupported file type'}), 400
 
         # =================================================
-        # 1. Save to MongoDB (assets)
+        # 1. Read bytes & deduplicate in MongoDB
         # =================================================
         file_bytes = file.read()
+        content_type = file.mimetype
+        sha256 = hashlib.sha256(file_bytes).hexdigest()
 
-        asset_doc = {
-            "filename": filename,
-            "ext": ext,
-            "content": file_bytes,
-            "created_at": datetime.utcnow()
-        }
+        asset_doc = database['assets'].find_one({"sha256": sha256})
 
-        result = database['assets'].insert_one(asset_doc)
-        asset_id = result.inserted_id
+        if asset_doc:
+            asset_id = asset_doc["_id"]
+            # backward compatibility: old records without data
+            if not asset_doc.get("data"):
+                database['assets'].update_one(
+                    {"_id": asset_id},
+                    {
+                        "$set": {
+                            "data": Binary(file_bytes),
+                            "content_type": content_type,
+                            "ext": ext,
+                            "updated_at": datetime.utcnow(),
+                        }
+                    }
+                )
+                asset_doc = database['assets'].find_one({"_id": asset_id})
+        else:
+            asset_doc = {
+                "filename": filename,
+                "sha256": sha256,
+                "ext": ext,
+                "content_type": content_type,
+                "data": Binary(file_bytes),
+                "created_at": datetime.utcnow()
+            }
+            try:
+                result = database['assets'].insert_one(asset_doc)
+                asset_id = result.inserted_id
+            except DuplicateKeyError:
+                asset_doc = database['assets'].find_one({"sha256": sha256})
+                asset_id = asset_doc["_id"]
+
+        asset_doc = database['assets'].find_one({"_id": asset_id})
 
         # =================================================
-        # 2. Restore file from MongoDB to tmp
+        # 2. Prepare input for vLLM (NO TMP for images)
         # =================================================
-        tmp_dir = os.path.join(app_dir, 'tmp')
-        os.makedirs(tmp_dir, exist_ok=True)
-
-        uid = uuid.uuid4().hex
-        saved_name = f'{uid}.{ext}'
-        saved_path = os.path.join(tmp_dir, saved_name)
-
-        with open(saved_path, 'wb') as f:
-            f.write(file_bytes)
-
-        # =================================================
-        # 3. Prepare image list for vllm_generate
-        # =================================================
-        input_images = []
-
         if ext == 'pdf':
+            # ---- PDF: must go through tmp for process_pdf ----
+            tmp_dir = os.path.join(app_dir, 'tmp')
+            os.makedirs(tmp_dir, exist_ok=True)
+
+            saved_name = f'{asset_id}_{sha256[:8]}.pdf'
+            saved_path = os.path.join(tmp_dir, saved_name)
+
+            if not os.path.exists(saved_path):
+                with open(saved_path, 'wb') as f:
+                    f.write(asset_doc["data"])
+
             try:
                 image_paths = process_pdf(pdf_path=saved_path)
                 if not image_paths:
                     return jsonify({'success': False, 'error': 'Empty PDF after processing'}), 500
-                input_images = [image_paths[0]]  # first page only
+                input_image = image_paths[0]  # first page only
             except Exception:
                 traceback.print_exc()
                 return jsonify({'success': False, 'error': 'Failed to process PDF'}), 500
+
         else:
-            rel_path = os.path.relpath(saved_path, app_dir)
-            input_images = [rel_path]
+            # Image: always safe, data guaranteed by step 1
+            input_image = {
+                "bytes": asset_doc["data"],
+                "mime_type": asset_doc.get("content_type") or content_type,
+            }
 
         # =================================================
-        # 4. Select system prompt
+        # 3. Select system prompt
         # =================================================
         if input_type == 'question':
             system_prompt = QUESTION_RECOGNITION
@@ -876,24 +1076,41 @@ def api_image_convert():
             system_prompt = QUESTION_RECOGNITION
 
         # =================================================
-        # 5. Call vLLM
+        # 4. Call vLLM / Gemini
         # =================================================
         text, _ = utils.vllm_generate(
             input_text="",
             system_text=system_prompt,
-            input_image=input_images,
-            temperature=0.0
+            input_image=input_image,
+            img_type=content_type,
         )
 
         return jsonify({
             'success': True,
             'asset_id': str(asset_id),
-            'text': text.strip()
+            'sha256': sha256,
+            'text': text.strip(),
         })
 
     except Exception as e:
         traceback.print_exc()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+
+@app.route("/asset/<asset_id>")
+def get_asset(asset_id):
+    asset = database["assets"].find_one(
+        {"_id": ObjectId(asset_id)},
+        {"data": 1, "content_type": 1}
+    )
+    if not asset:
+        abort(404)
+
+    return Response(
+        asset["data"],
+        mimetype=asset.get("content_type", "application/octet-stream"),
+        headers={
+        "Cache-Control": "public, max-age=31536000"
+        }
+    )

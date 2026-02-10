@@ -97,11 +97,13 @@
     white-space: nowrap;
     display: inline-block;
 }
+
 .template-row {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
 }
+
 .delete-btn {
     background-color: #dc3545;
     color: white;
@@ -117,10 +119,13 @@
     align-items: center;
     justify-content: center;
 }
+
 .delete-btn:hover {
     background-color: #c82333;
 }
+
 .template-container {
     max-height: 200px;
     overflow-y: auto;
 }
+

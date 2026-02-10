@@ -146,6 +146,8 @@ def multi_agent_judge(
     max_tokens: int = 2048,
     score_tolerance: float = 0.25,
 ) -> Dict[str, object]:
+    dialogue_history = ["** History of Multi-agent Debate, Round 1 \n"]
+    dialogue_round_template = "* [{}] `Score`: `{}`, `Reasoning`: `{}` \n"
     """
     Run a two-round, two-agent judging process.
 
@@ -164,11 +166,18 @@ def multi_agent_judge(
     judge_a1 = _run_judge(base_prompt, system_prompt, model, max_tokens)
     judge_b1 = _run_judge(base_prompt, system_prompt, model, max_tokens)
 
+    base_prompt_shorten = base_prompt.replace("\n\n", "\n")
+    dialogue_history.append(f"""* Instruction to Agent: {base_prompt_shorten} \n""")
+    dialogue_history.append(dialogue_round_template.format("Judge A - Round 1", judge_a1['score'], judge_a1['reasoning']))
+    dialogue_history.append(dialogue_round_template.format("Judge B - Round 1", judge_b1['score'], judge_b1['reasoning']))
+    
     if is_consistent(judge_a1["score"], judge_b1["score"], score_tolerance):
+        dialogue_history.append(dialogue_round_template.format("Final Result", judge_a1['score'], judge_a1['reasoning']))
         return {
             "score": judge_a1["score"],
             "reasoning": judge_a1["reasoning"],
-            "pass": True
+            "pass": True, 
+            "dialogue_history": dialogue_history
         }
 
     # -------- Round 2 --------
@@ -178,20 +187,31 @@ def multi_agent_judge(
         judge_b1
     )
 
+    
     judge_a2 = _run_judge(round2_prompt, system_prompt, model, max_tokens)
     judge_b2 = _run_judge(round2_prompt, system_prompt, model, max_tokens)
+    
+    dialogue_history.append(f"** History of Multi-agent Debate, Round 2: \n")
+    round2_prompt_shorten = round2_prompt.replace("\n\n", "\n")
+    dialogue_history.append(f"""** Additional Instruction to Agent: {round2_prompt_shorten} \n""")
 
+    dialogue_history.append(dialogue_round_template.format("Judge A - Round 2", judge_a2['score'], judge_a2['reasoning']))
+    dialogue_history.append(dialogue_round_template.format("Judge B - Round 2", judge_b2['score'], judge_b2['reasoning']))
+    
     if is_consistent(judge_a2["score"], judge_b2["score"], score_tolerance):
+        dialogue_history.append(dialogue_round_template.format("Final Result", judge_a2['score'], judge_a2['reasoning']))
         return {
             "score": judge_a2["score"],
             "reasoning": judge_a1["reasoning"],
-            "pass": True
+            "pass": True,
+            "dialogue_history": dialogue_history
         }
 
     # -------- No consensus --------
     return {
         "score": None,
-        "pass": False
+        "pass": False,
+        "dialogue_history": dialogue_history
     }
 
 

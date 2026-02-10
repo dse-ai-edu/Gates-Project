@@ -7,32 +7,36 @@ const INPUT_CACHE_KEYS = {
 document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.information_box').forEach(box => {
-        const type = box.dataset.type; // question / assessment / answer
+        const type = box.dataset.type;
         const uploadBtn = box.querySelector('.upload-btn');
         const uploadText = box.querySelector('.file-name');
         const fileInput = box.querySelector('.hidden-file-input');
         const textarea = box.querySelector('.info-textarea');
-
-        // add image preview
         const previewImg = box.querySelector('.preview-img');
 
-        /* ---------- load cache ---------- */
-
+        // Load cached text
         const cachedText = sessionStorage.getItem(INPUT_CACHE_KEYS[type]);
-        if (cachedText && textarea) {
-            textarea.value = cachedText;
-        }
+        if (cachedText && textarea) textarea.value = cachedText;
 
         if (textarea) {
             textarea.addEventListener('input', () => {
-                sessionStorage.setItem(
-                    INPUT_CACHE_KEYS[type],
-                    textarea.value
-                );
+                sessionStorage.setItem(INPUT_CACHE_KEYS[type], textarea.value);
             });
         }
 
-        /* ---------- Upload ---------- */
+        // Load cached image by asset_id
+        if (previewImg) {
+            const assetId = sessionStorage.getItem(`asset_id_${type}`);
+            if (assetId) {
+                previewImg.src = `${window.location.origin}/asset/${assetId}`;
+                previewImg.style.display = 'block';
+                previewImg.onerror = () => {
+                    previewImg.style.display = 'none';
+                    previewImg.removeAttribute('src');
+                    sessionStorage.removeItem(`asset_id_${type}`);
+                };
+            }
+        }
 
         uploadBtn.addEventListener('click', () => fileInput.click());
 
@@ -49,19 +53,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             uploadText.textContent = file.name;
 
-            /* ---------- IMG ---------- */
-            if (previewImg) {
-                if (file.type.startsWith('image/')) {
-                    const url = URL.createObjectURL(file);
-                    previewImg.src = url;
-                    previewImg.style.display = 'block';
-                } else {
-                    previewImg.src = '';
-                    previewImg.style.display = 'none';
+            // Local blob preview (image only)
+            if (previewImg && file.type.startsWith('image/')) {
+                if (previewImg.dataset.blobUrl) {
+                    URL.revokeObjectURL(previewImg.dataset.blobUrl);
+                    delete previewImg.dataset.blobUrl;
                 }
+                const blobUrl = URL.createObjectURL(file);
+                previewImg.src = blobUrl;
+                previewImg.style.display = 'block';
+                previewImg.dataset.blobUrl = blobUrl;
             }
-
-            /* ---------- OCR ---------- */
 
             const formData = new FormData();
             formData.append('file', file);
@@ -72,17 +74,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     method: 'POST',
                     body: formData
                 });
+
                 const data = await resp.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'Backend failed');
+                }
 
+                // Update text
                 const recognizedText = data.text || '';
+                sessionStorage.setItem(INPUT_CACHE_KEYS[type], recognizedText);
+                if (textarea) textarea.value = recognizedText;
 
-                sessionStorage.setItem(
-                    INPUT_CACHE_KEYS[type],
-                    recognizedText
-                );
+                // Switch to DB asset image
+                const assetId = data.asset_id || '';
+                if (assetId && previewImg) {
+                    sessionStorage.setItem(`asset_id_${type}`, assetId);
+                    previewImg.src = `${window.location.origin}/asset/${assetId}`;
+                    previewImg.style.display = 'block';
+                    previewImg.onerror = () => {
+                        previewImg.style.display = 'none';
+                        previewImg.removeAttribute('src');
+                        sessionStorage.removeItem(`asset_id_${type}`);
+                    };
 
-                if (textarea) {
-                    textarea.value = recognizedText;
+                    if (previewImg.dataset.blobUrl) {
+                        URL.revokeObjectURL(previewImg.dataset.blobUrl);
+                        delete previewImg.dataset.blobUrl;
+                    }
                 }
 
                 if (window.MathJax) {
@@ -90,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
             } catch (e) {
-                console.error(e);
+                console.error('[UPLOAD] failed:', e);
                 alert('Failed to process file.');
             } finally {
                 fileInput.value = '';
@@ -337,12 +355,14 @@ function generatePersonalizedFeedback() {
     sessionStorage.setItem('tid', tid);
 
     const resultBox = document.getElementById('result-textarea');
+    const debateBox = document.getElementById('debate-textarea');
     const resultSection = document.getElementById('feedback-display');
     const enhancementSection = document.getElementById('enhancement-display');
 
     if (resultSection) {
         resultSection.style.display = 'block';
     }
+
     if (enhancementSection) {
         enhancementSection.style.display = 'none';
     }
@@ -406,6 +426,9 @@ function generatePersonalizedFeedback() {
         }
 
         resultBox.innerHTML = loadResult.response || '';
+
+        sessionStorage.setItem('debate', loadResult.grade_history || 'Grading Debate Not F0und');
+        // sessionStorage.setItem('debate', 'example debate text 1');
 
         if (enhancementSection) {
             enhancementSection.style.display = 'block';
@@ -500,6 +523,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveBtn = document.getElementById('suggestion-save-btn');
     const cancelBtn = document.getElementById('suggestion-cancel-btn');
 
+    const debate = document.getElementById('debate-modal');
+    const titleDb = document.getElementById('debate-title');
+    const textareaDb = document.getElementById('debate-textarea');
+
+    const debateBtn = document.getElementById('debate-main-btn');
+    const debateExitBtn = document.getElementById('debate-exit-btn');
+
     let currentType = null; // grading / feedback
 
     function openSuggestionModal(type) {
@@ -522,11 +552,28 @@ document.addEventListener('DOMContentLoaded', function () {
         currentType = null;
     }
 
+    function openDebateModal() {
+        // if (!debate || !textareaDb || !titleDb) return;
+        const cached = sessionStorage.getItem('debate');
+        titleDb.textContent = `Grading Debate History`;
+        textareaDb.value = cached || ` `;
+        debate.style.display = 'flex';
+    }
+
+    function closeDebateModal() {
+        if (!debate) return;
+        debate.style.display = 'none';
+    }
+
     const gradingDown = document.getElementById('grading-thumb-down');
     const feedbackDown = document.getElementById('feedback-thumb-down');
 
     if (gradingDown) {
         gradingDown.addEventListener('click', () => openSuggestionModal('grading'));
+    }
+
+    if (debateBtn) {
+        debateBtn.addEventListener('click', () => openDebateModal());
     }
 
     if (feedbackDown) {
@@ -544,6 +591,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (cancelBtn) {
         cancelBtn.addEventListener('click', closeSuggestionModal);
+    }
+
+    if (debateExitBtn) {
+        debateExitBtn.addEventListener('click', closeDebateModal);
     }
 
 });

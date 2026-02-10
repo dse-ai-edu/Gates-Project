@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/generation.css') }}">
 </head>
 
-<body data-page="page_final">
+<body data-page="page_final_example">
 
     <h1 class="page-title">Auto Feedback Generation</h1>
    <!-- Display current tid at top right -->
@@ -69,11 +69,11 @@
         <div class="section" id="question-input">
             <h2>Question</h2>
             <div id="sampleQuestionButtons" style="margin-bottom: 15px;">
-                <button class="sample-q-btn" data-index="0">Q1</button>
-                <button class="sample-q-btn" data-index="1">Q2</button>
-                <button class="sample-q-btn" data-index="2">Q3</button>
-                <button class="sample-q-btn" data-index="3">Q4</button>
-                <button class="sample-q-btn" data-index="4">Q5</button>
+                <button class="sample-q-btn" data-index="0">Question 1</button>
+                <button class="sample-q-btn" data-index="1">Question 2</button>
+                <button class="sample-q-btn" data-index="2">Question 3</button>
+                <button class="sample-q-btn" data-index="3">Question 4</button>
+                <button class="sample-q-btn" data-index="4">Question 5</button>
             </div>
             <div id="questionTextArea">
                 <textarea id="question-text" placeholder="Question content will appear here..."></textarea>
@@ -82,13 +82,13 @@
 
         <!-- Student Answer Input -->
         <div class="section" id="student-input">
-            <h2>Student Answer Input</h2>
+            <h2>Student Solution Input</h2>
             <div id="sampleAnswerButtons" style="margin-bottom: 15px;">
-                <button class="sample-a-btn" data-index="0">Answer1</button>
-                <button class="sample-a-btn" data-index="1">Answer2</button>
-                <button class="sample-a-btn" data-index="2">Answer3</button>
-                <button class="sample-a-btn" data-index="3">Answer4</button>
-                <button class="sample-a-btn" data-index="4">Answer5</button>
+                <button class="sample-a-btn" data-index="0">Solution 1</button>
+                <button class="sample-a-btn" data-index="1">Solution 2</button>
+                <button class="sample-a-btn" data-index="2">Solution 3</button>
+                <button class="sample-a-btn" data-index="3">Solution 4</button>
+                <button class="sample-a-btn" data-index="4">Solution 5</button>
             </div>
             <div id="textInputArea">
                 <!-- Answer Code Preview -->
@@ -125,7 +125,7 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/generation.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/feedback_input_function_old.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/generation_old.js') }}"></script>
 </body>
 </html>
