@@ -4,6 +4,7 @@ const INPUT_CACHE_KEYS = {
   answer: "input_answer_text",
 };
 
+
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".information_box").forEach((box) => {
     const type = box.dataset.type;
@@ -23,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    // Load cached image by asset_id
+    // Load cached image
     if (previewImg) {
       const assetId = sessionStorage.getItem(`asset_id_${type}`);
       if (assetId) {
@@ -55,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sessionStorage.setItem(INPUT_CACHE_KEYS[type], "");
       sessionStorage.removeItem(`asset_id_${type}`);
 
-      // Local blob preview (image only)
+      // Local blob preview
       if (previewImg && file.type.startsWith("image/")) {
         if (previewImg.dataset.blobUrl) {
           URL.revokeObjectURL(previewImg.dataset.blobUrl);
@@ -78,36 +79,60 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         const data = await resp.json();
-        if (!data.success) {
-          throw new Error(data.error || "Backend failed");
-        }
 
-        // Update text
-        const recognizedText = data.text || "";
-        sessionStorage.setItem(INPUT_CACHE_KEYS[type], recognizedText);
-        if (textarea) textarea.value = recognizedText;
+        if (data.success) {
+          // ===== SUCCESS =====
+          const recognizedText = data.text || "";
+          sessionStorage.setItem(INPUT_CACHE_KEYS[type], recognizedText);
+          if (textarea) textarea.value = recognizedText;
 
-        // Switch to DB asset image
-        const assetId = data.asset_id || "";
-        if (assetId && previewImg) {
-          sessionStorage.setItem(`asset_id_${type}`, assetId);
-          previewImg.src = `${window.location.origin}/asset/${assetId}`;
-          previewImg.style.display = "block";
-          previewImg.onerror = () => {
-            previewImg.style.display = "none";
-            previewImg.removeAttribute("src");
-            sessionStorage.removeItem(`asset_id_${type}`);
-          };
+          const assetId = data.asset_id || "";
+          if (assetId && previewImg) {
+            sessionStorage.setItem(`asset_id_${type}`, assetId);
+            previewImg.src = `${window.location.origin}/asset/${assetId}`;
+            previewImg.style.display = "block";
 
-          if (previewImg.dataset.blobUrl) {
-            URL.revokeObjectURL(previewImg.dataset.blobUrl);
-            delete previewImg.dataset.blobUrl;
+            previewImg.onerror = () => {
+              previewImg.style.display = "none";
+              previewImg.removeAttribute("src");
+              sessionStorage.removeItem(`asset_id_${type}`);
+            };
+
+            if (previewImg.dataset.blobUrl) {
+              URL.revokeObjectURL(previewImg.dataset.blobUrl);
+              delete previewImg.dataset.blobUrl;
+            }
+          }
+
+        } else {
+          // ===== FAILURE =====
+          if (type === "answer" && parseInt(data.status) === 2) {
+            console.warn("[UPLOAD] Image unclear but potentially processable.");
+
+            alert(
+              "The image appears too blurry for us to confidently recognize its content. " +
+              "Please consult a human expert to identify the content and manually enter it in the text area."
+            );
+
+            const assetId = data.asset_id || "";
+            if (assetId && previewImg) {
+              sessionStorage.setItem(`asset_id_${type}`, assetId);
+              previewImg.src = `${window.location.origin}/asset/${assetId}`;
+              previewImg.style.display = "block";
+            }
+
+            sessionStorage.setItem(INPUT_CACHE_KEYS[type], "");
+            if (textarea) textarea.value = "";
+
+          } else {
+            throw new Error(data.error || "Backend failed");
           }
         }
 
         if (window.MathJax) {
           MathJax.typesetPromise();
         }
+
       } catch (e) {
         console.error("[UPLOAD] failed:", e);
         alert("Failed to process file.");
@@ -121,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     MathJax.typesetPromise();
   }
 });
+
 
 // ===============================
 // User authentication check

@@ -21,7 +21,9 @@ import app.utils as utils
 import app.prompts as prompts
 from app.gates_segment import process_pdf
 from app import app, database
+from app.post_process_utils import run_image_post_process_llm
 # from app import s3_client
+
 from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
@@ -31,7 +33,7 @@ from bson.binary import Binary
 import io
 
 from app.question_image_prompt import QUESTION_RECOGNITION, ASSESSMENT_RECOGNITION
-from app.image_prompts_latest import RECOGNITION
+from app.image_prompts_latest import RECOGNITION as ANSWER_RECOGNITION
 from app.prompts import JUDGE
 
 from app.judge import multi_agent_judge, run_score_extract, is_consistent
@@ -973,21 +975,34 @@ def api_image_convert():
     - Image: stored in MongoDB and reused (no tmp)
     - PDF: stored in MongoDB, restored to tmp only for processing
     """
+    api_output = {'success': False, 
+                  'error': "",
+                  'asset_id': "",
+                  'sha256': "",
+                  'text': "",
+                  'status': 0,
+                  # status: 0 = cannot process, 1 = success proces, 2 = unprocessable content rejected by vllm
+                }
     try:
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file uploaded'}), 400
 
         file = request.files['file']
         input_type = request.form.get('type', '').lower()
+        
+        allow_reject = request.form.get('allow_reject', 'no').strip().lower()
+        allow_reject = True if "yes" in allow_reject else False
 
         if file.filename == '':
-            return jsonify({'success': False, 'error': 'Empty filename'}), 400
+            api_output['error'] = 'Empty filename'
+            return jsonify(api_output), 400
 
         filename = secure_filename(file.filename)
         ext = filename.rsplit('.', 1)[-1].lower()
 
         if ext not in ('png', 'jpg', 'jpeg', 'pdf'):
-            return jsonify({'success': False, 'error': 'Unsupported file type'}), 400
+            api_output['error'] = 'Unsupported file type'
+            return jsonify(api_output), 400
 
         # =================================================
         # 1. Read bytes & deduplicate in MongoDB
@@ -1050,11 +1065,13 @@ def api_image_convert():
             try:
                 image_paths = process_pdf(pdf_path=saved_path)
                 if not image_paths:
-                    return jsonify({'success': False, 'error': 'Empty PDF after processing'}), 500
+                    api_output['error'] = 'Empty PDF after processing'
+                    return jsonify(api_output), 500
                 input_image = image_paths[0]  # first page only
             except Exception:
                 traceback.print_exc()
-                return jsonify({'success': False, 'error': 'Failed to process PDF'}), 500
+                api_output['error'] = 'Failed to process PDF'
+                return jsonify(api_output), 500
 
         else:
             # Image: always safe, data guaranteed by step 1
@@ -1063,6 +1080,10 @@ def api_image_convert():
                 "mime_type": asset_doc.get("content_type") or content_type,
             }
 
+        # update response body
+        api_output['asset_id'] = str(asset_id)
+        api_output['sha256'] = sha256
+        
         # =================================================
         # 3. Select system prompt
         # =================================================
@@ -1071,9 +1092,15 @@ def api_image_convert():
         elif input_type == 'assessment':
             system_prompt = ASSESSMENT_RECOGNITION
         elif input_type == 'answer':
-            system_prompt = RECOGNITION
+            system_prompt = ANSWER_RECOGNITION
         else:
             system_prompt = QUESTION_RECOGNITION
+            
+        if allow_reject and input_type == 'answer':
+            system_prompt += "\n# IMPORTANT: SERVER-SIDE REJECTION RULES FOR UNPROCESSABLE INPUTS:"
+            system_prompt += "\n- IF the content is illegible, non-mathematical, irrelevant, or cannot be reliably interpreted after reasonable effort, respond with exactly one word: [REJECT]"
+            system_prompt += "\n- The response must be precisely: [REJECT] — including the square brackets, with no additional text, explanation, punctuation, or formatting."
+            system_prompt += "\n- If this rule applies, it overrides all other instructions above. Do NOT attempt transcription or partial interpretation."
 
         # =================================================
         # 4. Call vLLM / Gemini
@@ -1084,13 +1111,25 @@ def api_image_convert():
             input_image=input_image,
             img_type=content_type,
         )
-
-        return jsonify({
-            'success': True,
-            'asset_id': str(asset_id),
-            'sha256': sha256,
-            'text': text.strip(),
-        })
+        
+        processed_text = ""
+        if allow_reject and input_type == 'answer':
+            processed_output = run_image_post_process_llm(
+                user_text = str(text),
+                model = 'gpt-4.1-nano', 
+            )
+            if int(processed_output.get("flag", 0)) == 0:
+                api_output['success'] = False
+                api_output['error'] = 'Image Cannot Be Processed'
+                api_output['status'] = 2
+                return jsonify(api_output), 400
+            else:
+                processed_text = processed_output.get("text", "").strip()
+        
+        api_output['success'] = True
+        api_output['status'] = 1
+        api_output['text'] = processed_text.strip() or text.strip()
+        return jsonify(api_output)
 
     except Exception as e:
         traceback.print_exc()
