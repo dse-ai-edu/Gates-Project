@@ -517,7 +517,8 @@ def llm_generate_gemini(
         config=types.GenerateContentConfig(
             system_instruction=system_prompt if system_prompt else None,
             max_output_tokens=max_tokens,
-            response_mime_type="text/plain",
+            # response_mime_type="text/plain",
+            response_mime_type="application/json",
         )
     )
 

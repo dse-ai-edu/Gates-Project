@@ -63,8 +63,6 @@ Students may intentionally cross out terms to indicate cancellation. Interpret a
 7. Illegible or ambiguous content.
 - If a symbol or term is unclear:
   - Make the most likely mathematical interpretation.
-  - If ambiguity remains, use:
-    \text{[illegible]}
 - Do not invent content.
 
 

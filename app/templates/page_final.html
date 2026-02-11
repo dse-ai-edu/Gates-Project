@@ -209,78 +209,80 @@
       <div class="section" id="feedback-display" style="display: none">
         <h2>Generated Feedback</h2>
 
-        <div class="feedback-container">
-          <div class="feedback-actions" id="enhancement-display">
-            <!-- Grading -->
-            <div
-              class="action-group"
-              id="grading-rating-group"
-              data-type="grading"
+        <div class="feedback-actions" id="enhancement-display">
+          <!-- Grading -->
+          <div
+            class="action-group"
+            id="grading-rating-group"
+            data-type="grading"
+          >
+            <button
+              class="thumb-btn down"
+              id="grading-thumb-down"
+              data-value="down"
+              aria-label="Grading thumbs down"
             >
-              <button
-                class="thumb-btn down"
-                id="grading-thumb-down"
-                data-value="down"
-                aria-label="Grading thumbs down"
-              >
-                👎
-              </button>
+              👎
+            </button>
 
-              <button
-                class="thumb-btn"
-                id="debate-main-btn"
-                type="button"
-                tabindex="-1"
-                style="color: #0b3c8a"
-              >
-                &nbsp;GRADING&nbsp;
-              </button>
-
-              <button
-                class="thumb-btn up"
-                id="grading-thumb-up"
-                data-value="up"
-                aria-label="Grading thumbs up"
-              >
-                👍
-              </button>
-            </div>
-
-            <!-- Feedback -->
-            <div
-              class="action-group"
-              id="feedback-rating-group"
-              data-type="feedback"
+            <button
+              class="thumb-btn"
+              id="debate-main-btn"
+              type="button"
+              tabindex="-1"
+              style="color: #0b3c8a"
             >
-              <button
-                class="thumb-btn down"
-                id="feedback-thumb-down"
-                data-value="down"
-                aria-label="Feedback thumbs down"
-              >
-                👎
-              </button>
+              &nbsp;GRADING&nbsp;
+            </button>
 
-              <button
-                class="action-label-btn"
-                type="button"
-                tabindex="-1"
-                disabled
-              >
-                FEEDBACK
-              </button>
-
-              <button
-                class="thumb-btn up"
-                id="feedback-thumb-up"
-                data-value="up"
-                aria-label="Feedback thumbs up"
-              >
-                👍
-              </button>
-            </div>
+            <button
+              class="thumb-btn up"
+              id="grading-thumb-up"
+              data-value="up"
+              aria-label="Grading thumbs up"
+            >
+              👍
+            </button>
           </div>
 
+          <!-- Feedback -->
+          <div
+            class="action-group"
+            id="feedback-rating-group"
+            data-type="feedback"
+          >
+            <button
+              class="thumb-btn down"
+              id="feedback-thumb-down"
+              data-value="down"
+              aria-label="Feedback thumbs down"
+            >
+              👎
+            </button>
+
+            <button
+              class="action-label-btn"
+              type="button"
+              tabindex="-1"
+              disabled
+            >
+              FEEDBACK
+            </button>
+
+            <button
+              class="thumb-btn up"
+              id="feedback-thumb-up"
+              data-value="up"
+              aria-label="Feedback thumbs up"
+            >
+              👍
+            </button>
+          </div>
+        </div>
+
+        <br>
+
+        <div class="feedback-container">
           <div id="result-textarea">
             Generating Feedback... Please Wait a Minute...
           </div>

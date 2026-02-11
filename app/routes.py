@@ -991,7 +991,7 @@ def api_image_convert():
         input_type = request.form.get('type', '').lower()
         
         allow_reject = request.form.get('allow_reject', 'no').strip().lower()
-        allow_reject = True if "yes" in allow_reject else False
+        allow_reject = True if ("yes" in allow_reject or "1" in allow_reject) else False
 
         if file.filename == '':
             api_output['error'] = 'Empty filename'
@@ -1114,6 +1114,7 @@ def api_image_convert():
         
         processed_text = ""
         if allow_reject and input_type == 'answer':
+            print(f"[INFO] running in reject-able image recognition model.`")
             processed_output = run_image_post_process_llm(
                 user_text = str(text),
                 model = 'gpt-4.1-nano', 
@@ -1126,9 +1127,13 @@ def api_image_convert():
             else:
                 processed_text = processed_output.get("text", "").strip()
         
+        # safe text for html showing
+        safe_text = (processed_text.strip() or text.strip())
+        safe_text = safe_text.replace("\x08", "\\")
+        
         api_output['success'] = True
         api_output['status'] = 1
-        api_output['text'] = processed_text.strip() or text.strip()
+        api_output['text'] = safe_text
         return jsonify(api_output)
 
     except Exception as e:

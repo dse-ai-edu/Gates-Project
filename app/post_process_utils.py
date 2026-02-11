@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 import openai
 
-from question_image_prompt import IMAGE_POST_PROCESS_PROMPT
+from app.question_image_prompt import IMAGE_POST_PROCESS_PROMPT
 
 from app import key_iter
 
@@ -62,4 +62,5 @@ def run_image_post_process_llm(
             last_error = e
             continue
 
+    print(f"[ERROR INPUT]: {messages}")
     raise RuntimeError(f"Post-process LLM failed after {max_retry} retries. Last error: {last_error}")

@@ -53,7 +53,7 @@ Return exactly:
 if any of the following holds:
 - The text explicitly signals rejection (e.g., “[REJECT]”, “reject”, “rejected”), even if formatted incorrectly or accompanied by explanations.
 - The text mainly explains that the image is unreadable, illegible, too blurry, or cannot be interpreted.
-- The text contains only meta-commentary about failure and does not include recognizable mathematical content (such as equations, LaTeX, problem statements, grading rubrics, or answers).
+- The text contains only meta-commentary about failure and does not include recognizable mathematical content (such as equations, LaTeX, problem statements, grading rubrics, or answers). Or it only has very minilal valid content that is clearly overshadowed by the rejection message (for example. `\$\\text\{\[illegible\]\}$` or `\cancel{x}`.).
 
 If this condition applies, ignore everything else and output only: [REJECT]
 

@@ -71,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("type", type);
+      formData.append("allow_reject", "yes");
 
       try {
         const resp = await fetch("/api/image/convert", {
@@ -468,6 +469,7 @@ function generatePersonalizedFeedback() {
   }
 
   if (enhancementSection) {
+    console.log("Hide enhancement section");
     enhancementSection.style.display = "none";
   }
 
@@ -532,16 +534,16 @@ function generatePersonalizedFeedback() {
       }
 
       resultBox.innerHTML = loadResult.response || "";
+      if (enhancementSection) {
+        console.log("Showing enhancement section");
+        enhancementSection.style.display = "block";
+      }
 
       sessionStorage.setItem(
         "debate",
         loadResult.grade_history || "Grading Debate Not F0und"
       );
       // sessionStorage.setItem('debate', 'example debate text 1');
-
-      if (enhancementSection) {
-        enhancementSection.style.display = "block";
-      }
     })
     .catch((err) => {
       clearInterval(timerId);
