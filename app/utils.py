@@ -129,13 +129,20 @@ def llm_generate(
                     logprobs=True,
                     # **kwarg
                     )
-                print(f"!!! debug: after response generation A, {str(response)[:200]}")
+                
+                response_showing = f"{str(response)[:200]} ... {str(response)[-200:]}" if len(str(response)) > 450 else str(response)
+                
+                print(f"!!! debug: after response generation A, {response_showing}")
+                
             else:
                 print(f"!!! debug: before response generation B: ")
                 response = client.chat.completions.create(messages=messages, model=model, max_tokens=max_tokens)
-                print(f"!!! debug: after response generation B, {str(response)[:200]}")
+                response_showing = f"{str(response)[:200]} ... {str(response)[-200:]}" if len(str(response)) > 450 else str(response)
+                print(f"!!! debug: after response generation B, {response_showing}")
+                
             response_text = response.choices[0].message.content
-            print(f"!!! debug: response_text: {response_text}")
+            response_text_showing = f"{str(response_text)[:200]} ... {str(response_text)[-200:]}" if len(str(response_text)) > 450 else str(response_text)
+            print(f"!!! debug: response_text: {response_text_showing}")
             if hasattr(response.choices[0], "logprobs") and response.choices[0].logprobs is not None:
                 print(f"--- LOGPROB: ")
                 # with open("tmp0202.json", "w") as g:

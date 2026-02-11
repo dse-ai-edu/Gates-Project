@@ -479,11 +479,13 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             style_keywords=style_keywords,
             feedback_templates=feedback_templates,
             )
+        print(f"[Debug 5]: User Prompt has placeholder? {'[PLACEHOLDER]' in user_prompt}")
         
         feedback_suggestion_text = ""
         if feedback_suggestion is not None and str(feedback_suggestion).strip() != "":
             feedback_suggestion_text = f"\n\n# Suggestion for Feedback Generation from Human Expert:\n{feedback_suggestion}"
-            user_prompt.replace("[PLACEHOLDER]", feedback_suggestion_text)
+            user_prompt = user_prompt.replace("[PLACEHOLDER]", feedback_suggestion_text)
+            print(f"[Debug 4]: User Prompt is augmented with Feedback Suggestion? {feedback_suggestion_text in user_prompt} :: ``{feedback_suggestion_text}``")
 
         print(f"debug: before utils.llm_generate")
         # Generate feedback using LLM
@@ -548,7 +550,7 @@ def comment_generate_old(system_info, answer_text, question_text, reference_text
             style_keywords=style_keywords,
             feedback_templates=feedback_templates,
             )
-        
+        print(f"[Debug 6]: User Prompt has Placeholder: {'[PLACEHOLDER]' in user_prompt}")
         print(f"debug: before utils.llm_generate")
         # Generate feedback using LLM
         feedback_text, feedback_prob = utils.llm_generate(

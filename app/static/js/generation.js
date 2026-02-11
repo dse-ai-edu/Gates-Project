@@ -294,6 +294,8 @@ function initHover() {
 // ===============================
 let isStyleLocked = false;
 let lockedStyleTmp = true;
+let runningTimer = null;
+let currentRunToken = 0;
 
 let currentConfig = {
   style_keywords: [],
@@ -433,6 +435,16 @@ function estimateExpectation(cfg) {
 // MAIN: generate feedback
 // ===============================function generatePersonalizedFeedback() {
 function generatePersonalizedFeedback() {
+
+  // ====== run token ======
+  const myToken = ++currentRunToken;
+
+  // ====== clear old timer ======
+  if (runningTimer !== null) {
+    clearInterval(runningTimer);
+    runningTimer = null;
+  }
+
   const question = document
     .querySelector('.information_box[data-type="question"] textarea')
     ?.value.trim();
@@ -460,57 +472,46 @@ function generatePersonalizedFeedback() {
   sessionStorage.setItem("tid", tid);
 
   const resultBox = document.getElementById("result-textarea");
-  const debateBox = document.getElementById("debate-textarea");
   const resultSection = document.getElementById("feedback-display");
   const enhancementSection = document.getElementById("enhancement-display");
 
-  if (resultSection) {
-    resultSection.style.display = "block";
-  }
-
-  if (enhancementSection) {
-    console.log("Hide enhancement section");
-    enhancementSection.style.display = "none";
-  }
+  if (resultSection) resultSection.style.display = "block";
+  if (enhancementSection) enhancementSection.style.display = "none";
 
   const expectation = estimateExpectation(currentConfig);
 
-  // === timer ===
+  // ====== TIMER ======
   const startTime = Date.now();
-  const timerId = setInterval(() => {
+
+  runningTimer = setInterval(() => {
+
+    // 如果不是当前任务，立即停止
+    if (myToken !== currentRunToken) {
+      clearInterval(runningTimer);
+      return;
+    }
+
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
     resultBox.innerText =
       `Generating feedback... (expect ~${expectation}s)\n` +
       `Running ${elapsed}s...`;
+
   }, 1000);
 
-  // === collect optional suggestions ===
-  const gradingSuggestion = sessionStorage
-    .getItem("suggestion_grading")
-    ?.trim();
-  const feedbackSuggestion = sessionStorage
-    .getItem("suggestion_feedback")
-    ?.trim();
+  // ====== optional suggestions ======
+  const gradingSuggestion = sessionStorage.getItem("suggestion_grading")?.trim();
+  const feedbackSuggestion = sessionStorage.getItem("suggestion_feedback")?.trim();
 
-  // === submit ===
   const formData = new FormData();
   formData.append("tid", tid);
   formData.append("question", question);
   formData.append("assessment", assessment);
   formData.append("answer", answerText);
-  formData.append(
-    "predefined_flag",
-    sessionStorage.getItem("predefined_conf") || ""
-  );
+  formData.append("predefined_flag", sessionStorage.getItem("predefined_conf") || "");
 
-  //
-  if (gradingSuggestion) {
-    formData.append("suggestion_grading", gradingSuggestion);
-  }
-
-  if (feedbackSuggestion) {
-    formData.append("suggestion_feedback", feedbackSuggestion);
-  }
+  if (gradingSuggestion) formData.append("suggestion_grading", gradingSuggestion);
+  if (feedbackSuggestion) formData.append("suggestion_feedback", feedbackSuggestion);
 
   fetch("/api/comment/submit", {
     method: "POST",
@@ -518,37 +519,50 @@ function generatePersonalizedFeedback() {
   })
     .then((r) => r.json())
     .then((submitResult) => {
+
+      if (myToken !== currentRunToken) return;
+
       if (!submitResult.success) {
         throw new Error(submitResult.error || "Submit failed");
       }
+
       return fetch(
         `/api/comment/load?tid=${tid}&attempt_id=${submitResult.attempt_id}`
       );
     })
     .then((r) => r.json())
     .then((loadResult) => {
-      clearInterval(timerId);
+
+      if (myToken !== currentRunToken) return;
+
+      clearInterval(runningTimer);
+      runningTimer = null;
 
       if (!loadResult.success) {
         throw new Error(loadResult.error || "Load failed");
       }
 
       resultBox.innerHTML = loadResult.response || "";
+
       if (enhancementSection) {
-        console.log("Showing enhancement section");
         enhancementSection.style.display = "block";
       }
 
       sessionStorage.setItem(
         "debate",
-        loadResult.grade_history || "Grading Debate Not F0und"
+        loadResult.grade_history || "Grading Debate Not Found"
       );
-      // sessionStorage.setItem('debate', 'example debate text 1');
     })
     .catch((err) => {
-      clearInterval(timerId);
+
+      if (myToken !== currentRunToken) return;
+
+      clearInterval(runningTimer);
+      runningTimer = null;
+
       console.error(err);
-      resultBox.innerText = `❌ Error generating feedback:\n${err.message}`;
+      resultBox.innerText =
+        `❌ Error generating feedback:\n${err.message}`;
     });
 }
 
