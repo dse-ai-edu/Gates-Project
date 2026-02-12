@@ -4,7 +4,19 @@ const INPUT_CACHE_KEYS = {
   answer: "input_answer_text",
 };
 
-
+async function typesetMathIn(el) {
+  if (!window.MathJax) return;
+  try {
+    if (MathJax.typesetClear) MathJax.typesetClear([el]);
+    if (MathJax.typesetPromise) {
+      await MathJax.typesetPromise([el]);
+    } else if (MathJax.typeset) {
+      MathJax.typeset([el]);
+    }
+  } catch (e) {
+    console.warn("MathJax typeset failed:", e);
+  }
+}
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".information_box").forEach((box) => {
     const type = box.dataset.type;
@@ -104,7 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
               delete previewImg.dataset.blobUrl;
             }
           }
-
         } else {
           // ===== FAILURE =====
           if (type === "answer" && parseInt(data.status) === 2) {
@@ -112,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             alert(
               "The image appears too blurry for us to confidently recognize its content. " +
-              "Please consult a human expert to identify the content and manually enter it in the text area."
+                "Please consult a human expert to identify the content and manually enter it in the text area.",
             );
 
             const assetId = data.asset_id || "";
@@ -124,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             sessionStorage.setItem(INPUT_CACHE_KEYS[type], "");
             if (textarea) textarea.value = "";
-
           } else {
             throw new Error(data.error || "Backend failed");
           }
@@ -133,7 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (window.MathJax) {
           MathJax.typesetPromise();
         }
-
       } catch (e) {
         console.error("[UPLOAD] failed:", e);
         alert("Failed to process file.");
@@ -147,7 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
     MathJax.typesetPromise();
   }
 });
-
 
 // ===============================
 // User authentication check
@@ -205,7 +213,7 @@ async function buildInfoDisplayText(type, value) {
     const descr = resolveDescr(key);
     return `- <span title="${name}: ${descr.replace(
       /"/g,
-      "&quot;"
+      "&quot;",
     )}">${name}</span>`;
   };
 
@@ -250,7 +258,7 @@ function initHover() {
     if (!span) return;
 
     const container = span.closest(
-      "#style-keywords-display, #feedback-pattern-display"
+      "#style-keywords-display, #feedback-pattern-display",
     );
     if (!container) return;
 
@@ -332,7 +340,7 @@ function saveConfiguration() {
       alert(
         result.success
           ? "✅ Configuration saved successfully!"
-          : "❗ Save failed."
+          : "❗ Save failed.",
       );
     })
     .catch((err) => {
@@ -363,7 +371,7 @@ async function displayConfigurationAsText() {
   styleDisplay.style.whiteSpace = "pre-line";
   styleDisplay.innerHTML = await buildInfoDisplayText(
     "keyword",
-    currentConfig.style_keywords
+    currentConfig.style_keywords,
   );
 
   const templateDisplay = document.getElementById("feedback-templates-display");
@@ -398,7 +406,7 @@ async function displayConfigurationAsText() {
   } else {
     pattern_text_show = await buildInfoDisplayText(
       "pattern",
-      currentConfig.feedback_pattern
+      currentConfig.feedback_pattern,
     );
   }
 
@@ -435,7 +443,6 @@ function estimateExpectation(cfg) {
 // MAIN: generate feedback
 // ===============================function generatePersonalizedFeedback() {
 function generatePersonalizedFeedback() {
-
   // ====== run token ======
   const myToken = ++currentRunToken;
 
@@ -484,7 +491,6 @@ function generatePersonalizedFeedback() {
   const startTime = Date.now();
 
   runningTimer = setInterval(() => {
-
     // 如果不是当前任务，立即停止
     if (myToken !== currentRunToken) {
       clearInterval(runningTimer);
@@ -496,22 +502,30 @@ function generatePersonalizedFeedback() {
     resultBox.innerText =
       `Generating feedback... (expect ~${expectation}s)\n` +
       `Running ${elapsed}s...`;
-
   }, 1000);
 
   // ====== optional suggestions ======
-  const gradingSuggestion = sessionStorage.getItem("suggestion_grading")?.trim();
-  const feedbackSuggestion = sessionStorage.getItem("suggestion_feedback")?.trim();
+  const gradingSuggestion = sessionStorage
+    .getItem("suggestion_grading")
+    ?.trim();
+  const feedbackSuggestion = sessionStorage
+    .getItem("suggestion_feedback")
+    ?.trim();
 
   const formData = new FormData();
   formData.append("tid", tid);
   formData.append("question", question);
   formData.append("assessment", assessment);
   formData.append("answer", answerText);
-  formData.append("predefined_flag", sessionStorage.getItem("predefined_conf") || "");
+  formData.append(
+    "predefined_flag",
+    sessionStorage.getItem("predefined_conf") || "",
+  );
 
-  if (gradingSuggestion) formData.append("suggestion_grading", gradingSuggestion);
-  if (feedbackSuggestion) formData.append("suggestion_feedback", feedbackSuggestion);
+  if (gradingSuggestion)
+    formData.append("suggestion_grading", gradingSuggestion);
+  if (feedbackSuggestion)
+    formData.append("suggestion_feedback", feedbackSuggestion);
 
   fetch("/api/comment/submit", {
     method: "POST",
@@ -519,7 +533,6 @@ function generatePersonalizedFeedback() {
   })
     .then((r) => r.json())
     .then((submitResult) => {
-
       if (myToken !== currentRunToken) return;
 
       if (!submitResult.success) {
@@ -527,12 +540,11 @@ function generatePersonalizedFeedback() {
       }
 
       return fetch(
-        `/api/comment/load?tid=${tid}&attempt_id=${submitResult.attempt_id}`
+        `/api/comment/load?tid=${tid}&attempt_id=${submitResult.attempt_id}`,
       );
     })
     .then((r) => r.json())
-    .then((loadResult) => {
-
+    .then(async (loadResult) => {
       if (myToken !== currentRunToken) return;
 
       clearInterval(runningTimer);
@@ -543,6 +555,7 @@ function generatePersonalizedFeedback() {
       }
 
       resultBox.innerHTML = loadResult.response || "";
+      await typesetMathIn(resultBox);
 
       if (enhancementSection) {
         enhancementSection.style.display = "block";
@@ -550,19 +563,17 @@ function generatePersonalizedFeedback() {
 
       sessionStorage.setItem(
         "debate",
-        loadResult.grade_history || "Grading Debate Not Found"
+        loadResult.grade_history || "Grading Debate Not Found",
       );
     })
     .catch((err) => {
-
       if (myToken !== currentRunToken) return;
 
       clearInterval(runningTimer);
       runningTimer = null;
 
       console.error(err);
-      resultBox.innerText =
-        `❌ Error generating feedback:\n${err.message}`;
+      resultBox.innerText = `❌ Error generating feedback:\n${err.message}`;
     });
 }
 
@@ -699,7 +710,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (feedbackDown) {
     feedbackDown.addEventListener("click", () =>
-      openSuggestionModal("feedback")
+      openSuggestionModal("feedback"),
     );
   }
 
