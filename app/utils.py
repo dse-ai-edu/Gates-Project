@@ -109,7 +109,6 @@ def llm_generate(
     ) -> str:
     
     user_msg = {'role':'user','content': str(input_text)}
-    
     if system_text is not None:
         system_msg = {'role':'system','content':str(system_text)}
         messages = [system_msg, user_msg]
@@ -138,8 +137,8 @@ def llm_generate(
                 print(f"!!! debug: after response generation B, {str(response)[:200]}")
             response_text = response.choices[0].message.content
             print(f"!!! debug: response_text: {response_text}")
-            if hasattr(response.choices[0], "logprobs"):
-                print(f"--- LOGPROB: {str(response)}")
+            if hasattr(response.choices[0], "logprobs") and response.choices[0].logprobs is not None:
+                print(f"--- LOGPROB: ")
                 with open("tmp0202.json", "w") as g:
                     response_dict = response.model_dump()
                     json.dump(response_dict, g, ensure_ascii=False, indent=2)
@@ -231,38 +230,40 @@ def parse_feedback_pattern(
         **kwarg) -> str:
     
     app_dir = find_app_dir()
-    json_path = app_dir / "style_info.json"
+    json_path = app_dir / "static" / "data" / "pattern_info.json"
     with open(json_path, "r", encoding="utf-8") as f:
-        style_info = json.load(f)
+        pattern_info = json.load(f)
     
     pattern_input_lower = feedback_pattern.lower().strip()
-    default_pattern_key, default_pattern = next(iter(style_info.items()))  # default = first one
+    default_pattern_key, default_pattern = next(iter(pattern_info.items()))  # default = first one
     pattern_body, case_num = None, -1
     if len(pattern_input_lower) > 0 and 'custom' not in pattern_input_lower:
         case_num = 1
         # Case 1: Pre-defined Pattern
-        matched_pattern_key = best_match_by_lcs(pattern_input_lower, style_info.keys())
-        pattern_body = style_info.get(matched_pattern_key)
+        matched_pattern_key = best_match_by_lcs(pattern_input_lower, pattern_info.keys())
+        pattern_body = pattern_info.get(matched_pattern_key)
     elif str(custom_rubric).strip() == 0:
         case_num = 3
         # Case 3: No match and no rubric -> plain pattern
         matched_pattern_key = "Plain"
-        pattern_body = style_info.get(matched_pattern_key)
+        pattern_body = pattern_info.get(matched_pattern_key)
     else:
         # Case 2: Generate personal template
         case_num = 2
         matched_pattern_key = "Custom"
-        customize_prompt = style_info.get("Rubric")
+        customize_prompt = pattern_info.get("Rubric")
         system_text = str(customize_prompt)
         input_text = f"""User Rubric: {custom_rubric}"""
+        print(f"*** debug: generate pattern input_text: `{input_text}`")
+        print(f"*** debug: generate pattern system_text: `{system_text}`")
         pattern_body, pattern_prob = llm_generate(
-            input_text, system_text, 
+            input_text=input_text, system_text=system_text, 
             model=model, max_retry=5, have_log=False)
         if pattern_body is None:
             matched_pattern_key = "Custom (override by Plain)"
-            pattern_body = style_info.get("Rubric")
+            pattern_body = pattern_info.get("Plain")
             
-    print(f"[PATTERN] Pattern Case  Above :{case_num}: `{matched_pattern_key}` from `{feedback_pattern}`")
+    print(f"[PATTERN] Pattern Case Above: {case_num}: `{matched_pattern_key}` from `{feedback_pattern}`")
     return {"pattern_key": matched_pattern_key, 
             "pattern_body": pattern_body}
 
@@ -278,8 +279,9 @@ def parse_teaching_text(
     # Step 1: optional, add grading information
     # grading_rubric, grading_text = grading
     # grading_prompt = ""
-    current_dir = Path(__file__).resolve().parent
-    keyword_info_path = current_dir / "keyword_info.json"
+    app_dir = find_app_dir()
+    data_dir = app_dir / "static" / "data" 
+    keyword_info_path = data_dir / "keyword_info.json"
     try:
         with open(keyword_info_path, "r", encoding="utf-8") as f:
             keyword_info = json.load(f)

@@ -23,11 +23,13 @@
 
         <div class="traverse-buttons">
             <button class="t-button" onclick="saveAndProceed_page1()">Save</button>
-            <!-- <button class="t-button"
+            <!--
+            <button class="t-button"
                     style="background-color:#ff9800;"
                     onclick="window.feedbackInputFunctions.loadPriorSetting()">
                 Load Prior Setting
-            </button> -->
+            </button>
+            -->
         </div>
     </div>
 
@@ -40,10 +42,29 @@
             <p>Choose one keyword from each group:</p>
 
             <div class="style-keywords-row">
-                <div class="style-keywords-col" id="feedback-function-1A-container"></div>
-                <div class="style-keywords-col" id="feedback-function-1B-container"></div>
-                <div class="style-keywords-col" id="feedback-function-1C-container"></div>
-                <div class="style-keywords-col" id="feedback-function-1D-container"></div>
+                <div class="style-keywords-col" id="feedback-function-1A-container">
+                    {% set subgroup_idx = 1 %}
+                    {% set keywords = subgroup1_keywords %}
+                    {% include "components/feedback_function_1_template.html" %}
+                </div>
+
+                <div class="style-keywords-col" id="feedback-function-1B-container">
+                    {% set subgroup_idx = 2 %}
+                    {% set keywords = subgroup2_keywords %}
+                    {% include "components/feedback_function_1_template.html" %}
+                </div>
+
+                <div class="style-keywords-col" id="feedback-function-1C-container">
+                    {% set subgroup_idx = 3 %}
+                    {% set keywords = subgroup3_keywords %}
+                    {% include "components/feedback_function_1_template.html" %}
+                </div>
+
+                <div class="style-keywords-col" id="feedback-function-1D-container">
+                    {% set subgroup_idx = 4 %}
+                    {% set keywords = subgroup4_keywords %}
+                    {% include "components/feedback_function_1_template.html" %}
+                </div>
             </div>
         </div>
 
@@ -52,7 +73,9 @@
         <!-- ===== Component 2: Feedback Templates (step2, read-only) ===== -->
         <div class="content-section" id="feedback-templates-section">
             <h2>Templates of Feedback Response</h2>
-            <div id="feedback-function-2-container"></div>
+
+            <!-- include template component  -->
+            {% include "components/feedback_function_2.html" %}
         </div>
 
     </div>
@@ -60,6 +83,7 @@
 
 <!-- ================= Shared Logic ================= -->
 <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
+<script src="{{ url_for('static', filename='js/step1.js') }}"></script>
 
 <script>
 /* ---------- Authentication ---------- */
@@ -71,39 +95,6 @@
         throw new Error('Authentication required');
     }
 })();
-
-/* ---------- Load Components ---------- */
-async function loadComponents() {
-    try {
-        const map = [
-            ['feedback-function-1A-container', 'components/feedback_function_1A.html'],
-            ['feedback-function-1B-container', 'components/feedback_function_1B.html'],
-            ['feedback-function-1C-container', 'components/feedback_function_1C.html'],
-            ['feedback-function-1D-container', 'components/feedback_function_1D.html'],
-            ['feedback-function-2-container',  'components/feedback_function_2.html']
-        ];
-
-        for (const [id, path] of map) {
-            const r = await fetch(`{{ url_for('static', filename='') }}${path}`);
-            document.getElementById(id).innerHTML = await r.text();
-        }
-
-        const init = () => {
-            initStyleKeywordsComponent();
-            initFeedbackTemplatesComponent();
-        };
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
-        }
-
-    } catch (e) {
-        console.error('Component loading failed:', e);
-    }
-}
-
 
 /* ---------- Save & Proceed ---------- */
 function saveAndProceed_page1() {
@@ -131,10 +122,16 @@ function saveAndProceed_page1() {
 }
 
 /* ---------- Init ---------- */
-window.addEventListener('load', () => {
-    loadComponents();
+window.addEventListener('DOMContentLoaded', () => {
+    // shared logic
+    initStyleKeywordsComponent();
+    initFeedbackTemplatesComponent();
+
+    // page-1-only logic
+    loadFeedbackTemplatesFromSessionStorage();
 });
 </script>
+
 
 </body>
 </html>

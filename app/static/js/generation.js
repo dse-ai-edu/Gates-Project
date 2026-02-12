@@ -14,6 +14,62 @@ if (!checkAuthentication()) {
     throw new Error('Authentication required');
 }
 
+
+// Global variables - keyword info
+const INFO_CACHE = {};
+
+async function loadInfoByType(type) {
+    if (!type || typeof type !== 'string') {
+        throw new Error('type must be a non-empty string');
+    }
+    const key = type.toLowerCase();
+    if (INFO_CACHE[key]) {
+        return INFO_CACHE[key];
+    }
+    const url = `/static/data/${key}_info.json`;
+    const resp = await fetch(url);
+    if (!resp.ok) {
+        throw new Error(`Failed to load ${url}`);
+    }
+    const data = await resp.json();
+    INFO_CACHE[key] = data;
+    return data;
+}
+
+
+// Display for keyword(s) and pattern(s)
+async function buildInfoDisplayText(type, value) {
+    let info = {};
+    try {
+        info = await loadInfoByType(type);
+    } catch (e) {
+        console.error(e);
+        return 'N/A*';
+    }
+    const resolveName = (key) => info?.[key]?.name || key;
+    const resolveDescr = (key) => info?.[key]?.short || '';
+    const makeLine = (key) => {
+        const name = resolveName(key);
+        const descr = resolveDescr(key);
+        return `- <span title="${name}: ${descr.replace(/"/g, '&quot;')}">${name}</span>`;
+    };
+    let lines = [];
+    if (Array.isArray(value)) {
+        lines = value.map(k => makeLine(k));
+    } else if (typeof value === 'string' && value.trim() !== '') {
+        lines = value
+            .split(',')
+            .map(k => k.trim())
+            .filter(k => k.length > 0)
+            .map(k => makeLine(k));
+    } else {
+        console.log('Unrecognized Info, its type/value are: ', type, '&&', value);
+        lines = ['N/A**'];
+    }
+    return lines.join('\n');
+}
+
+
 // Global variables - avoid redeclaration conflict with feedback_input_function.js
 let isStyleLocked = false;  // From backend data (renamed to avoid conflict)
 let lockedStyleTmp = true;  // Local variable for UI control (renamed to avoid conflict)
@@ -86,31 +142,17 @@ function loadConfiguredSystem() {
 
 
 // Display configuration as text in four panels
-function displayConfigurationAsText() {
-    // 1 Style Keywords
+async function displayConfigurationAsText() {
+
+    // 1 Selected Keyword
     const styleDisplay = document.getElementById('style-keywords-display');
-
-    let keywords = currentConfig.style_keywords;
-    let kw_lines = [];
-
-    if (Array.isArray(keywords)) {
-        kw_lines = keywords.map(k => `- ${k}`);
-    } else if (typeof keywords === 'string' && keywords.trim() !== '') {
-        kw_lines = keywords
-            .split(',')
-            .map(k => k.trim())
-            .filter(k => k.length > 0)
-            .map(k => `- ${k}`);
-    } else {
-        kw_lines = ['N/A'];
-    }
-
+    const keywords = currentConfig.style_keywords;
+    const keyword_text_show = await buildInfoDisplayText('keyword', keywords);
     styleDisplay.style.whiteSpace = 'pre-line';
-    styleDisplay.textContent = kw_lines.join('\n');
+    styleDisplay.innerHTML = keyword_text_show;
 
     // 2 Feedback Templates  
     const templateDisplay = document.getElementById('feedback-templates-display');
-
     const templateDefault = ['`Strength', '`Weakness', '`Improvement'];
 
     let tp_lines;
@@ -139,26 +181,38 @@ function displayConfigurationAsText() {
     // templateDisplay.textContent = "- Strength  - Weakness  - Improvement";
     
     // 3 Pattern
-    console.log("FLAG 1")
-    console.log(currentConfig.feedback_pattern)
-    console.log("FLAG 1")
-    const stylePattern = document.getElementById('feedback-pattern-display');
-    if (currentConfig.feedback_pattern) {
-        stylePattern.textContent = currentConfig.feedback_pattern;
-    } else if (currentConfig.custom_rubric) {
-        stylePattern.textContent = 'Custom Rubric Pattern';
+    const patternDisplay = document.getElementById('feedback-pattern-display');
+    const pattern = currentConfig.feedback_pattern;
+    let pattern_custom_flag = false;
+
+    let pattern_text_show = '';
+    if (
+        typeof pattern === 'string' &&
+        (
+            pattern.toLowerCase().includes('custom') ||
+            pattern.trim() === ''
+        )
+    ) {
+        pattern_text_show = 'Your Custom Pattern';
+        pattern_custom_flag = true;
     } else {
-        stylePattern.textContent = 'N/A';
+        pattern_text_show = await buildInfoDisplayText('pattern', pattern);
     }
+    patternDisplay.style.whiteSpace = 'pre-line';
+    patternDisplay.innerHTML = pattern_text_show;
 
     // 4 custom content
-    const exampleDisplay = document.getElementById('custom-rubric-display');
-    exampleDisplay.style.whiteSpace = 'pre-line';
-    if (currentConfig.feedback_pattern !== "") {
-        exampleDisplay.textContent = '<Not Applicable>';
+    const customDisplay = document.getElementById('custom-rubric-display');
+    customDisplay.style.whiteSpace = 'pre-line';
+
+    if (pattern_custom_flag === false) {
+        customDisplay.textContent = '<Not Applicable>';
     } else {
-        exampleDisplay.textContent =
-            currentConfig.custom_rubric || '<Not Applicable>';
+        const custom_tmp = currentConfig.custom_rubric;
+        customDisplay.textContent =
+            custom_tmp && custom_tmp.trim()
+                ? custom_tmp
+                : '<Custom Content Not Found>';
     }
 }
 
@@ -220,7 +274,7 @@ function saveCurrentConfiguration() {
 document.addEventListener('DOMContentLoaded', function() {
     const generateFeedbackBtn = document.getElementById('generateFeedbackBtn');
     const feedbackDisplay = document.getElementById("feedback-display");
-    const tid = sessionStorage.getItem('tid') || 'N/A';
+    const tid = sessionStorage.getItem('tid') || 'N/A***';
     
     document.getElementById('tid-value').textContent = tid;
 
@@ -264,6 +318,7 @@ function estimateExpectation(currentConfig) {
 
 
 function generatePersonalizedFeedback() {
+    const questionContent = document.getElementById('question-text').value;
     const studentAnswer = document.getElementById('student-answer').value;
     const resultBox = document.getElementById('result-textarea');
     const tid = sessionStorage.getItem('tid') || crypto.randomUUID();
@@ -286,14 +341,15 @@ function generatePersonalizedFeedback() {
     timerId = setInterval(updateRunningTime, 1000);
 
     const submitData = {
-        tid,
-        archive_tid,
+        tid: tid,
+        archive_tid: archive_tid,
+        question: questionContent,
         student_answer: studentAnswer,
-        style_keywords: currentConfig.style_keywords,
-        feedback_templates: currentConfig.feedback_templates,
-        feedback_pattern: currentConfig.feedback_pattern,
-        custom_rubric: currentConfig.custom_rubric,
-        predefined_flag
+        // style_keywords: currentConfig.style_keywords,
+        // feedback_templates: currentConfig.feedback_templates,
+        // feedback_pattern: currentConfig.feedback_pattern,
+        // custom_rubric: currentConfig.custom_rubric,
+        predefined_flag: predefined_flag
     };
 
     console.log('Submitting feedback request:', submitData);
@@ -323,31 +379,63 @@ function generatePersonalizedFeedback() {
         const htmlText = loadResult.response;
         resultBox.innerHTML = htmlText;
 
-        const templates = currentConfig.feedback_templates;
-        const templateText = Array.isArray(templates)
-            ? templates.join(', ')
-            : (templates || 'DEV: Default Template');
+        // keyword showing
+        const keywordText =
+            (typeof loadResult.keyword_text === 'string' &&
+            loadResult.keyword_text.trim() !== '')
+                ? `${loadResult.keyword_text}`
+                : 'NA[Default]';
 
-        const pattern_val =
-            (typeof currentConfig.feedback_pattern === 'string' &&
-            currentConfig.feedback_pattern.trim() !== '')
-                ? currentConfig.feedback_pattern
-                : 'Custom';
+        // Template showing
+        const templateText =
+            (typeof loadResult.template_text === 'string' &&
+            loadResult.template_text.trim() !== '')
+                ? `${loadResult.template_text}`
+                : 'NA[Default]';
 
-        const rubric_txt =
-            (typeof currentConfig.custom_rubric === 'string' &&
-            currentConfig.custom_rubric.trim() !== '')
-                ? `Your Custom Rubric: ${currentConfig.custom_rubric}<br>`
-                : '';
+        // Pattern showing
+        let pattern_custom_flag = false;
 
+        const patternText =
+            (typeof loadResult.pattern_text === 'string' &&
+            loadResult.pattern_text.trim() !== '')
+                ? `${loadResult.pattern_text}`
+                : 'NA[Default]';
+
+        if (typeof loadResult.pattern_text === 'string' && (loadResult.pattern_text.toLowerCase().includes('custom') || loadResult.pattern_text.trim() === '')) 
+            {
+                pattern_custom_flag = true;
+            }
+
+        // Custom Rubric showing
+        const rubricText =
+            (typeof loadResult.custom_rubric === 'string' &&
+            loadResult.custom_rubric.trim() !== '' && pattern_custom_flag === true) 
+                ? `Your Custom Rubric: ${loadResult.custom_rubric}`
+                : null;
+
+        // Pattern text showing
+        const patternFullText = '';
+        //     (typeof loadResult.pattern_body === 'string' &&
+        //     loadResult.pattern_body.trim() !== '' && pattern_custom_flag === false)
+        //         ? `Rubric of Current Pattern: ${loadResult.pattern_body}`
+        //         : null;
+        // const custom_patternFullText = 
+        //     (pattern_custom_flag === true)
+        //         ? `Rubric of Current Pattern: ${loadResult.pattern_body}`
+        //         : null;
+
+        // Showing All Setting
         resultBox.innerHTML += `
-        <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
-        <div style="color:#fb827a;">
-        Generated in: ${pattern_val} style<br>
-        Templates: ${templateText}
-        Keywords: ${currentConfig.style_keywords.join(', ') || 'DEV: Default Keywords'}<br>
-        ${rubric_txt}
-        </div>`;
+            <hr style="margin:1rem 0;border:none;border-top:1px solid #ccc;">
+            <div style="color:#fb827a;">
+            Generate Feedback with:<br>
+            &nbsp;&nbsp;- Character Keywords: "${keywordText}"<br>
+            &nbsp;&nbsp;- Feedback Template: "${templateText}"<br>
+            &nbsp;&nbsp;- Feedback Pattern: "${patternText}" Style<br>
+            ${rubricText ? '&nbsp;&nbsp;- ' + rubricText + '<br>' : ''}
+            ${patternFullText ? '&nbsp;&nbsp;- ' + patternFullText + '<br>' : ''}
+            </div>`;
     })
     .catch(error => {
         if (timerId) clearInterval(timerId);
@@ -455,3 +543,32 @@ document.querySelectorAll('.sample-a-btn').forEach(btn => {
         }
     });
 });
+
+
+
+
+// ==================== Display Functions for step_final ====================
+
+function displayStyleKeywordsAsText(keywords, container) {
+    const values = keywords && typeof keywords === 'object'
+        ? Object.values(keywords)
+        : [];
+
+    const displayText = values.length > 0
+        ? values.map(v => `${v}; `).join('')
+        : 'N/A';
+
+    container.innerHTML = `<div class="display-text">${displayText}</div>`;
+}
+
+
+function displayFeedbackTemplatesAsText(templates, container) {
+    if (templates.length > 0) {
+        const html = templates.map(template => 
+            `<div class="display-text" style="margin-bottom: 0.3rem; padding: 0.3rem;">${template}</div>`
+        ).join('');
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = '<div class="display-text">N/A</div>';
+    }
+}

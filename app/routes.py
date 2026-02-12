@@ -23,32 +23,40 @@ from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TMP_DIR = os.path.join(BASE_DIR, "tmp")
+from pathlib import Path
 
-os.makedirs(TMP_DIR, exist_ok=True)
+BASE_DIR = Path(__file__).resolve().parent
+TMP_DIR = BASE_DIR / "tmp"
 
+TMP_DIR.mkdir(parents=True, exist_ok=True)
+
+app_dir = utils.find_app_dir()
+KEYWORD_PATH = app_dir / "static" / "data"/ "keyword_info.json"
 #   ==================== MAIN ==================== #
 
 #   ==================== Sample Data for Demo ==================== #
 
-question_this = """
-<p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
-<p>(a) f(x) = x<sup>ln(x)</sup></p>
-"""
-reference_this = """
-<p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
-<p>(a) f(x) = x<sup>ln(x)</sup></p>
-<p><strong>Solution:</strong></p>
-<p>To find the derivative of f(x) = x<sup>ln(x)</sup>, we use logarithmic differentiation.</p>
-<p>Take the natural logarithm of both sides:</p>
-<p>ln(f(x)) = ln(x) · ln(x) = (ln(x))<sup>2</sup></p>
-<p>Differentiate both sides with respect to x:</p>
-<p>f'(x)/f(x) = 2ln(x) · (1/x)</p>
-<p>Solve for f'(x):</p>
-<p>f'(x) = f(x) · 2ln(x)/x = x<sup>ln(x)</sup> · 2ln(x)/x</p>
-<p><strong>Answer: f'(x) = x<sup>ln(x)</sup> · 2ln(x)/x</strong> or equivalently <strong>f'(x) = 2x<sup>ln(x)-1</sup>ln(x)</strong></p>
-"""
+
+def load_keywords_by_subgroup(keyword_path = KEYWORD_PATH):
+    with open(keyword_path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+    grouped = {}
+    for kw, info in raw.items():
+        subgroup = info.get("subgroup")
+        if subgroup is None:
+            continue
+        grouped.setdefault(subgroup, []).append({
+            "key": kw,
+            "name": info.get("name", kw),
+            "group_idx": info.get("group_idx", 0),
+            "short": info.get("short", "")
+        })
+    for subgroup, items in grouped.items():
+        items.sort(key=lambda x: x["group_idx"])
+    return grouped
+
+
+GROUPED_KEYWORDS = load_keywords_by_subgroup()
 # ==================== Page Route (returns HTML) ==================== #
 
 @app.route('/')
@@ -61,7 +69,12 @@ def login():
 
 @app.route('/page_1')
 def page_1():
-    return render_template('page_1.html')
+    return render_template('page_1.html',
+                            subgroup1_keywords=GROUPED_KEYWORDS.get(1, []),
+                            subgroup2_keywords=GROUPED_KEYWORDS.get(2, []),
+                            subgroup3_keywords=GROUPED_KEYWORDS.get(3, []),
+                            subgroup4_keywords=GROUPED_KEYWORDS.get(4, [])
+                           )
 
 @app.route('/page_2')
 def step2():
@@ -71,26 +84,6 @@ def step2():
 def page_final():
     return render_template('page_final.html')
 
-# @app.route("/segment")
-# def segment_page():
-#     return render_template("segment.html")
-
-# @app.route('/tmp/<path:filename>')
-# def serve_tmp(filename):
-#     return send_from_directory(TMP_DIR, filename)
-
-
-# @app.route('/<path:filepath>')
-# def serve_uploaded_files(filepath): 
-#     full_path = os.path.join(os.getcwd(), filepath)
-
-#     if not os.path.isfile(full_path):
-#         return "Not Found", 404
-
-#     directory = os.path.dirname(full_path)
-#     filename = os.path.basename(full_path)
-
-#     return send_from_directory(directory, filename)
 
 
 # ==================== API Route (System Setting) ==================== #
@@ -209,7 +202,7 @@ def update_style_config():
                     'config': current_config_list,
                     'updated_at': datetime.utcnow()
                 }}
-                )         
+                )
         else:
             # Tid doesn't exist - create new record with config as list containing one dict
             new_record = {
@@ -268,81 +261,6 @@ def retrieve_style_config():
         response = {'success': False, 'error': str(e)}
     
     return jsonify(response)
-
-
-# def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
-#     """Generate personalized feedback response for student answer"""
-#     if predefined_flag:
-#         import predefined_conf
-#         predefined_data = predefined_conf.predefined_data
-#         system_prompts_raw = {
-#             "final": predefined_data[predefined_flag]["final"], 
-#             "selected": predefined_data[predefined_flag]["selected"], 
-#             "custom": predefined_data[predefined_flag]["custom"], }
-#     elif history_prompt_dict:
-#         system_prompts_raw = history_prompt_dict
-#     else:
-#         try:
-#             # Extract configuration from system
-#             micro_feedback = system_info.get('micro_style', {})
-#             macro_feedback = system_info.get('macro_style', {})
-            
-#         # Get style descriptors and templates
-#             style_keywords = macro_feedback.get('keywords', [])
-#             feedback_templates = macro_feedback.get('templates', [])
-            
-#         # Get teaching style and personalization
-#             teach_style = micro_feedback.get('teach_style', '')
-#             teach_example = micro_feedback.get('examples', '')
-#             locked_style = macro_feedback.get('locked_style', False)
-            
-#         # Build system prompt for feedback generation
-#             system_prompts_raw = utils.parse_teaching_style(
-#                 teach_style=teach_style,
-#                 teach_example=teach_example,
-#                 )
-#         except Exception as e:
-#             traceback.print_exc()
-#             return {'success': False, 'error': str(e)}
-
-#     try:
-#         # Build user prompt with student answer
-#         system_prompt = system_prompts_raw['final']
-#         custom_prompt = system_prompts_raw['custom'] if system_prompts_raw.get('custom', '') else None
-#         user_prompt = utils.parse_teaching_text(
-#             question=question_text + "\n ## Reference Answer is: " + reference_text,
-#             answer=answer_text,
-#             style_keywords=style_keywords,
-#             feedback_templates=feedback_templates,
-#             )
-        
-#        # Generate feedback using LLM
-#         feedback_text, feedback_prob = utils.llm_generate(
-#             input_text=user_prompt,
-#             system_text=system_prompt,
-#             model='gpt-4o',
-#             temperature=0.7, 
-#             max_tokens=750,
-#             logprobs=True
-#         )
-        
-#         return {
-#             'success': True,
-#             'feedback_text': feedback_text,
-#             'feedback_prob': feedback_prob,
-#             'style_keywords': style_keywords,
-#             'feedback_templates': feedback_templates,
-#             'teach_style': teach_style,
-#             'teach_example': teach_example,
-#             'system_prompt': system_prompt,
-#             'selected_prompt': system_prompts_raw.get('selected', ""),
-#             'custom_prompt': custom_prompt
-#         }
-        
-#     except Exception as e:
-#         traceback.print_exc()
-#         print(system_prompts_raw)
-#         return {'success': False, 'error': str(e)}
 
 
 def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
@@ -412,8 +330,8 @@ def comment_submit():
     qid = data.get('qid')
     answer_text = data.get("student_answer", "")
     question_this = data.get("question", "")
-    reference_this = data.get("reference", "")
     predefined_flag = data.get("predefined_flag", "")
+    
     history_prompt_dict = None
     
     try:
@@ -494,12 +412,32 @@ def comment_load():
     tid = request.args.get('tid')
     attempt_id = request.args.get('attempt_id')
     print(">>>1>>>", tid, attempt_id)
+    with open(KEYWORD_PATH, "r", encoding="utf-8") as f:
+        keyword_info = json.load(f)
+        
     try:
         print(f"want to find one record with tid {tid} and atmp_id {attempt_id}")
         result = database['comment'].find_one({'tid': tid, 'attempt_id': int(attempt_id)})
         response_text = result.get('generated_response', '')
+        
+        system_config = result.get('system_config', dict())
+        
+        style_keywords = system_config.get('style_keywords', [])
+        style_keywords = style_keywords.split(",") if isinstance(style_keywords, str) else style_keywords
+        style_keywords_print = [keyword_info.get(kw.strip(), {}).get('name', "") for kw in style_keywords]
+        style_keywords_text = "; ".join(s.strip() for s in style_keywords_print if s.strip())
+        
+        feedback_templates = system_config.get('feedback_templates', [])
+        
+        feedback_pattern = system_config.get('feedback_pattern', '')
+        pattern_custom_flag = feedback_pattern=="" or "custom" in feedback_pattern.lower()
+        style_pattern_text = "Custom" if pattern_custom_flag else feedback_pattern
+        
+        custom_rubric = system_config.get('custom_rubric', '')
+        
+        pattern_body = system_config.get('pattern_body', '')
+
         if response_text:
-            # Return the generated response (no scoring)
             certainty_score = result.get('feedback_prob', '-1')
 
             # Format as HTML for display
@@ -507,11 +445,18 @@ def comment_load():
                 response_text=response_text,
                 certainty_score=certainty_score,
             )
-            print(f">>>3>>>{formatted_response}")
-            print(f">>>4>>>{response_text}")
-            print(f">>>5>>>{certainty_score}")
 
-            return jsonify({'success': True, 'response': formatted_response})
+            
+            return_data = {'success': True,
+                            'response': formatted_response,
+                            'keyword_text': str(style_keywords_text),
+                            'template_text': str(feedback_templates),
+                            'pattern_text': str(style_pattern_text),
+                            'custom_rubric': str(custom_rubric),
+                            'pattern_body': str(pattern_body)
+                        }
+
+            return jsonify(return_data)
         return jsonify({'success': False, 'response': None})
     except:
         traceback.print_exc()
@@ -543,12 +488,13 @@ def health_check():
 # ==================== segment ==================== #
 
 def clear_tmp():
-    for f in os.listdir(TMP_DIR):
+    import shutil
+    for f in TMP_DIR.iterdir():
         path = os.path.join(TMP_DIR, f)
-        if os.path.isfile(path):
-            os.remove(path)
+        if p.is_file():
+            p.unlink()
         else:
-            shutil.rmtree(path)
+            shutil.rmtree(p)
 
 @app.route("/api/preprocess/upload_pdf", methods=["POST"])
 def upload_pdf():
@@ -596,8 +542,9 @@ def segment_pdf():
 @app.route("/api/preprocess/segment_download", methods=["POST"])
 def download_all():
     try:
-        zip_path = os.path.join(TMP_DIR, "figures.zip")
-        if not os.path.exists(zip_path):
+        zip_path = TMP_DIR / "figures.zip"   
+
+        if not zip_path.exists():
             return jsonify({"success": False})
 
         # Central Time (US)
@@ -606,14 +553,14 @@ def download_all():
         time_str = now.strftime("%y%m%d_%H%M%S")
 
         rand_str = "".join(random.choices(string.ascii_lowercase, k=6))
-
         download_name = f"{time_str}_{rand_str}.zip"
 
         return send_file(
-            zip_path,
+            zip_path,               
             as_attachment=True,
             download_name=download_name
         )
-    except:
+
+    except Exception:
         traceback.print_exc()
         return jsonify({"success": False})

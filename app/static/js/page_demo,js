@@ -1,0 +1,190 @@
+/**
+ * page_demo.js
+ * Logic for page_demo.html
+ * - upload & parse question / assessment
+ * - upload answer (no text return required)
+ * - validate inputs
+ * - generate feedback
+ */
+
+/* =========================
+   Helpers
+========================= */
+
+function getTid() {
+    let tid = sessionStorage.getItem('tid');
+    if (!tid) {
+        tid = crypto.randomUUID();
+        sessionStorage.setItem('tid', tid);
+    }
+    const tidSpan = document.getElementById('tid-value');
+    if (tidSpan) tidSpan.textContent = tid;
+    return tid;
+}
+
+function showAlert(msg) {
+    alert(msg);
+}
+
+function showResult(text) {
+    const display = document.getElementById('feedback-display');
+    const textarea = document.getElementById('result-textarea');
+    if (display) display.style.display = 'block';
+    if (textarea) textarea.textContent = text;
+}
+
+/* =========================
+   Upload & Parse
+========================= */
+
+/**
+ * For question / assessment:
+ * upload pdf/image -> backend parses -> return cleaned text
+ */
+async function uploadAndParse(type) {
+    const fileInput = document.getElementById(`${type}-file`);
+    const textArea = document.getElementById(`${type}-text`);
+
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showAlert(`❗ Please select a file for ${type}.`);
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('tid', getTid());
+
+    textArea.value = '⏳ Processing file...';
+
+    try {
+        const resp = await fetch(`/api/parse/${type}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!resp.ok) {
+            throw new Error('Upload or parsing failed.');
+        }
+
+        const data = await resp.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Parsing failed.');
+        }
+
+        // Fill textarea with parsed text (user can edit)
+        textArea.value = data.text || '';
+
+    } catch (err) {
+        console.error(err);
+        textArea.value = '';
+        showAlert(`❌ Failed to process ${type}.`);
+    }
+}
+
+/**
+ * For answer:
+ * only upload file, no need to return parsed text
+ */
+async function uploadAnswerOnly() {
+    const fileInput = document.getElementById('answer-file');
+    const textArea = document.getElementById('answer-text');
+
+    if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        showAlert('❗ Please select a file for answer.');
+        return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('tid', getTid());
+
+    textArea.value = '📎 Answer uploaded (file).';
+
+    try {
+        const resp = await fetch('/api/parse/answer', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!resp.ok) {
+            throw new Error('Upload failed.');
+        }
+
+        const data = await resp.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Upload failed.');
+        }
+
+        // nothing else to do (no parsed text required)
+
+    } catch (err) {
+        console.error(err);
+        textArea.value = '';
+        showAlert('❌ Failed to upload answer.');
+    }
+}
+
+/* =========================
+   Generate Feedback
+========================= */
+
+async function generateFeedback() {
+    const question = document.getElementById('question-text')?.value.trim();
+    const assessment   = document.getElementById('assessment-text')?.value.trim();
+    const answer   = document.getElementById('answer-text')?.value.trim();
+
+    if (!question || !assessment || !answer) {
+        showAlert('❗ Question, assessment, and answer must all have content.');
+        return;
+    }
+
+    showResult('⏳ Generating feedback...');
+
+    const payload = {
+        tid: getTid(),
+        question: question,
+        assessment: assessment,
+        answer: answer
+    };
+
+    try {
+        const resp = await fetch('/api/generate_feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!resp.ok) {
+            throw new Error('Generation failed.');
+        }
+
+        const data = await resp.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Generation failed.');
+        }
+
+        showResult(data.feedback || '');
+
+    } catch (err) {
+        console.error(err);
+        showResult('❌ Failed to generate feedback.');
+        showAlert('❌ Feedback generation failed.');
+    }
+}
+
+/* =========================
+   Init
+========================= */
+
+document.addEventListener('DOMContentLoaded', () => {
+    getTid();
+
+    const genBtn = document.getElementById('generateFeedbackBtn');
+    if (genBtn) {
+        genBtn.addEventListener('click', generateFeedback);
+    }
+});

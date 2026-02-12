@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <title>Auto Feedback Generation (Demo)</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/general.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/feedback_input_function.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/generation.css') }}">
+
+    <style>
+        .upload-grid {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .upload-panel {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #fff;
+        }
+
+        .upload-panel h3 {
+            margin-top: 0;
+        }
+
+        .upload-panel textarea {
+            width: 100%;
+            min-height: 140px;
+            margin-top: 0.5rem;
+            resize: vertical;
+        }
+
+        .upload-panel input[type="file"] {
+            margin-top: 0.5rem;
+        }
+
+        .upload-panel button {
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+
+<body data-page="page_demo">
+
+<h1 class="page-title">Auto Feedback Generation (Demo)</h1>
+
+<!-- tid display -->
+<div id="tid-display"
+     style="position:absolute; top:1rem; right:2rem; color:#999; font-size:0.9rem;">
+    Current tid is: <span id="tid-value">N/A</span>
+</div>
+
+<div class="container">
+
+    <!-- ================= Configuration Display ================= -->
+    <div class="section" id="details-display">
+        <h2>Your Feedback System Configuration:</h2>
+
+        <div class="four-panel-layout">
+            <div class="panel-display">
+                <h3>Style Keywords</h3>
+                <div class="panel-content-display" id="style-keywords-display"></div>
+            </div>
+
+            <div class="panel-display">
+                <h3>Feedback Template</h3>
+                <div class="panel-content-display" id="feedback-templates-display"></div>
+            </div>
+
+            <div class="panel-display">
+                <h3>Feedback Pattern</h3>
+                <div class="panel-content-display" id="feedback-pattern-display"></div>
+            </div>
+
+            <div class="panel-display">
+                <h3>Custom Feedback Rubric</h3>
+                <div class="panel-content-display" id="custom-rubric-display">
+                    <em>Not Applicable</em>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= Upload Section ================= -->
+    <div class="section">
+        <h2>Input Materials</h2>
+
+        <div class="upload-grid">
+
+            <!-- Question -->
+            <div class="upload-panel">
+                <h3>Upload Question</h3>
+                <input type="file" id="question-file" accept=".pdf,image/*">
+                <button onclick="uploadAndParse('question')">Upload</button>
+                <textarea id="question-text"
+                          placeholder="Question text will appear here or you can type directly..."></textarea>
+            </div>
+
+            <!-- Assessment -->
+            <div class="upload-panel">
+                <h3>Upload Assessment</h3>
+                <input type="file" id="rubric-file" accept=".pdf,image/*">
+                <button onclick="uploadAndParse('rubric')">Upload</button>
+                <textarea id="assessment-text"
+                          placeholder="Assessment text will appear here or you can type directly..."></textarea>
+            </div>
+
+            <!-- Answer -->
+            <div class="upload-panel">
+                <h3>Upload Student Answer</h3>
+                <input type="file" id="answer-file" accept=".pdf,image/*">
+                <button onclick="uploadAnswerOnly()">Upload</button>
+                <textarea id="answer-text"
+                          placeholder="Student answer text (optional if uploaded as PDF/Image)..."></textarea>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================= Generate ================= -->
+    <div class="section">
+        <button id="generateFeedbackBtn">Generate Feedback</button>
+    </div>
+
+    <!-- ================= Result ================= -->
+    <div class="section" id="feedback-display" style="display:none;">
+        <h2>Generated Feedback</h2>
+        <div id="result-textarea"
+             style="white-space:pre-line;
+                    border:1px solid #ccc;
+                    padding:8px;
+                    min-height:120px;
+                    background:#f9f9f9;">
+        </div>
+    </div>
+
+</div>
+
+<!-- ================= Scripts ================= -->
+<script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
+<script src="{{ url_for('static', filename='js/page_demo.js') }}"></script>
+
+</body>
+</html>
