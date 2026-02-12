@@ -1,34 +1,40 @@
 <!-- Style Keywords Subcomponent 1-{{ subgroup_idx }} -->
-<div class="feedback-input-component style-keywords-submodule"
-     data-step="step1{{ subgroup_idx }}"
-     id="style-keywords-component-step1{{ subgroup_idx }}">
+<div
+  class="feedback-input-component style-keywords-submodule"
+  data-step="step1{{ subgroup_idx }}"
+  id="style-keywords-component-step1{{ subgroup_idx }}"
+>
+  <h3>
+    {% if keywords and keywords|length >= 1 %} {{ keywords[0].subgroup_name }}
+    {% else %} subgroup{{ subgroup_idx }}_keywords {% endif %}
+  </h3>
 
-    <h3>
-        {% if keywords and keywords|length >= 1 %}
-            {{ keywords[0].subgroup_name }}
-        {% else %}
-            subgroup{{ subgroup_idx }}_keywords
-        {% endif %}
-    </h3>
+  <div class="component-content">
+    <div class="style-grid vertical">
+      {% for item in keywords %}
+      <div class="checkbox-item">
+        <input
+          type="radio"
+          name="step1{{ subgroup_idx }}"
+          id="kw1{{ subgroup_idx }}_{{ item.group_idx }}"
+          value="{{ item.key }}"
+          {%
+          if
+          loop.first
+          %}checked{%
+          endif
+          %}
+        />
 
-    <div class="component-content">
-        <div class="style-grid vertical">
-
-            {% for item in keywords %}
-            <div class="checkbox-item">
-                <input type="radio"
-                       name="step1{{ subgroup_idx }}"
-                       id="kw1{{ subgroup_idx }}_{{ item.group_idx }}"
-                       value="{{ item.key }}"
-                       {% if loop.first %}checked{% endif %}>
-
-                <label for="kw1{{ subgroup_idx }}_{{ item.group_idx }}"
-                       title="{{ item.short }}">
-                    {{ item.name }}
-                </label>
-            </div>
-            {% endfor %}
-
-        </div>
+        <label
+          for="kw1{{ subgroup_idx }}_{{ item.group_idx }}"
+          data-teaching="keyword"
+          data-key="{{ item.key }}"
+        >
+          {{ item.name }}
+        </label>
+      </div>
+      {% endfor %}
     </div>
+  </div>
 </div>

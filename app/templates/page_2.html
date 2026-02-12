@@ -46,7 +46,7 @@
 
         <!-- ===== Component 3: Feedback Pattern (step3 / step3A) ===== -->
         <div class="content-section" id="feedback-pattern-section">
-            <div id="feedback-function-3-container"></div>
+              {% include "components/feedback_function_3.html" %}
         </div>
 
     </div>
@@ -65,8 +65,6 @@
         throw new Error('Authentication required');
     }
 })();
-
-/* ---------- Load Component ---------- */
 
 
 // procedding functions
@@ -224,39 +222,15 @@ function saveAndProceed_page2_old() {
     });
 }
 
-
-
-/* ---------- Init ---------- */
 window.addEventListener('load', () => {
-    loadComponents();
+    window.feedbackInputFunctions.initFeedbackPatternComponent();
 });
 
-
-async function loadComponents() {
-    try {
-        const r = await fetch("{{ url_for('static', filename='components/feedback_function_3.html') }}");
-        document.getElementById('feedback-function-3-container').innerHTML = await r.text();
-
-        /* initialize  */
-        setTimeout(() => {
-            window.feedbackInputFunctions.initFeedbackPatternComponent();
-        }, 100);
-
-    } catch (e) {
-        console.error('Component loading failed:', e);
-    }
-}
 
 /* ---------- Navigation ---------- */
 function goBack() {
     window.location.href = '/page_1';
 }
-
-
-/* ---------- Init ---------- */
-window.addEventListener('load', () => {
-    loadComponents();
-});
 
 /* ---------- Auto-clear save status ---------- */
 document.addEventListener('change', () => {

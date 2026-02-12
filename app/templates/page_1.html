@@ -75,7 +75,13 @@
         <!-- ===== Component 2: Feedback Templates (step2, read-only) ===== -->
         <div class="content-section" id="feedback-templates-section">
           <h2>Feedback Components (Fixed)</h2>
-          <div id="feedback-function-2-container"></div>
+            {% include "components/feedback_function_2.html" %}
+        </div>
+
+        <hr style="margin: 2rem 0; border: 1px solid #ddd" />
+
+        <div class="content-section" id="feedback-pattern-section">
+          {% include "components/feedback_function_3.html" %}
         </div>
       </div>
     </div>
@@ -93,30 +99,6 @@
           throw new Error("Authentication required");
         }
       })();
-
-      /* ---------- Load Components ---------- */
-      async function loadComponents() {
-        try {
-          const r = await fetch(
-            `{{ url_for('static', filename='components/feedback_function_2.html') }}`
-          );
-          document.getElementById("feedback-function-2-container").innerHTML =
-            await r.text();
-
-          const init = () => {
-            initStyleKeywordsComponent();
-            initFeedbackTemplatesComponent();
-          };
-
-          if (document.readyState === "loading") {
-            document.addEventListener("DOMContentLoaded", init);
-          } else {
-            init();
-          }
-        } catch (e) {
-          console.error("Component loading failed:", e);
-        }
-      }
 
       /* ---------- Save & Proceed ---------- */
       function saveAndProceed_page1() {
@@ -145,7 +127,9 @@
 
       /* ---------- Init ---------- */
       window.addEventListener("load", () => {
-        loadComponents();
+        initStyleKeywordsComponent();
+        initFeedbackTemplatesComponent();
+        initFeedbackPatternComponent();
       });
     </script>
   </body>
