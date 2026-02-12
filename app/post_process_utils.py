@@ -12,7 +12,7 @@ class ImagePostProcessOutput(BaseModel):
 
 def run_image_post_process_llm(
     user_text: str,
-    model: str = 'gpt-4.1-nano', 
+    model: str = "gpt-4.1-nano",
     max_retry: int = 3,
 ):
     messages = [
@@ -46,16 +46,12 @@ def run_image_post_process_llm(
                 return {text: "[REJECT]", flag: 0}
 
             # Case 2: Must NOT contain extra commentary about rejection
-            
             elif "[reject]" in lowered and lowered != "[REJECT]":
                 return {text: "[REJECT] - soft", flag: 0}
 
             # Otherwise: faithfully return cleaned content
             else:
-                final_output = {
-                    "text": final_text,
-                    "flag": 1
-                }
+                final_output = {"text": final_text, "flag": 1}
             return final_output
 
         except Exception as e:
