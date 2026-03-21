@@ -229,10 +229,29 @@ def best_match_by_lcs(query: str, candidates: list) -> str | None:
             best_candidate = c
     return best_candidate
 
+def decide_adaptive_pattern(question, answer, model):
+    app_dir = find_app_dir()
+    json_path = app_dir / "static" / "data" / "pattern_info.json"
+    with open(json_path, "r", encoding="utf-8") as f:
+        pattern_info = json.load(f)
+    adaptive_pattern_dict = pattern_info["Adaptive"]
+    selection_prompt_tmp = "You are an educational expert. Below are a pair of (question, student answer) and the guidance to select proper feedback pattern to him/her. You should response with one word in [conceptual, procedural, correctness] without any other comments or explanation. You are NOT asked to comment on or give feedback to the student answer."
+    selection_prompt_tmp += str(adaptive_pattern_dict)
+    qa_query = f"# Question: {question}; # Studeng Answer: {answer}; \n # Your Selection (one word in [conceptual, procedural, correctness]):"
+    select_pattern_text, _ = llm_generate(
+                           input_text=qa_query, system_text=selection_prompt_tmp, 
+                            model=model, max_retry=5, have_log=False)
+    matched_pattern_key = best_match_by_lcs(select_pattern_text, pattern_info.keys())
+    if matched_pattern_key.lower() not in ['conceptual', 'procedural', 'correctness']:
+        matched_pattern_key = 'conceptual'
+    return matched_pattern_key.capitalize()
+
+
 def parse_feedback_pattern(
         feedback_pattern: str = None, 
         custom_rubric: str = None, 
         model: str = 'gpt-4o-mini',
+        from_adaptive: bool = False,
         **kwarg) -> str:
     
     app_dir = find_app_dir()
@@ -242,7 +261,15 @@ def parse_feedback_pattern(
     
     pattern_input_lower = feedback_pattern.lower().strip()
     default_pattern_key, default_pattern = next(iter(pattern_info.items()))  # default = first one
-    pattern_body, case_num = None, -1
+    pattern_body, case_num = None, 0
+    if from_adaptive:
+        case_num = -1
+        matched_pattern_key = best_match_by_lcs(pattern_input_lower, pattern_info.keys())
+        pattern_body = pattern_info.get(matched_pattern_key.capitalize(), {})
+        focus_selection_rule = pattern_info['Adaptive']['focus_selection_rule'].get(matched_pattern_key.lower(), "")
+        pattern_body['primary_content_focus'] = f"{focus_selection_rule} \n {pattern_body['primary_content_focus']}"
+        pattern_body['feedback_scope_rule'] = pattern_info['Adaptive']['feedback_scope_rule']
+        pattern_body['exclusions'] = f"{pattern_info['Adaptive']['exclusions']} \n {pattern_body['exclusions']}"
     if len(pattern_input_lower) > 0 and 'custom' not in pattern_input_lower:
         case_num = 1
         # Case 1: Pre-defined Pattern
@@ -331,6 +358,7 @@ def parse_teaching_text(
     final_respond_prompt += macro_template_prompt
     final_respond_prompt += FEEDBACK_OUTPUT_INSTRUCTION
     final_respond_prompt += "[PLACEHOLDER]\n"
+    final_respond_prompt += "# IMPORTANT: if there is no meanful content in a section of given template, you may just skip this section; for example, if the response is almost perfect and your template contains the section of weakness, do not need to force saying something when there is little.\n"
     final_respond_prompt += "## Teacher (you) Response [NO MORE THAN *500* WORDS]: "
     return final_respond_prompt
 
@@ -405,6 +433,7 @@ def vllm_generate(
     max_retry: int = 3,
     img_type: str | None = None,
     project_dir: Path | None = None,
+    config: dict = None,
     **kwargs
 ):
     if project_dir is None:
@@ -435,6 +464,7 @@ def vllm_generate(
                 model="gemini-2.5-flash",
                 max_tokens=8192,
                 img_type=img_type,
+                config=config,
             ), None
         except Exception as e:
             last_error = e
@@ -444,7 +474,7 @@ def vllm_generate(
         f"failed to generate response with gemini: {last_error}"
     )
 
-        
+      
 def llm_generate_gemini(
     system_prompt: str,
     user_prompt: str,
@@ -452,6 +482,7 @@ def llm_generate_gemini(
     model: str = "gemini-2.5-flash",
     max_tokens: int = 8192,
     img_type: str | None = None,
+    config: dict = None
 ) -> str:
     from google import genai
     from google.genai import types
@@ -511,26 +542,26 @@ def llm_generate_gemini(
     if not parts:
         raise ValueError("Both image and user_prompt are empty")
 
-    contents = [
-        types.Content(
-            role="user",
-            parts=parts
-        )
-    ]
-
+    base_config = {
+            "system_instruction": system_prompt if system_prompt else None,
+            "max_output_tokens": max_tokens,
+            # "response_mime_type"="text/plain",
+            "response_mime_type": "application/json",
+        }
+    
+    if config:
+        base_config = {**base_config, **config}
+        
     response = client.models.generate_content(
         model=model,
-        contents=contents,
-        config=types.GenerateContentConfig(
-            system_instruction=system_prompt if system_prompt else None,
-            max_output_tokens=max_tokens,
-            # response_mime_type="text/plain",
-            response_mime_type="application/json",
-        )
+        contents=parts,
+        config = base_config
     )
 
-    return get_gemini_output_text(response).strip()
-
+    if config is not None and config.get("response_json_schema", ""):
+        return response
+    else:
+        return get_gemini_output_text(response).strip()
 
 
 def get_gemini_output_text(response):
@@ -551,3 +582,12 @@ def get_gemini_output_text(response):
         return response.text or ""
 
     return "\n".join(texts)
+      
+
+## extract full score
+def extract_full_score(text):
+    vals=re.findall(r'"points"\s*:\s*"?(-?\d+(?:\.\d+)?)"?',text)
+    nums=[float(v) for v in vals]
+    total=sum(x for x in nums if x>=0)
+    s=f"{total:.2f}".rstrip("0").rstrip(".")
+    return s if s!="" else "0"

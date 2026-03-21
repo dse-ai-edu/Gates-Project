@@ -6,6 +6,8 @@ from pydantic import BaseModel
 
 import openai
 from app import key_iter
+
+from app.prompts import GET_FULL_POINT_PRMPT
 # =========================
 
 class JudgeOutput(BaseModel):
@@ -225,15 +227,15 @@ def run_score_extract(
     Run a single judge agent.
     Must return {"score": number, "reasoning": str}
     """
+    print(f"Debug: BEFORE FULL SCORE EXTRACT: {user_prompt}")
     raw = llm_structured_generate(
         input_text=user_prompt,
-        system_text="""You are an assistant. Extract the full score from the grading rubric. The rubric may be plain text, Markdown, or LaTeX. Full score = the maximum non-negative numerical score mentioned. Ignore all negative scores. If no non-negative score exists, return 0. Output only a single number.""",
+        system_text=GET_FULL_POINT_PRMPT,
         model=model,
         max_tokens=max_tokens,
         format_obj=FullScoreOutput,
     )
-    
-    print(f"Debug: SCORE EXTRACT generation: {str(raw)} with {type(raw)}")
+    print(f"Debug: FULL SCORE EXTRACT TMP: {str(raw)} with {type(raw)}")
     try:
         if isinstance(raw, str):
             raw = json.loads(raw)
@@ -242,4 +244,5 @@ def run_score_extract(
         score = round(score, 2)
     except (TypeError, ValueError, json.JSONDecodeError, AttributeError):
         score = 0.0
+    print(f"Debug: FULL SCORE EXTRACT FINAL: {score}")
     return {"score": score}

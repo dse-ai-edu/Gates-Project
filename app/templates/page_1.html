@@ -44,31 +44,48 @@
         <!-- ===== Component 1: Feedback Keywords (step11–step14) ===== -->
         <div class="content-section" id="style-keywords-section">
           <h2>Tone of Voice and Style of Feedback</h2>
-          <p>Option:</p>
+          <!-- <p>Option:</p> -->
 
           <div class="style-keywords-row">
             <div class="style-keywords-col" id="feedback-function-1A-container">
-              <h3 class="style-group-title">Point of View</h3>
+              <!-- <h3 class="style-group-title">Point of View</h3> -->
               {% set subgroup_idx = 1 %} {% set keywords = subgroup1_keywords %}
               {% include "components/feedback_function_1_template.html" %}
             </div>
             <div class="style-keywords-col" id="feedback-function-1B-container">
-              <h3 class="style-group-title">Interpersonal Quality</h3>
+              <!-- <h3 class="style-group-title">Interpersonal Quality</h3> -->
               {% set subgroup_idx = 2 %} {% set keywords = subgroup2_keywords %}
               {% include "components/feedback_function_1_template.html" %}
             </div>
             <div class="style-keywords-col" id="feedback-function-1C-container">
-              <h3 class="style-group-title">Directness</h3>
+              <!-- <h3 class="style-group-title">Directness</h3> -->
               {% set subgroup_idx = 3 %} {% set keywords = subgroup3_keywords %}
               {% include "components/feedback_function_1_template.html" %}
             </div>
             <div class="style-keywords-col" id="feedback-function-1D-container">
-              <h3 class="style-group-title">Motivational Framing</h3>
+              <!-- <h3 class="style-group-title">Motivational Framing</h3> -->
               {% set subgroup_idx = 4 %} {% set keywords = subgroup4_keywords %}
               {% include "components/feedback_function_1_template.html" %}
             </div>
           </div>
         </div>
+
+        <hr style="margin: 2rem 0; border: 1px solid #ddd" />
+
+        <button class="example-button" onclick="showExample_page1(event)">
+            Show Example
+        </button>
+
+        <div id="example-box" style="
+            display:none;
+            margin-left:10px;
+            padding:10px;
+            border:1px solid #ccc;
+            background:#f9f9f9;
+            width:50ch;
+            white-space:pre-line;
+            z-index:1000;
+        "></div>
 
         <hr style="margin: 2rem 0; border: 1px solid #ddd" />
 
@@ -84,6 +101,7 @@
     <script src="{{ url_for('static', filename='js/feedback_input_function.js') }}"></script>
 
     <script>
+
       /* ---------- Authentication ---------- */
       (function checkAuthentication() {
         const user = localStorage.getItem("user");
@@ -142,6 +160,73 @@
           window.location.href = "/page_2";
         }, 800);
       }
+
+    /* ---------- Play with Toy Examples ---------- */
+    function showExample_page1(event) {
+        event.stopPropagation();   
+
+        const keys = ["step11", "step12", "step13", "step14"];
+        let result = "";
+
+        keys.forEach(k => {
+            let val = sessionStorage.getItem(k);
+            if (!val) {
+                result += "**+";
+            } else {
+                result += val + "+";
+            }
+        });
+
+        sessionStorage.setItem("keywordLongText", result);
+
+        const box = document.getElementById("example-box");
+
+        box.style.display = "block";
+        box.textContent = "Loading example...";
+
+        function hideBox(e) {
+            if (!box.contains(e.target)) {
+                box.style.display = "none";
+                document.removeEventListener("click", hideBox);
+            }
+        }
+
+        document.addEventListener("click", hideBox);
+
+        fetch("/api/configuration/showexample", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                keywordLongText: result
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                box.textContent = "Example Retrirval Fails";
+                return;
+            }
+
+            let pattern = result.replace(/\+$/g, "");
+            pattern = pattern
+                .replace(/FirstP/g, "FirstPerson")
+                .replace(/SecondP/g, "SecondPerson")
+                .replace(/ThirdP/g, "ThirdPerson")
+                .replace(/([A-Z\+])/g, " $1")
+                .trim();
+
+            box.textContent =
+                "Question: " + (data.question || "") + "\n" +
+                "Answer: " + (data.answer || "") + "\n" +
+                "Feedback Pattern: " + pattern + "\n" +
+                "Feedback: " + (data.feedback || "");
+        })
+        .catch(() => {
+            box.textContent = "Example Retrirval Fails";
+        });
+    }
 
       /* ---------- Init ---------- */
       window.addEventListener("load", () => {

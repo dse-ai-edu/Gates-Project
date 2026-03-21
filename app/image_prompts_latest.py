@@ -8,7 +8,9 @@ preserving the intended mathematical meaning and solution flow rather than the e
 # CORE OBJECTIVE:
 
 Produce a clean, readable LaTeX transcription that reflects the student’s intended sequence of mathematical reasoning, 
-even when the handwriting layout is irregular or disorganized.
+even when the handwriting layout is irregular or disorganized. 
+
+Honestly give the text version of handwriting image, including all lines, without removing the intermediate steps or explanations written on the image.
 
 # HANDWRITING RECOGNITION AND INTERPRETATION RULES:
 
@@ -88,6 +90,7 @@ Before outputting:
 - Confirm cancellations are represented only when explicitly indicated.
 - Confirm scribbles are excluded but intentional cancellations are preserved.
 - Confirm the LaTeX reflects the student’s intended solution path.
+- Confirm you give text for all content in the given image, rather than only the first or last line.
 
 """
 

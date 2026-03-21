@@ -2,6 +2,7 @@
   "FirstP": {
     "subgroup": 1,
     "subgroup_name": "Point of View",
+    "subgroup_info": "The point of view refers to the perspective used to write the feedback message: \n - 1st person: Written from the instructor’s perspective using “I” statements. \n - 2nd person: Addresses the student directly using “you.” \n - 3rd person: Focused on the work itself rather than the instructor or student.",
     "group_idx": 1,
     "name": "First Person",
     "short": "Feedback is written from the instructor’s perspective, using “I” statements.",
@@ -26,6 +27,7 @@
   "Neutral": {
     "subgroup": 2,
     "subgroup_name": "Interpersonal Quality",
+    "subgroup_info": "The interpersonal quality refers to the tone and level of formality used in the feedback message. \n - Neutral: Emotionally even and matter of fact. \n - Conversational: Uses natural and approachable language. \n - Formal: Uses professional and academic language.",
     "group_idx": 1,
     "name": "Neutral",
     "short": "Emotionally even and matter of fact. Signals objectivity and consistency.",
@@ -50,6 +52,7 @@
   "Direct": {
     "subgroup": 3,
     "subgroup_name": "Directness",
+    "subgroup_info": "The directness refers to how explicit or softened the feedback language is. \n - Direct: Uses explicit and plain language. \n - Indirect: Uses softened or more conditional language.",
     "group_idx": 1,
     "name": "Direct",
     "short": "Uses explicit and plain language.",
@@ -66,6 +69,7 @@
   "TaskFocused": {
     "subgroup": 4,
     "subgroup_name": "Motivational Framing",
+    "subgroup_info": "Motivational framing refers to how feedback is phrased to support motivation and confidence. \n - Task-Focused: Emphasizes the work, process, or criteria rather than the student. \n - Growth-Focused: Frames performance as something that can improve over time. \n - Wise Feedback: Communicates high standards while affirming the student is capable of meeting them.",
     "group_idx": 1,
     "name": "Task-Focused",
     "short": "Maintains attention on the work, process, or criteria and avoids personal attribution.",
@@ -85,6 +89,6 @@
     "group_idx": 3,
     "name": "High Expectations + Reassurance",
     "short": "Sets clear standards while affirming that the student is capable of meeting them.",
-    "detail": "Example: “At this level, derivatives of products are expected to reflect both components of the function. Applying the product rule here will allow you to include the missing term and produce a complete derivative going forward.”\n\nKEYWORD SECTION: Motivational Framing\nKEYWORD NAME: High Expectations and Reassurance\n\nPROMPT: Communicate clear academic standards while explicitly affirming that the student is capable of meeting those standards. Frame errors as expected and fixable. Focuses on what to do next while signaling explicitly, “this is within your reach.” Override the selected Point of View and write the reassurance in second person (“you”).\n\nHARD CONSTRAINTS:\n- Must explicitly state an academic expectation or standard (e.g., “At this level…”, “This problem requires…”).\n- Must include an explicit affirmation of capability in second person (e.g., “You are capable of meeting this standard,” “You can absolutely do this”).\n- Must include a concrete next step for revision.\n- Must frame the error as normal and correctable."
+    "detail": "Example: “At this level, derivatives of products are expected to reflect both components of the function. Applying the product rule here will allow you to include the missing term and produce a complete derivative going forward.”\n\nKEYWORD SECTION: Motivational Framing\nKEYWORD NAME: High Expectations and Reassurance\n\nPROMPT: Communicate clear academic standards while explicitly affirming that the student is capable of meeting those standards. Frame errors as expected and fixable. Focuses on what to do next while signaling explicitly, “this is within your reach.” Override the selected Point of View and write the reassurance in second person (“you”).\n\nHARD CONSTRAINTS:\n- Must explicitly state an academic expectation or standard (e.g., “At this level…”, “This problem requires…”).\n- Must include an explicit affirmation of capability in second person (e.g., “You are capable of meeting this standard,” “You can absolutely do this”).\n- Must include a concrete next step for revision.\n- Must frame the error as normal and correctable. 模仿这个函数，为我写一个函数，输入为一个长文本，先用加号拆分，然后在这个文本列表里，寻找匹配中的关键词（备选关键词列表 是下面的raw 的dict 的所有keys）。如果匹配中，根据raw[keyword][“subgroup”]得到所属的组（正整数，1到4）. 完成或如果有某组关键词缺失，则用raw[keyword][“subgroup”]==missing_group_idx and raw[keyword][“group_idx”] == 1"
   }
 }
