@@ -18,10 +18,12 @@ from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
 import app.utils as utils
+import app.routes_utils as routes_utils
 import app.prompts as prompts
 from app.gates_segment import process_pdf
 from app import app, database
 from app.post_process_utils import run_image_post_process_llm
+from app.feedback_post_process_utils import run_feedback_post_process_llm
 # from app import s3_client
 
 from datetime import datetime, timedelta
@@ -34,11 +36,22 @@ import io
 
 from app.question_image_prompt import QUESTION_RECOGNITION, ASSESSMENT_RECOGNITION
 from app.image_prompts_latest import RECOGNITION as ANSWER_RECOGNITION
-from app.prompts import JUDGE
+from app.prompts import JUDGE, SOLUTION_REJECT_PRMPT
 
 from app.judge import multi_agent_judge, run_score_extract, is_consistent
 
 from pathlib import Path
+
+from pydantic import BaseModel, Field
+from typing import List, Optional
+
+class RubricOutputItem(BaseModel):
+    points: float = Field(description="Points of the one rubric item.")
+    content: str = Field(description="Content of the one rubric item.")
+
+class RubricOutput(BaseModel):
+    rubrics: List[RubricOutputItem]
+    
 
 BASE_DIR = Path(__file__).resolve().parent
 TMP_DIR = BASE_DIR / "tmp"
@@ -47,6 +60,7 @@ TMP_DIR.mkdir(parents=True, exist_ok=True)
 
 app_dir = utils.find_app_dir()
 KEYWORD_PATH = app_dir / "static" / "data"/ "keyword_info.json"
+EXAMPLE_PATH = app_dir / "static" / "data"/ "feedback_example.json"
 #   ==================== MAIN ==================== #
 
 #   ==================== Sample Data for Demo ==================== #
@@ -75,21 +89,33 @@ def load_keywords_by_subgroup(keyword_path = KEYWORD_PATH):
         raw = json.load(f)
     grouped = {}
     for kw, info in raw.items():
+        
         subgroup = info.get("subgroup")
         if subgroup is None:
             continue
-        grouped.setdefault(subgroup, []).append({
+        
+        group_idx = info.get("group_idx", 0)
+        item_dict = {
             "key": kw,
             "name": info.get("name", kw),
-            "group_idx": info.get("group_idx", 0),
+            "group_idx": group_idx,
             "short": info.get("short", "")
-        })
+            }
+        
+        if group_idx == 1:
+            item_dict['subgroup_name'] = info.get("subgroup_name", f"Keyword {subgroup}")
+            item_dict['subgroup_info'] = info.get("subgroup_info", f"List of Keywords of Group {subgroup}")
+            
+        grouped.setdefault(int(subgroup), []).append(item_dict)
+        
     for subgroup, items in grouped.items():
-        items.sort(key=lambda x: x["group_idx"])
+        items.sort(key=lambda x: int(x["group_idx"]))
     return grouped
 
 
 GROUPED_KEYWORDS = load_keywords_by_subgroup()
+DEFAULT_KEYWORDS = routes_utils.load_default_keywords(GROUPED_KEYWORDS)
+
 # ==================== Page Route (returns HTML) ==================== #
 
 @app.route('/')
@@ -181,6 +207,21 @@ def configuration_final():
             }}
         )
         response = {'success': True}
+    except:
+        traceback.print_exc()
+        response = {'success': False}
+    return jsonify(response)
+
+
+@app.route('/api/configuration/showexample', methods=['POST'])
+def show_keyword_feedback_example():
+    """Save final configuration and mark system as complete"""
+    data = request.get_json()
+    keywordLongText = data.get('keywordLongText')
+    try:
+        example_body = routes_utils.return_keyword_combination_example(keywords_str=keywordLongText, default_keywords=DEFAULT_KEYWORDS, example_path=EXAMPLE_PATH)
+        example_body['success'] = True
+        response = example_body
     except:
         traceback.print_exc()
         response = {'success': False}
@@ -451,17 +492,25 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 "grade": grading_result['score'],
                 "grade_history": grading_result.get("dialogue_history", []),
                 }
-            
+        
+        
+        if "adaptive" in feedback_pattern.lower():
+            selected_pattern_key = utils.decide_adaptive_pattern(question=question_text, answer=answer_text, model='gpt-4o-mini')
+            from_adaptive = True
+        else:
+            selected_pattern_key = feedback_pattern
+            from_adaptive = False
             
         print(f"debug: before parse_feedback_pattern")
         pattern_dict = utils.parse_feedback_pattern(
-            feedback_pattern=feedback_pattern,
+            feedback_pattern=selected_pattern_key,
             custom_rubric=custom_rubric,
+            from_adaptive=from_adaptive
             )
         
         pattern_key = pattern_dict.get("pattern_key", None)
         pattern_body = pattern_dict.get("pattern_body", None)
-        print(f"debug: selected feedback_pattern: `{pattern_key}`; `{str(pattern_body)[:200]}`")
+        print(f"debug: selected feedback_pattern: `{pattern_key}`; from_adaptive: `{from_adaptive}`; `{str(pattern_body)[:200]}`")
         
         
         if reference_text is not None and len(reference_text.strip()) > 0:
@@ -497,7 +546,16 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             have_log=True
             )
         score_text = re.sub(r'-(\d)', r'- \1', str(grading_result['score']))
-        feedback_text = feedback_text + f"\n\n<<< Grade: {score_text} >>>\n\n"
+        feedback_text = feedback_text 
+        
+        try: # clean the feedback!
+            feedback_text_processed = run_feedback_post_process_llm(user_text=feedback_text)
+            feedback_text = feedback_text_processed["text"]
+        except:
+            feedback_text = feedback_text + "\n>" # a symbol for further debug
+        
+        if 1: # show score to user?
+            feedback_text = feedback_text + f"\n\n<<< Grade: {score_text} >>>\n\n"
         
         return {
                 'success': True,
@@ -505,7 +563,8 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'feedback_prob': feedback_prob,
                 'style_keywords': style_keywords,
                 'feedback_templates': feedback_templates,
-                'feedback_pattern': feedback_pattern,
+                'feedback_pattern': selected_pattern_key,
+                'from_adaptive': from_adaptive,
                 'custom_rubric': custom_rubric,
                 'pattern_body': pattern_body,
                 "grade_success": True, 
@@ -650,7 +709,7 @@ def comment_submit():
 
         # ===============================
         # 4. Generate feedback
-        # ===============================
+        # ===============================       
         generate_result = comment_generate(
             system_info=system_info,
             answer_text=answer_text,
@@ -689,6 +748,7 @@ def comment_submit():
                 'style_keywords': generate_result['style_keywords'],
                 'feedback_templates': generate_result['feedback_templates'],
                 'feedback_pattern': generate_result['feedback_pattern'],
+                'feedback_pattern_from_adaptive': generate_result['from_adaptive'],
                 'custom_rubric': generate_result['custom_rubric'],
                 'pattern_body': generate_result['pattern_body'],
             },
@@ -828,6 +888,7 @@ def comment_load():
         feedback_templates = system_config.get('feedback_templates', [])
         
         feedback_pattern = system_config.get('feedback_pattern', '')
+        feedback_pattern_from_adaptive = system_config.get('feedback_pattern_from_adaptive', False)
         pattern_custom_flag = feedback_pattern=="" or "custom" in feedback_pattern.lower()
         style_pattern_text = "Custom" if pattern_custom_flag else feedback_pattern
         
@@ -1089,53 +1150,73 @@ def api_image_convert():
         # =================================================
         # 3. Select system prompt
         # =================================================
+        config_temp = None
         if input_type == 'question':
+            print("USING PROMPT: QUESTION_RECOGNITION")
             system_prompt = QUESTION_RECOGNITION
         elif input_type == 'assessment':
+            print("USING PROMPT: ASSESSMENT_RECOGNITION")
             system_prompt = ASSESSMENT_RECOGNITION
+            config_temp = {
+                "response_mime_type": "application/json",
+                "response_json_schema": RubricOutput.model_json_schema(),
+                }
         elif input_type == 'answer':
+            print("USING PROMPT: ANSWER_RECOGNITION")
             system_prompt = ANSWER_RECOGNITION
         else:
+            print("USING PROMPT: QUESTION_RECOGNITION")
             system_prompt = QUESTION_RECOGNITION
             
         if allow_reject and input_type == 'answer':
-            system_prompt += "\n# IMPORTANT: SERVER-SIDE REJECTION RULES FOR UNPROCESSABLE INPUTS:"
-            system_prompt += "\n- IF the content is illegible, non-mathematical, irrelevant, or cannot be reliably interpreted after reasonable effort, respond with exactly one word: [REJECT]"
-            system_prompt += "\n- The response must be precisely: [REJECT] — including the square brackets, with no additional text, explanation, punctuation, or formatting."
-            system_prompt += "\n- If this rule applies, it overrides all other instructions above. Do NOT attempt transcription or partial interpretation."
+            system_prompt += SOLUTION_REJECT_PRMPT
 
         # =================================================
         # 4. Call vLLM / Gemini
         # =================================================
-        text, _ = utils.vllm_generate(
+        output, _ = utils.vllm_generate(
             input_text="",
             system_text=system_prompt,
             input_image=input_image,
             img_type=content_type,
+            config=config_temp,
         )
         
-        processed_text = ""
-        if allow_reject and input_type == 'answer':
-            print(f"[INFO] running in reject-able image recognition model.`")
-            processed_output = run_image_post_process_llm(
-                user_text = str(text),
-                model = 'gpt-4.1-nano', 
-            )
-            if int(processed_output.get("flag", 0)) == 0:
-                api_output['success'] = False
-                api_output['error'] = 'Image Cannot Be Processed'
-                api_output['status'] = 2
-                return jsonify(api_output), 400
-            else:
-                processed_text = processed_output.get("text", "").strip()
-        
-        # safe text for html showing
-        safe_text = (processed_text.strip() or text.strip())
-        safe_text = safe_text.replace("\x08", "\\")
-        
+        if input_type == 'assessment':
+            rubric_list = list(RubricOutput.model_validate_json(output.text).rubrics)
+            rubric_dict = {
+                f"rubric {idx+1}": {"points": rbrc.points, "content": rbrc.content}
+                for idx, rbrc in enumerate(rubric_list)
+                }
+            full_score = sum(item["points"] for item in rubric_dict.values())
+            rubric_dict['Full Score'] = round(full_score, 2)
+            print(rubric_dict)
+            processed_text = json.dumps(rubric_dict, indent=2, ensure_ascii=False)
+            api_output['text'] = processed_text
+        else:
+            processed_text = ""
+            if allow_reject and input_type == 'answer':
+                print(f"[INFO] running in reject-able image recognition model.`")
+                processed_output = run_image_post_process_llm(
+                    user_text = str(output),
+                    model = 'gpt-4.1-nano', 
+                )
+                if int(processed_output.get("flag", 0)) == 0:
+                    api_output['success'] = False
+                    api_output['error'] = 'Image Cannot Be Processed'
+                    api_output['status'] = 2
+                    return jsonify(api_output), 400
+                else:
+                    processed_text = processed_output.get("text", "").strip()
+
+            # safe text for html showing
+            safe_text = (processed_text.strip() or str(output).strip())
+            safe_text = safe_text.replace("\x08", "\\")
+            api_output['text'] = safe_text
+            
         api_output['success'] = True
         api_output['status'] = 1
-        api_output['text'] = safe_text
+        print(f"IMAGE TEXT: {api_output['text']}")
         return jsonify(api_output)
 
     except Exception as e:

@@ -6,6 +6,17 @@
         <p>Choose the content focus of your feedback that best matches your feedback philosophy:</p>
 
         <div class="radio-group" id="teaching-style-group">
+            <div class="radio-item">
+                <input type="radio"
+                       id="ts-correctness"
+                       name="step3"
+                       value="Adaptive"
+                       checked>
+                <label for="ts-adaptive"
+                       title="Allows feedback to shift between correctness, procedural guidance, and conceptual reasoning depending on the student's mistakes.">
+                    Adaptive
+                </label>
+            </div>
 
             <div class="radio-item">
                 <input type="radio"
@@ -14,7 +25,7 @@
                        value="Correctness"
                        checked>
                 <label for="ts-correctness"
-                       title="The most basic level of feedback content centers on the accuracy of a response, often termed verification or knowledge of results (KR).">
+                       title="Focuses on whether the answer is correct and identifies errors or missing elements.">
                     Correctness-Oriented
                 </label>
             </div>
@@ -25,7 +36,7 @@
                        name="step3"
                        value="Procedural">
                 <label for="ts-procedural"
-                       title="More sophisticated feedback focuses on procedural knowledge, which provides information on the actions and strategies needed to complete a task.">
+                       title="Focuses on the steps, /rules, or methods used to solve the problem.">
                     Procedural/Steps-Focused
                 </label>
             </div>
@@ -36,7 +47,7 @@
                        name="step3"
                        value="Conceptual">
                 <label for="ts-conceptual"
-                       title="Panadero and Lipnevich emphasize that feedback is most effective when it shifts from outcomes to the underlying processes and reasoning involved in learning.">
+                       title="Focuses on the ideas and reasoning behind the solution.">
                     Conceptual/Reasoning-Focused
                 </label>
             </div>
@@ -46,7 +57,8 @@
                        id="ts-custom"
                        name="step3"
                        value="">
-                <label for="ts-custom">
+                <label for="ts-custom"
+                        title="Upload your rubric so the system can align feedback with your evaluation criteria.">
                     Provide Your Preferred Feedback Focus
                 </label>
             </div>
