@@ -20,7 +20,6 @@ from app.pattern_prompt import *
 
 from pathlib import Path
 
-
 def find_app_dir(max_depth=3):
     start = Path(__file__).resolve().parent
     cur = start
