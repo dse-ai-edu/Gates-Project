@@ -46,7 +46,6 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 
 
-#   ==================== DATA STRUCTURE PREPARE ==================== #
 class RubricOutputItem(BaseModel):
     points: float = Field(description="Points of the one rubric item.")
     content: str = Field(description="Content of the one rubric item.")
@@ -54,8 +53,7 @@ class RubricOutputItem(BaseModel):
 class RubricOutput(BaseModel):
     rubrics: List[RubricOutputItem]
     
-
-#   ==================== MAIN DATA LOAD ==================== #
+    
 BASE_DIR = Path(__file__).resolve().parent
 TMP_DIR = BASE_DIR / "tmp"
 
