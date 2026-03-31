@@ -327,3 +327,17 @@
 .unlock-button.unlocked:hover {
     background-color: #218838;
 }
+
+
+/* keyword hover showing */
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+    cursor: pointer;
+}
+
+.checkbox-item:hover {
+    background-color: #f5f5f5;
+    border-radius: 6px;
+}

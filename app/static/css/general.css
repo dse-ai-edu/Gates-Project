@@ -68,3 +68,27 @@
 .hidden {
     display: none;
 }
+
+
+/* All tooltip targets show help cursor */
+[title] {
+    cursor: help;
+}
+
+/* Keep large hover area on container */
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 4px 6px;
+}
+
+/* Underline only the visible keyword text */
+.checkbox-item[title] label {
+    border-bottom: 1px dotted #888;
+}
+
+/* Title: underline only text + icon */
+h3[title] .title-text,
+h3[title] .info-icon {
+    border-bottom: 1px dotted #888;
+}
