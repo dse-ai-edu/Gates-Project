@@ -48,22 +48,18 @@
 
           <div class="style-keywords-row">
             <div class="style-keywords-col" id="feedback-function-1A-container">
-              <h3 class="style-group-title">Point of View</h3>
               {% set subgroup_idx = 1 %} {% set keywords = subgroup1_keywords %}
               {% include "components/feedback_function_1_template.html" %}
             </div>
             <div class="style-keywords-col" id="feedback-function-1B-container">
-              <h3 class="style-group-title">Interpersonal Quality</h3>
               {% set subgroup_idx = 2 %} {% set keywords = subgroup2_keywords %}
               {% include "components/feedback_function_1_template.html" %}
             </div>
             <div class="style-keywords-col" id="feedback-function-1C-container">
-              <h3 class="style-group-title">Directness</h3>
               {% set subgroup_idx = 3 %} {% set keywords = subgroup3_keywords %}
               {% include "components/feedback_function_1_template.html" %}
             </div>
             <div class="style-keywords-col" id="feedback-function-1D-container">
-              <h3 class="style-group-title">Motivational Framing</h3>
               {% set subgroup_idx = 4 %} {% set keywords = subgroup4_keywords %}
               {% include "components/feedback_function_1_template.html" %}
             </div>
@@ -71,6 +67,12 @@
         </div>
 
         <hr style="margin: 2rem 0; border: 1px solid #ddd" />
+        
+        
+        <button class="example-button" onclick="showExample_page1()">
+            Show Example
+        </button>
+
 
         <!-- ===== Component 2: Feedback Templates (step2, read-only) ===== -->
         <div class="content-section" id="feedback-templates-section">

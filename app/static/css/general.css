@@ -1,4 +1,15 @@
 /*CHECK NEEDED*/
+.example-button {
+    background-color: rgb(255, 220, 106);
+    color: rgba(0, 0, 0, 0);
+    padding: 10px 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100px;
+}
+
 
 .traverse-buttons {
     width: 100%;

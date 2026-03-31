@@ -3,11 +3,16 @@
   class="feedback-input-component style-keywords-submodule"
   data-step="step1{{ subgroup_idx }}"
   id="style-keywords-component-step1{{ subgroup_idx }}"
->
-  <h3>
-    {% if keywords and keywords|length >= 1 %} {{ keywords[0].subgroup_name }}
-    {% else %} subgroup{{ subgroup_idx }}_keywords {% endif %}
-  </h3>
+  >
+    <h3 class="style-group-title">
+    {% if keywords and keywords|length >= 1 %} 
+        {{ keywords[0].subgroup_name }}
+    {% else %} 
+        subgroup{{ subgroup_idx }}_keywords 
+    {% endif %}
+
+    <span class="info-icon" title="{% if keywords and keywords|length >= 1 %}{{ keywords[0].subgroup_info }}{% endif %}"> ⓘ </span>
+    </h3>
 
   <div class="component-content">
     <div class="style-grid vertical">

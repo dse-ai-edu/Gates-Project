@@ -1,23 +1,23 @@
 from pydantic import BaseModel, Field
 import openai
 
-from app.question_image_prompt import IMAGE_POST_PROCESS_PROMPT
+from app.prompts import FEEDBACK_POST_PROCESS_PROMPT
 
 from app import key_iter
 
-
-class ImagePostProcessOutput(BaseModel):
+class FeedbackPostProcessOutput(BaseModel):
     text: str
     flag: int
 
-def run_image_post_process_llm(
+
+def run_feedback_post_process_llm(
     user_text: str,
-    model: str = "gpt-4.1-nano",
+    model: str = "gpt-5-mini",
     max_retry: int = 3,
 ):
     messages = [
-        {"role": "system", "content": IMAGE_POST_PROCESS_PROMPT},
-        {"role": "user", "content": user_text},
+        {"role": "system", "content": FEEDBACK_POST_PROCESS_PROMPT},
+        {"role": "user", "content": f"# Input: the feedback text to process: ```{user_text}```"},
     ]
 
     last_error = None
@@ -28,31 +28,23 @@ def run_image_post_process_llm(
             response = client.responses.parse(
                 input=messages,
                 model=model,
-                text_format=ImagePostProcessOutput,
+                text_format=FeedbackPostProcessOutput,
             )
 
             parsed_output = response.output_parsed
             parsed_output = parsed_output.dict()
 
             final_text = parsed_output.get("text", "").strip()
+            final_flag = parsed_output.get("flag", "").strip()
 
             # ===== Sanity Checks =====
             if not final_text:
                 raise ValueError("Empty output from post-process LLM.")
 
-            lowered = final_text.lower()
-            # Case 1: Clean reject
-            if lowered == "[reject]":
-                return {"text": "[REJECT]", "flag": 0}
-
-            # Case 2: Must NOT contain extra commentary about rejection
-            elif "[reject]" in lowered and lowered != "[REJECT]":
-                return {"text": "[REJECT] - soft", "flag": 0}
-
-            # Otherwise: faithfully return cleaned content
+            if "0" in str(final_flag):
+                return {"text": user_text, "flag": 0}
             else:
                 final_output = {"text": final_text, "flag": 1}
-            print(f"IMAGE PROCESSED TEXT: {final_output}")
             return final_output
 
         except Exception as e:
@@ -60,4 +52,4 @@ def run_image_post_process_llm(
             continue
 
     print(f"[ERROR INPUT]: {messages}")
-    raise RuntimeError(f"Post-process LLM failed after {max_retry} retries. Last error: {last_error}")
+    raise RuntimeError(f"Feedback Post-process LLM failed after {max_retry} retries. Last error: {last_error}")

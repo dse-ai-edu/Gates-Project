@@ -331,7 +331,6 @@ def parse_teaching_text(
     final_respond_prompt += macro_template_prompt
     final_respond_prompt += FEEDBACK_OUTPUT_INSTRUCTION
     final_respond_prompt += "[PLACEHOLDER]\n"
-    final_respond_prompt += "# IMPORTANT: if there is no meanful content in a section of given template, you may just skip this section; for example, if the response is almost perfect and your template contains the section of weakness, do not need to force saying something when there is little.\n"
     final_respond_prompt += "## Teacher (you) Response [NO MORE THAN *500* WORDS]: "
     return final_respond_prompt
 
@@ -406,7 +405,6 @@ def vllm_generate(
     max_retry: int = 3,
     img_type: str | None = None,
     project_dir: Path | None = None,
-    config: dict = None,
     **kwargs
 ):
     if project_dir is None:
@@ -437,7 +435,6 @@ def vllm_generate(
                 model="gemini-2.5-flash",
                 max_tokens=8192,
                 img_type=img_type,
-                config=config,
             ), None
         except Exception as e:
             last_error = e
@@ -455,7 +452,6 @@ def llm_generate_gemini(
     model: str = "gemini-2.5-flash",
     max_tokens: int = 8192,
     img_type: str | None = None,
-    config: dict = None
 ) -> str:
     from google import genai
     from google.genai import types
@@ -515,26 +511,25 @@ def llm_generate_gemini(
     if not parts:
         raise ValueError("Both image and user_prompt are empty")
 
-    base_config = {
-            "system_instruction": system_prompt if system_prompt else None,
-            "max_output_tokens": max_tokens,
-            # "response_mime_type"="text/plain",
-            "response_mime_type": "application/json",
-        }
-    
-    if config:
-        base_config = {**base_config, **config}
-        
+    contents = [
+        types.Content(
+            role="user",
+            parts=parts
+        )
+    ]
+
     response = client.models.generate_content(
         model=model,
-        contents=parts,
-        config = base_config
+        contents=contents,
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt if system_prompt else None,
+            max_output_tokens=max_tokens,
+            # response_mime_type="text/plain",
+            response_mime_type="application/json",
+        )
     )
 
-    if config is not None and config.get("response_json_schema", ""):
-        return response
-    else:
-        return get_gemini_output_text(response).strip()
+    return get_gemini_output_text(response).strip()
 
 
 
@@ -556,14 +551,3 @@ def get_gemini_output_text(response):
         return response.text or ""
 
     return "\n".join(texts)
-    
-    
-    
-## extract full score
-
-def extract_full_score(text):
-    vals=re.findall(r'"points"\s*:\s*"?(-?\d+(?:\.\d+)?)"?',text)
-    nums=[float(v) for v in vals]
-    total=sum(x for x in nums if x>=0)
-    s=f"{total:.2f}".rstrip("0").rstrip(".")
-    return s if s!="" else "0"

@@ -20,7 +20,6 @@ from app.pattern_prompt import *
 
 from pathlib import Path
 
-
 def find_app_dir(max_depth=3):
     start = Path(__file__).resolve().parent
     cur = start
@@ -49,39 +48,6 @@ def encode_image(image_path):
 def verify_response(response_text):
     # leave if for now and we will implement it later based on need
     return True
-
-# def vllm_generate(input_text:str, system_text:str=None, input_image:list=None, max_retry:int=3, **kwarg):
-#     if input_image:
-#         image_list = [encode_image('./app/'+x) for x in input_image]
-#         messages = [{
-#             'role':'user',
-#             'content':[{"type": "image_url", "image_url": 
-#                         {"url": "data:image/png;base64,{}".format(x),},} for x in image_list] \
-#                             + [{"type": "text","text":input_text},]
-#         }]
-#     else:
-#         messages = [{'role':'user','content':input_text},]
-    
-#     if system_text is not None:
-#         messages = [{'role':'system','content':system_text},] + messages
-    
-#     for _ in range(max_retry):
-#         try:
-#             client = openai.OpenAI(api_key=next(key_iter))
-#             response = client.chat.completions.create(
-#                 messages=messages, **kwarg
-#             )
-#             response_text = response.choices[0].message.content
-#             if response.choices[0].logprobs:
-#                 response_prob = response.choices[0].logprobs.content[0].logprob
-#                 response_prob = np.round(np.exp(response_prob)*100, 2)
-#             else:
-#                 response_prob = None
-#             return response_text, response_prob
-#         except:
-#             traceback.print_exc()
-    
-#     raise SystemError('failed to generate response with llm.')
 
 
 def ppl_from_response(response, min_logprob=-100):
@@ -169,43 +135,6 @@ def format_keyword_block(keyword: str, info: dict) -> str:
     detail = info.get("detail", "NA").strip()
     return (f"KEYWORD: {keyword} \n SUMMARY: {short} \n DETAILS: {detail}")
 
-
-# def parse_teaching_style(
-#         teach_style: str = None, 
-#         teach_example: str = None, 
-#         resource: str = None, 
-#         example: str = None,
-#         **kwarg) -> str:
-
-#     # Step 1: Process teach_style
-#     standard_template = str(TP_PLAIN) # default = plain style
-#     teach_style_lower = teach_style.lower().strip()
-#     if "tpha" in teach_style_lower:
-#         standard_template = str(TP_HUMOROUS_ACTIVE)
-#     elif "tprl" in teach_style_lower:
-#         standard_template = str(TP_RIGOROUS_LOGICAL)
-#     elif "tpcs" in teach_style_lower:
-#         standard_template = str(TP_CARING_SHARING)
-#     else:
-#         standard_template = ""
-#     #  
-#     # Step 2: Generate personal template
-#     personal_template = ""
-#     if teach_example:
-#         teach_style_custom_text = str(teach_example).strip()
-#         from app.prompt_tool import complete_style_extraction
-#         personal_template = complete_style_extraction(teach_style_custom_text)
-#     #  
-#     # Step 3: Merge templates or use standard
-#     if standard_template and personal_template:
-#         from app.prompt_tool import complete_style_merge
-#         final_respond_prompt = complete_style_merge(standard_template, personal_template)
-#     else:
-#         final_respond_prompt = standard_template
-#     #  
-#     return {"final": final_respond_prompt, 
-#             "selected": standard_template, 
-#             "custom": personal_template, }
 
 def longest_common_substring_len(a: str, b: str) -> int:
     a, b = a.lower(), b.lower()
@@ -331,7 +260,6 @@ def parse_teaching_text(
     final_respond_prompt += macro_template_prompt
     final_respond_prompt += FEEDBACK_OUTPUT_INSTRUCTION
     final_respond_prompt += "[PLACEHOLDER]\n"
-    final_respond_prompt += "# IMPORTANT: if there is no meanful content in a section of given template, you may just skip this section; for example, if the response is almost perfect and your template contains the section of weakness, do not need to force saying something when there is little.\n"
     final_respond_prompt += "## Teacher (you) Response [NO MORE THAN *500* WORDS]: "
     return final_respond_prompt
 
@@ -406,7 +334,6 @@ def vllm_generate(
     max_retry: int = 3,
     img_type: str | None = None,
     project_dir: Path | None = None,
-    config: dict = None,
     **kwargs
 ):
     if project_dir is None:
@@ -437,7 +364,6 @@ def vllm_generate(
                 model="gemini-2.5-flash",
                 max_tokens=8192,
                 img_type=img_type,
-                config=config,
             ), None
         except Exception as e:
             last_error = e
@@ -455,7 +381,6 @@ def llm_generate_gemini(
     model: str = "gemini-2.5-flash",
     max_tokens: int = 8192,
     img_type: str | None = None,
-    config: dict = None
 ) -> str:
     from google import genai
     from google.genai import types
@@ -515,26 +440,25 @@ def llm_generate_gemini(
     if not parts:
         raise ValueError("Both image and user_prompt are empty")
 
-    base_config = {
-            "system_instruction": system_prompt if system_prompt else None,
-            "max_output_tokens": max_tokens,
-            # "response_mime_type"="text/plain",
-            "response_mime_type": "application/json",
-        }
-    
-    if config:
-        base_config = {**base_config, **config}
-        
+    contents = [
+        types.Content(
+            role="user",
+            parts=parts
+        )
+    ]
+
     response = client.models.generate_content(
         model=model,
-        contents=parts,
-        config = base_config
+        contents=contents,
+        config=types.GenerateContentConfig(
+            system_instruction=system_prompt if system_prompt else None,
+            max_output_tokens=max_tokens,
+            # response_mime_type="text/plain",
+            response_mime_type="application/json",
+        )
     )
 
-    if config is not None and config.get("response_json_schema", ""):
-        return response
-    else:
-        return get_gemini_output_text(response).strip()
+    return get_gemini_output_text(response).strip()
 
 
 
@@ -556,14 +480,3 @@ def get_gemini_output_text(response):
         return response.text or ""
 
     return "\n".join(texts)
-    
-    
-    
-## extract full score
-
-def extract_full_score(text):
-    vals=re.findall(r'"points"\s*:\s*"?(-?\d+(?:\.\d+)?)"?',text)
-    nums=[float(v) for v in vals]
-    total=sum(x for x in nums if x>=0)
-    s=f"{total:.2f}".rstrip("0").rstrip(".")
-    return s if s!="" else "0"

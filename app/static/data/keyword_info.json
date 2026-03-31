@@ -2,6 +2,7 @@
   "FirstP": {
     "subgroup": 1,
     "subgroup_name": "Point of View",
+    "subgroup_info": "The point of view refers to the perspective used to write the feedback message.<br><br>1st person: Written from the instructor’s perspective using “I” statements.<br><br>2nd person: Addresses the student directly using “you.”<br><br>3rd person: Focused on the work itself rather than the instructor or student.",
     "group_idx": 1,
     "name": "First Person",
     "short": "Feedback is written from the instructor’s perspective, using “I” statements.",
@@ -26,6 +27,7 @@
   "Neutral": {
     "subgroup": 2,
     "subgroup_name": "Interpersonal Quality",
+    "subgroup_info": "The interpersonal quality refers to the tone and level of formality used in the feedback message.<br><br>Neutral: Emotionally even and matter of fact.<br><br>Conversational: Uses natural and approachable language.<br><br>Formal: Uses professional and academic language.",
     "group_idx": 1,
     "name": "Neutral",
     "short": "Emotionally even and matter of fact. Signals objectivity and consistency.",
@@ -50,6 +52,7 @@
   "Direct": {
     "subgroup": 3,
     "subgroup_name": "Directness",
+    "subgroup_info": "The directness refers to how explicit or softened the feedback language is.<br><br>Direct: Uses explicit and plain language.<br><br>Indirect: Uses softened or more conditional language.",
     "group_idx": 1,
     "name": "Direct",
     "short": "Uses explicit and plain language.",
@@ -66,6 +69,7 @@
   "TaskFocused": {
     "subgroup": 4,
     "subgroup_name": "Motivational Framing",
+    "subgroup_info": "Motivational framing refers to how feedback is phrased to support motivation and confidence.<br><br>Task-Focused: Emphasizes the work, process, or criteria rather than the student.<br><br>Growth-Focused: Frames performance as something that can improve over time.<br><br>Wise Feedback: Communicates high standards while affirming the student is capable of meeting them.",
     "group_idx": 1,
     "name": "Task-Focused",
     "short": "Maintains attention on the work, process, or criteria and avoids personal attribution.",

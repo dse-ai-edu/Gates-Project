@@ -5,10 +5,10 @@ from app.question_image_prompt import IMAGE_POST_PROCESS_PROMPT
 
 from app import key_iter
 
-
 class ImagePostProcessOutput(BaseModel):
     text: str
     flag: int
+
 
 def run_image_post_process_llm(
     user_text: str,
@@ -52,7 +52,6 @@ def run_image_post_process_llm(
             # Otherwise: faithfully return cleaned content
             else:
                 final_output = {"text": final_text, "flag": 1}
-            print(f"IMAGE PROCESSED TEXT: {final_output}")
             return final_output
 
         except Exception as e:
@@ -60,4 +59,4 @@ def run_image_post_process_llm(
             continue
 
     print(f"[ERROR INPUT]: {messages}")
-    raise RuntimeError(f"Post-process LLM failed after {max_retry} retries. Last error: {last_error}")
+    raise RuntimeError(f"Image Post-process LLM failed after {max_retry} retries. Last error: {last_error}")

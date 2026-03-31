@@ -21,8 +21,7 @@ import app.utils as utils
 import app.prompts as prompts
 from app.gates_segment import process_pdf
 from app import app, database
-from app.post_process_utils import run_image_post_process_llm
-from app.feedback_post_process_utils import run_feedback_post_process_llm
+from app.image_post_process_utils import run_image_post_process_llm
 # from app import s3_client
 
 from datetime import datetime, timedelta
@@ -35,22 +34,11 @@ import io
 
 from app.question_image_prompt import QUESTION_RECOGNITION, ASSESSMENT_RECOGNITION
 from app.image_prompts_latest import RECOGNITION as ANSWER_RECOGNITION
-from app.prompts import JUDGE, SOLUTION_REJECT_PRMPT
+from app.prompts import JUDGE
 
 from app.judge import multi_agent_judge, run_score_extract, is_consistent
 
 from pathlib import Path
-
-from pydantic import BaseModel, Field
-from typing import List, Optional
-
-class RubricOutputItem(BaseModel):
-    points: float = Field(description="Points of the one rubric item.")
-    content: str = Field(description="Content of the one rubric item.")
-
-class RubricOutput(BaseModel):
-    rubrics: List[RubricOutputItem]
-    
 
 BASE_DIR = Path(__file__).resolve().parent
 TMP_DIR = BASE_DIR / "tmp"
@@ -431,16 +419,6 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             system_prompt=JUDGE, 
             )
         
-        # begin feedback generation
-        pattern_dict = utils.parse_feedback_pattern(
-            feedback_pattern=feedback_pattern,
-            custom_rubric=custom_rubric,
-            )
-        
-        pattern_key = pattern_dict.get("pattern_key", None)
-        pattern_body = pattern_dict.get("pattern_body", None)
-        print(f"debug: selected feedback_pattern: `{pattern_key}`; `{str(pattern_body)[:200]}`")
-        
         if grading_result["pass"] == False:
             return {
                 "success": True, 
@@ -456,20 +434,11 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 }
             
         print(f"debug: before grading extraction")
+        full_score = run_score_extract(
+                            user_prompt = f"# Grading Rubric:\n```\n{reference_text}\n```"
+                            )
         
-        # GET FULL CREDITS
-        # try:
-        #     rubric_dict = json.loads(reference_text)
-        #     full_score = rubric_dict['Full Score']
-        #     print(f"Get Full Score A: {full_score}")
-        # except:
-        #     full_score = run_score_extract(user_prompt = f"# Grading Rubric:\n```\n{reference_text}\n```")
-        #     print(f"Get Full Score B: {full_score}")
-        
-        full_score = 2
-        
-        if full_score - grading_result['score'] < 0.25:
-            print(f"RESPONSE: full score, override.")
+        if is_consistent(full_score, grading_result['score'], 0.25):
             return {
                 'success': True,
                 'feedback_text': "Congratulations! The answer fully meets the problem requirements and demonstrates a correct understanding of the task.",
@@ -478,14 +447,22 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'feedback_templates': feedback_templates,
                 'feedback_pattern': feedback_pattern,
                 'custom_rubric': custom_rubric,
-                'pattern_body': pattern_body,
                 "grade_success": True, 
                 "grade": grading_result['score'],
                 "grade_history": grading_result.get("dialogue_history", []),
                 }
             
             
-        print(f"debug: before parse_feedback_pattern")       
+        print(f"debug: before parse_feedback_pattern")
+        pattern_dict = utils.parse_feedback_pattern(
+            feedback_pattern=feedback_pattern,
+            custom_rubric=custom_rubric,
+            )
+        
+        pattern_key = pattern_dict.get("pattern_key", None)
+        pattern_body = pattern_dict.get("pattern_body", None)
+        print(f"debug: selected feedback_pattern: `{pattern_key}`; `{str(pattern_body)[:200]}`")
+        
         
         if reference_text is not None and len(reference_text.strip()) > 0:
             question_text = question_text + "\n ## Rubric: " + reference_text
@@ -520,16 +497,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             have_log=True
             )
         score_text = re.sub(r'-(\d)', r'- \1', str(grading_result['score']))
-        feedback_text = feedback_text 
-        
-        try: # clean the feedback!
-            feedback_text_processed = run_feedback_post_process_llm(user_text=feedback_text)
-            feedback_text = feedback_text_processed["text"]
-        except:
-            feedback_text = feedback_text + "\n>" # a symbol for further debug
-        
-        if 1: # show score to user?
-            feedback_text = feedback_text + f"\n\n<<< Grade: {score_text} >>>\n\n"
+        feedback_text = feedback_text + f"\n\n<<< Grade: {score_text} >>>\n\n"
         
         return {
                 'success': True,
@@ -582,7 +550,7 @@ def comment_generate_old(system_info, answer_text, question_text, reference_text
             style_keywords=style_keywords,
             feedback_templates=feedback_templates,
             )
-        print(f"[Debug 6]: User Prompt has Placeholder: {'[PLACEHOLDER]' in user_prompt}")
+
         print(f"debug: before utils.llm_generate")
         # Generate feedback using LLM
         feedback_text, feedback_prob = utils.llm_generate(
@@ -1107,6 +1075,7 @@ def api_image_convert():
                 api_output['error'] = 'Failed to process PDF'
                 return jsonify(api_output), 500
 
+
         else:
             # Image: always safe, data guaranteed by step 1
             input_image = {
@@ -1121,74 +1090,56 @@ def api_image_convert():
         # =================================================
         # 3. Select system prompt
         # =================================================
-        config_temp = None
         if input_type == 'question':
-            print("USING PROMPT: QUESTION_RECOGNITION")
             system_prompt = QUESTION_RECOGNITION
         elif input_type == 'assessment':
-            print("USING PROMPT: ASSESSMENT_RECOGNITION")
             system_prompt = ASSESSMENT_RECOGNITION
-            config_temp = {
-                "response_mime_type": "application/json",
-                "response_json_schema": RubricOutput.model_json_schema(),
-                }
         elif input_type == 'answer':
-            print("USING PROMPT: ANSWER_RECOGNITION")
             system_prompt = ANSWER_RECOGNITION
         else:
-            print("USING PROMPT: QUESTION_RECOGNITION")
             system_prompt = QUESTION_RECOGNITION
             
         if allow_reject and input_type == 'answer':
-            system_prompt += SOLUTION_REJECT_PRMPT
+            system_prompt += "\n# IMPORTANT: SERVER-SIDE REJECTION RULES FOR UNPROCESSABLE INPUTS:"
+            system_prompt += "\n- IF the content is illegible, non-mathematical, irrelevant, or cannot be reliably interpreted after reasonable effort, respond with exactly one word: [REJECT]"
+            system_prompt += "\n- The response must be precisely: [REJECT] — including the square brackets, with no additional text, explanation, punctuation, or formatting."
+            system_prompt += "\n- If this rule applies, it overrides all other instructions above. Do NOT attempt transcription or partial interpretation."
 
         # =================================================
         # 4. Call vLLM / Gemini
         # =================================================
-        output, _ = utils.vllm_generate(
+        text, _ = utils.vllm_generate(
             input_text="",
             system_text=system_prompt,
             input_image=input_image,
             img_type=content_type,
-            config=config_temp,
         )
-        
-        if input_type == 'assessment':
-            rubric_list = list(RubricOutput.model_validate_json(output.text).rubrics)
-            rubric_dict = {
-                f"rubric {idx+1}": {"points": rbrc.points, "content": rbrc.content}
-                for idx, rbrc in enumerate(rubric_list)
-                }
-            full_score = sum(item["points"] for item in rubric_dict.values())
-            rubric_dict['Full Score'] = round(full_score, 2)
-            print(rubric_dict)
-            processed_text = json.dumps(rubric_dict, indent=2, ensure_ascii=False)
-            api_output['text'] = processed_text
-        else:
-            processed_text = ""
-            if allow_reject and input_type == 'answer':
-                print(f"[INFO] running in reject-able image recognition model.`")
-                processed_output = run_image_post_process_llm(
-                    user_text = str(output),
-                    model = 'gpt-4.1-nano', 
-                )
-                if int(processed_output.get("flag", 0)) == 0:
-                    api_output['success'] = False
-                    api_output['error'] = 'Image Cannot Be Processed'
-                    api_output['status'] = 2
-                    return jsonify(api_output), 400
-                else:
-                    processed_text = processed_output.get("text", "").strip()
 
-            # safe text for html showing
-            safe_text = (processed_text.strip() or str(output).strip())
-            safe_text = safe_text.replace("\x08", "\\")
-            api_output['text'] = safe_text
-            
+        
+        processed_text = ""
+        if allow_reject and input_type == 'answer':
+            print(f"[INFO] running in reject-able image recognition model.`")
+            processed_output = run_image_post_process_llm(
+                user_text = str(text),
+                model = 'gpt-4.1-nano', 
+            )
+            if int(processed_output.get("flag", 0)) == 0:
+                api_output['success'] = False
+                api_output['error'] = 'Image Cannot Be Processed'
+                api_output['status'] = 2
+                return jsonify(api_output), 400
+            else:
+                processed_text = processed_output.get("text", "").strip()
+        
+        # safe text for html showing
+        safe_text = (processed_text.strip() or text.strip())
+        safe_text = safe_text.replace("\x08", "\\")
+        
         api_output['success'] = True
         api_output['status'] = 1
-        print(f"IMAGE TEXT: {api_output['text']}")
+        api_output['text'] = safe_text
         return jsonify(api_output)
+
 
     except Exception as e:
         traceback.print_exc()

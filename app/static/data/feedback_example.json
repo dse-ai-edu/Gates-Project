@@ -1,0 +1,113 @@
+{
+  "question": "Find the derivative of f(x) = x^2 * sin(x).",
+
+  "answer": "To find the derivative of f(x) = x^2 * sin(x), I take the derivative of the whole expression directly. \n I think I should differentiate the x^2 part and multiply by sin(x). \n The derivative of x^2 is 2x, and I keep the sin(x) part the same. So I get: f'(x) = 2x*sin(x).",
+
+  "FirstP+Neutral+Direct+TaskFocused": "I observe that the derivative only differentiates x^2 and leaves sin(x) unchanged. I state that the product rule is required when differentiating a product. I expect both functions to be differentiated and included.",
+  
+  "FirstP+Neutral+Direct+GrowthOriented": "I observe that the product rule is not applied. I note that using the product rule supports development in handling multi-term expressions. I state that applying it will improve future differentiation tasks.",
+  
+  "FirstP+Neutral+Direct+HighExpectation": "I state that this problem requires the product rule to differentiate both factors. I observe that one term is missing. At this level, both components must appear. You are capable of meeting this standard. You can correct this by applying the full product rule.",
+  
+  "FirstP+Neutral+Indirect+TaskFocused": "I notice that the derivative seems to focus on only one part of the product. It appears that the product rule may not yet be fully applied. I suggest considering both functions during differentiation.",
+  
+  "FirstP+Neutral+Indirect+GrowthOriented": "I notice that the derivative appears to include only part of the product. Applying the product rule more fully may help develop stronger understanding of multi-function expressions and support later work.",
+  
+  "FirstP+Neutral+Indirect+HighExpectation": "I observe that the derivative seems incomplete relative to expected use of the product rule. At this level, both factors are expected. You can meet this standard. Applying the full rule may complete the derivative.",
+  
+  "FirstP+Formal+Direct+TaskFocused": "I observe that the submitted derivative is incomplete. I state that the product rule has not been applied. I expect differentiation of both constituent functions in accordance with standard procedures.",
+  
+  "FirstP+Formal+Direct+GrowthOriented": "I observe that the derivative omits application of the product rule. I note that proper use of this rule is essential for advancing to more complex differentiation techniques. I expect incorporation of both terms.",
+  
+  "FirstP+Formal+Direct+HighExpectation": "I state that this task requires correct application of the product rule. I observe that the current response does not satisfy this requirement. You are capable of achieving this standard. You can revise by including both derivative terms.",
+  
+  "FirstP+Formal+Indirect+TaskFocused": "I observe that the derivative appears to reflect only a partial application of differentiation rules. It may be that the product rule has not yet been fully incorporated. I suggest considering both factors.",
+  
+  "FirstP+Formal+Indirect+GrowthOriented": "I observe that the derivative appears incomplete. It seems that fuller application of the product rule may support development in handling compound expressions and future calculus tasks.",
+  
+  "FirstP+Formal+Indirect+HighExpectation": "I observe that the response may not yet fully meet the expected standard for differentiating products. At this level, both components are required. You can achieve this. Applying the product rule more completely may resolve the issue.",
+  
+  "FirstP+Conversational+Direct+TaskFocused": "I see that only x^2 is differentiated while sin(x) stays the same. I state that this misses part of the product rule. I expect both parts of the expression to be differentiated.",
+  
+  "FirstP+Conversational+Direct+GrowthOriented": "I see that the derivative uses only part of the product rule. I note that applying the full rule will build stronger skills for handling expressions with multiple factors in later problems.",
+  
+  "FirstP+Conversational+Direct+HighExpectation": "I state that this problem requires both parts to be included using the product rule. I see that one part is missing. You can absolutely do this. You can fix it by adding the missing differentiated term.",
+  
+  "FirstP+Conversational+Indirect+TaskFocused": "I notice that the derivative seems to focus on just one part of the expression. It looks like the product rule might not be fully used. I suggest including both pieces when differentiating.",
+  
+  "FirstP+Conversational+Indirect+GrowthOriented": "I notice that the derivative seems to include only part of the product. Using the full product rule could help improve understanding and support solving more complex problems later.",
+  
+  "FirstP+Conversational+Indirect+HighExpectation": "I notice that the result seems to miss part of what is expected for a product derivative. At this level, both terms are needed. You can definitely reach this. Trying the full product rule may complete the answer.",
+
+  "SecondP+Neutral+Direct+TaskFocused": "You differentiate only x^2 and leave sin(x) unchanged. The product rule is required for a product of two functions. You must differentiate both factors and include both terms.",
+  
+  "SecondP+Neutral+Direct+GrowthOriented": "You do not apply the product rule. Using the product rule will improve your ability to handle expressions with multiple functions and support more advanced differentiation tasks.",
+  
+  "SecondP+Neutral+Direct+HighExpectation": "At this level, you are expected to apply the product rule to both factors. Your result is missing a term. You are capable of meeting this standard. You can fix this by differentiating both parts and combining them correctly.",
+  
+  "SecondP+Neutral+Indirect+TaskFocused": "You seem to differentiate only one part of the product. It appears that the product rule may not yet be fully applied. Both functions are typically included when differentiating a product.",
+  
+  "SecondP+Neutral+Indirect+GrowthOriented": "You seem to include only part of the product in your derivative. Applying the product rule more fully may help develop your understanding of multi-term expressions and support future work.",
+  
+  "SecondP+Neutral+Indirect+HighExpectation": "At this level, you are expected to include both factors when differentiating a product. Your result seems to miss one part. You can meet this expectation. Applying the full product rule may complete your answer.",
+  
+  "SecondP+Formal+Direct+TaskFocused": "You have provided an incomplete derivative. The product rule has not been applied. You must differentiate both constituent functions and include both resulting terms.",
+  
+  "SecondP+Formal+Direct+GrowthOriented": "You have not applied the product rule. Proper application of this rule is essential for progressing to more advanced calculus topics. You should incorporate both derivative components.",
+  
+  "SecondP+Formal+Direct+HighExpectation": "At this level, you are required to apply the product rule when differentiating products. Your response does not meet this standard. You are capable of achieving it. You can revise by including both derivative terms.",
+  
+  "SecondP+Formal+Indirect+TaskFocused": "You appear to differentiate only one component of the product. It may be that the product rule has not yet been fully incorporated. Both functions are typically required in the result.",
+  
+  "SecondP+Formal+Indirect+GrowthOriented": "You appear to partially apply differentiation rules. Fuller use of the product rule may strengthen your understanding of compound expressions and support future calculus work.",
+  
+  "SecondP+Formal+Indirect+HighExpectation": "At this level, you are expected to apply the product rule to both factors. Your response may not yet fully meet this expectation. You can achieve this. Incorporating both terms may complete the solution.",
+  
+  "SecondP+Conversational+Direct+TaskFocused": "You only differentiate x^2 and keep sin(x) the same. This misses part of the product rule. You need to differentiate both parts of the expression.",
+  
+  "SecondP+Conversational+Direct+GrowthOriented": "You are using only part of the product rule. Applying the full rule will help you handle expressions with multiple pieces, which is important in harder problems.",
+  
+  "SecondP+Conversational+Direct+HighExpectation": "At this level, you need to include both parts using the product rule. Your answer leaves one out. You can absolutely do this. You can fix it by adding the missing differentiated term.",
+  
+  "SecondP+Conversational+Indirect+TaskFocused": "You seem to focus on just one part of the expression. It looks like the product rule might not be fully used. Both parts are usually included when differentiating.",
+  
+  "SecondP+Conversational+Indirect+GrowthOriented": "You seem to include only part of the product. Using the full product rule could help you better understand how to handle these expressions and prepare for more complex problems.",
+  
+  "SecondP+Conversational+Indirect+HighExpectation": "At this level, you are expected to include both parts of a product in the derivative. Your answer seems to miss one. You can definitely reach this. Trying the full product rule may complete your result.",
+
+  "ThirdP+Neutral+Direct+TaskFocused": "The derivative shown is incomplete. The product rule is required for differentiating a product of two functions. Both x^2 and sin(x) must be differentiated and included in the result. The current work only differentiates one factor.",
+  
+  "ThirdP+Neutral+Direct+GrowthOriented": "The derivative shown is incomplete because the product rule is not applied. Using the product rule will support handling more complex expressions involving multiple functions. Mastering this step will improve performance in later calculus tasks.",
+  
+  "ThirdP+Neutral+Direct+HighExpectation": "At this level, derivatives of products are expected to include both components using the product rule. The current work omits one term. You are capable of applying the full rule correctly. Revising by differentiating both factors will produce a complete result.",
+  
+  "ThirdP+Neutral+Indirect+TaskFocused": "The derivative appears to only account for one part of the product. It seems that the product rule may not have been fully applied. When differentiating a product, both functions are typically considered.",
+  
+  "ThirdP+Neutral+Indirect+GrowthOriented": "The derivative appears to reflect only part of the product. Applying the product rule more fully may help strengthen understanding of how to handle multi-term expressions. This can support progress in more advanced differentiation tasks.",
+  
+  "ThirdP+Neutral+Indirect+HighExpectation": "At this level, derivatives of products are expected to reflect both factors. The current work seems to include only one part. You can meet this expectation. Applying the product rule fully may lead to a complete result.",
+  
+  "ThirdP+Formal+Direct+TaskFocused": "The submitted derivative is incomplete. The product rule has not been applied. Differentiation of a product requires inclusion of derivatives of both factors. The current response reflects only one component.",
+  
+  "ThirdP+Formal+Direct+GrowthOriented": "The submitted derivative is incomplete due to omission of the product rule. Proper application of this rule is essential for progressing to more advanced differentiation techniques. Mastery of this concept supports further study in calculus.",
+  
+  "ThirdP+Formal+Direct+HighExpectation": "At this level, correct application of the product rule is required when differentiating products. The present response does not meet this standard. You are capable of achieving this. Revising to include both derivative terms will align with expectations.",
+  
+  "ThirdP+Formal+Indirect+TaskFocused": "The derivative presented appears to consider only a single component of the product. It may be that the product rule has not yet been fully incorporated. Standard differentiation procedures typically require both terms.",
+  
+  "ThirdP+Formal+Indirect+GrowthOriented": "The derivative appears to reflect a partial application of differentiation rules. More complete use of the product rule may enhance understanding of compound expressions. This development is important for future work in calculus.",
+  
+  "ThirdP+Formal+Indirect+HighExpectation": "At this level, application of the product rule is expected for such expressions. The current response may not yet fully meet this expectation. You can achieve this standard. Incorporating both derivative components may complete the solution.",
+  
+  "ThirdP+Conversational+Direct+TaskFocused": "The derivative only includes one part of the product. The product rule is required here, and both parts need to be differentiated. The current result is missing a term.",
+  
+  "ThirdP+Conversational+Direct+GrowthOriented": "The derivative only uses part of the product rule. Applying the full rule will help build stronger skills for handling expressions with multiple factors. This becomes important in more advanced problems.",
+  
+  "ThirdP+Conversational+Direct+HighExpectation": "At this level, both parts of a product must be included using the product rule. The current result leaves one out. You can absolutely fix this. Add the missing differentiated term to complete the derivative.",
+  
+  "ThirdP+Conversational+Indirect+TaskFocused": "The derivative seems to focus on just one part of the expression. It looks like the product rule might not be fully used. Both pieces of the function are usually included when differentiating.",
+  
+  "ThirdP+Conversational+Indirect+GrowthOriented": "The derivative seems to include only part of the product. Using the full product rule could help improve understanding of how to handle expressions like this. That skill will be useful for harder problems later.",
+  
+  "ThirdP+Conversational+Indirect+HighExpectation": "At this level, both parts of a product are expected in the derivative. The current work seems to miss one part. You can definitely reach this standard. Trying the full product rule may lead to the complete answer."
+}
