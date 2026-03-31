@@ -1,0 +1,28 @@
+<div class="feedback-input-component" id="teaching-style-component">
+
+    <h3>Feedback Focus</h3>
+
+    <div class="component-content">
+
+        <div class="radio-group" id="teaching-style-group">
+            {% for item in pattern_items %}
+            <div class="checkbox-item"
+                 title="{{ item.short }}">
+
+                <input type="radio"
+                       id="ts-{{ item.key.lower() }}"
+                       name="step3"
+                       value="{{ item.key }}"
+                       data-need-extra="{{ item.need_additional_info | default(0) }}"
+                       {% if item.key == default_pattern %}checked{% endif %}>
+
+                <label for="ts-{{ item.key.lower() }}">
+                    {{ item.name }}
+                </label>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</div>

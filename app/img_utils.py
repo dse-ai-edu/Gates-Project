@@ -1,9 +1,8 @@
 import re, os, json
 from pathlib import Path
 import base64
-import pandas as pd
-from tqdm import tqdm
-from datetime import datetime
+
+from app import key_iter
 
 from openai import OpenAI
 from dotenv import load_dotenv
@@ -49,8 +48,8 @@ def llm_generate_gpt(
     text=None,
     structured: bool = False
 ):
-    api_key = os.getenv('OPENAI_API_KEY')
-    client = OpenAI(api_key=api_key)
+
+    client = OpenAI(api_key=next(key_iter))
 
     input_content = []
     if image_path and os.path.exists(image_path):

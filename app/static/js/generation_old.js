@@ -84,8 +84,15 @@ let currentConfig = {
 sessionStorage["userId"] = "test";
 
 // Navigation functions
-function goBack() {
-  window.location.href = "/page_2";
+function goBack_final() {
+    window.location.href = '/page_2';
+}
+
+function goBackAndReset_final() {
+    sessionStorage.removeItem('step3');
+    sessionStorage.removeItem('step3A');
+    sessionStorage.removeItem('locked_style');
+    window.location.href = '/page_2';
 }
 
 function saveConfiguration() {

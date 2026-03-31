@@ -45,6 +45,7 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
+
 class RubricOutputItem(BaseModel):
     points: float = Field(description="Points of the one rubric item.")
     content: str = Field(description="Content of the one rubric item.")
@@ -52,7 +53,7 @@ class RubricOutputItem(BaseModel):
 class RubricOutput(BaseModel):
     rubrics: List[RubricOutputItem]
     
-
+    
 BASE_DIR = Path(__file__).resolve().parent
 TMP_DIR = BASE_DIR / "tmp"
 
@@ -61,28 +62,7 @@ TMP_DIR.mkdir(parents=True, exist_ok=True)
 app_dir = utils.find_app_dir()
 KEYWORD_PATH = app_dir / "static" / "data"/ "keyword_info.json"
 EXAMPLE_PATH = app_dir / "static" / "data"/ "feedback_example.json"
-#   ==================== MAIN ==================== #
-
-#   ==================== Sample Data for Demo ==================== #
-
-# question_this = """
-# <p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
-# <p>(a) f(x) = x<sup>ln(x)</sup></p>
-# """
-# reference_this = """
-# <p>Find the derivative of each of the following functions. You do not need to simplify your answers.</p>
-# <p>(a) f(x) = x<sup>ln(x)</sup></p>
-# <p><strong>Solution:</strong></p>
-# <p>To find the derivative of f(x) = x<sup>ln(x)</sup>, we use logarithmic differentiation.</p>
-# <p>Take the natural logarithm of both sides:</p>
-# <p>ln(f(x)) = ln(x) · ln(x) = (ln(x))<sup>2</sup></p>
-# <p>Differentiate both sides with respect to x:</p>
-# <p>f'(x)/f(x) = 2ln(x) · (1/x)</p>
-# <p>Solve for f'(x):</p>
-# <p>f'(x) = f(x) · 2ln(x)/x = x<sup>ln(x)</sup> · 2ln(x)/x</p>
-# <p><strong>Answer: f'(x) = x<sup>ln(x)</sup> · 2ln(x)/x</strong> or equivalently <strong>f'(x) = 2x<sup>ln(x)-1</sup>ln(x)</strong></p>
-# """
-
+PATTERN_PATH = app_dir / "static" / "data" / "pattern_info.json"
 
 def load_keywords_by_subgroup(keyword_path = KEYWORD_PATH):
     with open(keyword_path, "r", encoding="utf-8") as f:
@@ -116,6 +96,42 @@ def load_keywords_by_subgroup(keyword_path = KEYWORD_PATH):
 GROUPED_KEYWORDS = load_keywords_by_subgroup()
 DEFAULT_KEYWORDS = routes_utils.load_default_keywords(GROUPED_KEYWORDS)
 
+
+def load_pattern_items(pattern_path=PATTERN_PATH):
+    with open(pattern_path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    # 1. filter: only show_on_page > 0
+    items = []
+    for key, info in raw.items():
+        show = info.get("show_on_page", -1)
+        if show > 0:
+            items.append({
+                "key": key,
+                "name": info.get("name", key),
+                "short": info.get("short", ""),
+                "show_on_page": show,
+                "default_select": info.get("default_select", None),
+                "need_additional_info": info.get("need_additional_info", 0)
+            })
+
+    # 2. sort by show_on_page
+    items.sort(key=lambda x: x["show_on_page"])
+
+    # 3. determine default
+    default_candidates = [x for x in items if x["default_select"] is not None]
+
+    if default_candidates:
+        default_key = max(default_candidates, key=lambda x: x["default_select"])["key"]
+    else:
+        default_key = min(items, key=lambda x: x["show_on_page"])["key"]
+
+    return items, default_key
+
+
+PATTERN_ITEMS, DEFAULT_PATTERN = load_pattern_items()
+
+
 # ==================== Page Route (returns HTML) ==================== #
 
 @app.route('/')
@@ -137,15 +153,21 @@ def page_1():
 
 @app.route('/page_2')
 def step2():
-    return render_template('page_2.html')
+    return render_template(
+        'page_2.html',
+        pattern_items=PATTERN_ITEMS,
+        default_pattern=DEFAULT_PATTERN
+    )
 
 @app.route('/page_final')
 def page_final():
     return render_template('page_final.html')
 
 @app.route('/page_final_example')
-def page_example_final():
+def page_final_example():
     return render_template('page_final_example.html')
+
+
 # @app.route("/segment")
 # def segment_page():
 #     return render_template("segment.html")
@@ -154,17 +176,13 @@ def page_example_final():
 # def serve_tmp(filename):
 #     return send_from_directory(TMP_DIR, filename)
 
-
 # @app.route('/<path:filepath>')
 # def serve_uploaded_files(filepath): 
 #     full_path = os.path.join(os.getcwd(), filepath)
-
 #     if not os.path.isfile(full_path):
 #         return "Not Found", 404
-
 #     directory = os.path.dirname(full_path)
 #     filename = os.path.basename(full_path)
-
 #     return send_from_directory(directory, filename)
 
 

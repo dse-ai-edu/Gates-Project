@@ -59,10 +59,23 @@
     <div class="container">
       <!-- Navigation Buttons -->
       <div class="navigation-buttons">
-        <button class="back-button" onclick="goBack()">Back</button>
-        <button class="save-button" onclick="saveConfiguration()">
+        <button class="back-button"
+                style="background-color:#9e9e9e;"
+                onclick="goBack_final()">
+            Back
+        </button>
+
+        <button class="back-button"
+                style="background-color:#ff5722;"
+                onclick="goBackAndReset_final()">
+            Back & Reset
+        </button>
+
+        <button class="save-button" 
+            onclick="saveConfiguration()">
           Save & Complete
         </button>
+
       </div>
 
       <!-- System Configuration Display -->
