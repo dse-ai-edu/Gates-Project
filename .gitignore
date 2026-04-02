@@ -218,3 +218,8 @@ assets/
 tmp*.json
 tmp*.jsonlapp/tmp/
 app/tmp/*
+
+
+
+legacy/
+backup/
