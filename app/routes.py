@@ -132,6 +132,8 @@ def load_pattern_items(pattern_path=PATTERN_PATH):
 PATTERN_ITEMS, DEFAULT_PATTERN = load_pattern_items()
 
 
+log_prob_text = os.environ.get("HAVE_LOGPROB", "0")
+HAVE_LOGPROB = any([pos_k in str(log_prob_text).lower() for pos_k in ["yes", "true", "1"]])
 # ==================== Page Route (returns HTML) ==================== #
 
 @app.route('/')
@@ -561,7 +563,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             system_text=pattern_body,
             model='gpt-4o-mini',
             max_tokens=2048,
-            have_log=True
+            have_log=HAVE_LOGPROB
             )
         score_text = re.sub(r'-(\d)', r'- \1', str(grading_result['score']))
         feedback_text = feedback_text 
@@ -635,7 +637,7 @@ def comment_generate_old(system_info, answer_text, question_text, reference_text
             system_text=pattern_body,
             model='gpt-4o-mini',
             max_tokens=2048,
-            have_log=True
+            have_log=HAVE_LOGPROB
             )
         
         return {

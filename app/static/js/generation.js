@@ -418,7 +418,7 @@ async function displayConfigurationAsText() {
 function estimateExpectation(cfg) {
   const text1 = String(cfg.feedback_pattern || "");
   const text2 = String(cfg.custom_rubric || "");
-  const len_estimate = text1.length + text2.length * 10;
+  const len_estimate = text1.length + text2.length * 20;
 
   const mean = 12 + (len_estimate - 3000) / 3000;
   const std = 2;
@@ -427,7 +427,7 @@ function estimateExpectation(cfg) {
   const u2 = Math.random();
   let x =
     mean + std * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-  x = Math.min(15, Math.max(10, x));
+  x = Math.min(30.35, Math.max(10.35, x));
   return Number(x.toFixed(1));
 }
 
