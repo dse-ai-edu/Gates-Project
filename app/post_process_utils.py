@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-import openai
 
 from app.question_image_prompt import IMAGE_POST_PROCESS_PROMPT
 
@@ -9,6 +8,7 @@ from app import key_iter
 class ImagePostProcessOutput(BaseModel):
     text: str
     flag: int
+
 
 def run_image_post_process_llm(
     user_text: str,

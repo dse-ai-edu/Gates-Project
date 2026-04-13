@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-import openai
 
 from app.prompts import FEEDBACK_POST_PROCESS_PROMPT
 
