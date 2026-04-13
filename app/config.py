@@ -1,21 +1,13 @@
 import os
 
-# def split_openai_api_keys():
-#     raw = os.getenv("OPENAI_API_KEYS")
-#     if not raw:
-#         return []
-#     keys = [k.strip() for k in raw.replace("\n", ",").split(",") if k.strip()]
-#     for i, key in enumerate(keys, 1):
-#         os.environ[f"OPENAI_API_KEY{i}"] = key
-#     return keys
-
-
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'JustTest')
     MONGODB_URI = os.getenv('MONGODB_URI')
 
     MODE = 'online'
-    
-    # OPENAI_API_KEYS = split_openai_api_keys()
 
+    OPENAI_API_KEY1 = os.getenv('OPENAI_API_KEY1')
+    OPENAI_API_KEY2 = os.getenv('OPENAI_API_KEY2')
+    OPENAI_API_KEY3 = os.getenv('OPENAI_API_KEY3')
+    
     MAX_CONTENT_LENGTH = 10 * 1000 * 1000  # 10 MB
