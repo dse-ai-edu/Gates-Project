@@ -1208,7 +1208,7 @@ def api_image_convert():
                 f"rubric {idx+1}": {"points": rbrc.points, "content": rbrc.content}
                 for idx, rbrc in enumerate(rubric_list)
                 }
-            full_score = sum(item["points"] for item in rubric_dict.values())
+            full_score = sum(max(item["points"], 0) for item in rubric_dict.values())
             rubric_dict['Full Score'] = round(full_score, 2)
             print(rubric_dict)
             processed_text = json.dumps(rubric_dict, indent=2, ensure_ascii=False)
