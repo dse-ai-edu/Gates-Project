@@ -418,7 +418,7 @@ async function displayConfigurationAsText() {
 function estimateExpectation(cfg) {
   const text1 = String(cfg.feedback_pattern || "");
   const text2 = String(cfg.custom_rubric || "");
-  const len_estimate = text1.length + text2.length * 10;
+  const len_estimate = text1.length + text2.length * 20;
 
   const mean = 12 + (len_estimate - 3000) / 3000;
   const std = 2;

@@ -14,18 +14,17 @@ import pytz
 from flask import render_template, request, jsonify, send_file
 from flask import Response, abort
 
-from flask import send_from_directory
+# from flask import send_from_directory
 from werkzeug.utils import secure_filename
 
 import app.utils as utils
+import app.llm_utils as llm_utils
+
 import app.routes_utils as routes_utils
-import app.prompts as prompts
-from app.gates_segment import process_pdf
+from app.segment_tool import process_pdf
 from app import app, database
 from app.post_process_utils import run_image_post_process_llm
 from app.feedback_post_process_utils import run_feedback_post_process_llm
-# from app import s3_client
-
 from datetime import datetime, timedelta
 
 from pymongo import DESCENDING
@@ -34,8 +33,7 @@ from bson import ObjectId
 from bson.binary import Binary
 import io
 
-from app.question_image_prompt import QUESTION_RECOGNITION, ASSESSMENT_RECOGNITION
-from app.image_prompts_latest import RECOGNITION as ANSWER_RECOGNITION
+from app.image_prompts import  ANSWER_RECOGNITION, QUESTION_RECOGNITION, ASSESSMENT_RECOGNITION
 from app.prompts import JUDGE, SOLUTION_REJECT_PRMPT
 
 from app.judge import multi_agent_judge, run_score_extract, is_consistent
@@ -63,6 +61,9 @@ app_dir = utils.find_app_dir()
 KEYWORD_PATH = app_dir / "static" / "data"/ "keyword_info.json"
 EXAMPLE_PATH = app_dir / "static" / "data"/ "feedback_example.json"
 PATTERN_PATH = app_dir / "static" / "data" / "pattern_info.json"
+
+have_log_text = os.environ.get("HAVE_LOGPROBS", "0")
+HAVE_LOGPROBS = any([pos_k in str(have_log_text).lower() for pos_k in ["true", "1"]])
 
 def load_keywords_by_subgroup(keyword_path = KEYWORD_PATH):
     with open(keyword_path, "r", encoding="utf-8") as f:
@@ -168,24 +169,6 @@ def page_final_example():
     return render_template('page_final_example.html')
 
 
-# @app.route("/segment")
-# def segment_page():
-#     return render_template("segment.html")
-
-# @app.route('/tmp/<path:filename>')
-# def serve_tmp(filename):
-#     return send_from_directory(TMP_DIR, filename)
-
-# @app.route('/<path:filepath>')
-# def serve_uploaded_files(filepath): 
-#     full_path = os.path.join(os.getcwd(), filepath)
-#     if not os.path.isfile(full_path):
-#         return "Not Found", 404
-#     directory = os.path.dirname(full_path)
-#     filename = os.path.basename(full_path)
-#     return send_from_directory(directory, filename)
-
-
 # ==================== API Route (System Setting) ==================== #
 
 @app.route('/api/login', methods=['POST'])
@@ -231,7 +214,7 @@ def configuration_final():
     return jsonify(response)
 
 
-@app.route('/api/configuration/showexample', methods=['POST'])
+@app.route('/api/configuration/showexample', methods=['POST','GET'])
 def show_keyword_feedback_example():
     """Save final configuration and mark system as complete"""
     data = request.get_json()
@@ -290,7 +273,7 @@ def catch_demo_answer():
     
 
 # ==================== API Route (Style Setting) ==================== #
-@app.route('/api/comment/update_style', methods=['POST'])
+@app.route('/api/comment/update_style', methods=['POST', 'GET'])
 def update_style_config():
     data = request.get_json()
     tid = data.get('tid')
@@ -376,81 +359,6 @@ def retrieve_style_config():
         response = {'success': False, 'error': str(e)}
     
     return jsonify(response)
-
-
-# def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = ""):
-#     """Generate personalized feedback response for student answer"""
-#     if predefined_flag:
-#         import predefined_conf
-#         predefined_data = predefined_conf.predefined_data
-#         system_prompts_raw = {
-#             "final": predefined_data[predefined_flag]["final"], 
-#             "selected": predefined_data[predefined_flag]["selected"], 
-#             "custom": predefined_data[predefined_flag]["custom"], }
-#     elif history_prompt_dict:
-#         system_prompts_raw = history_prompt_dict
-#     else:
-#         try:
-#             # Extract configuration from system
-#             micro_feedback = system_info.get('micro_style', {})
-#             macro_feedback = system_info.get('macro_style', {})
-            
-#         # Get style descriptors and templates
-#             style_keywords = macro_feedback.get('keywords', [])
-#             feedback_templates = macro_feedback.get('templates', [])
-            
-#         # Get teaching style and personalization
-#             teach_style = micro_feedback.get('teach_style', '')
-#             teach_example = micro_feedback.get('examples', '')
-#             locked_style = macro_feedback.get('locked_style', False)
-            
-#         # Build system prompt for feedback generation
-#             system_prompts_raw = utils.parse_teaching_style(
-#                 teach_style=teach_style,
-#                 teach_example=teach_example,
-#                 )
-#         except Exception as e:
-#             traceback.print_exc()
-#             return {'success': False, 'error': str(e)}
-
-#     try:
-#         # Build user prompt with student answer
-#         system_prompt = system_prompts_raw['final']
-#         custom_prompt = system_prompts_raw['custom'] if system_prompts_raw.get('custom', '') else None
-#         user_prompt = utils.parse_teaching_text(
-#             question=question_text + "\n ## Reference Answer is: " + reference_text,
-#             answer=answer_text,
-#             style_keywords=style_keywords,
-#             feedback_templates=feedback_templates,
-#             )
-        
-#        # Generate feedback using LLM
-#         feedback_text, feedback_prob = utils.llm_generate(
-#             input_text=user_prompt,
-#             system_text=system_prompt,
-#             model='gpt-4o',
-#             temperature=0.7, 
-#             max_tokens=750,
-#             logprobs=True
-#         )
-        
-#         return {
-#             'success': True,
-#             'feedback_text': feedback_text,
-#             'feedback_prob': feedback_prob,
-#             'style_keywords': style_keywords,
-#             'feedback_templates': feedback_templates,
-#             'teach_style': teach_style,
-#             'teach_example': teach_example,
-#             'system_prompt': system_prompt,
-#             'selected_prompt': system_prompts_raw.get('selected', ""),
-#             'custom_prompt': custom_prompt
-#         }
-        
-#     except Exception as e:
-#         traceback.print_exc()
-#         print(system_prompts_raw)
-#         return {'success': False, 'error': str(e)}
 
 
 def comment_generate(system_info, answer_text, question_text, reference_text, history_prompt_dict, predefined_flag = "", suggestion = None):
@@ -561,7 +469,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             system_text=pattern_body,
             model='gpt-4o-mini',
             max_tokens=2048,
-            have_log=True
+            have_log=HAVE_LOGPROBS
             )
         score_text = re.sub(r'-(\d)', r'- \1', str(grading_result['score']))
         feedback_text = feedback_text 
@@ -635,7 +543,7 @@ def comment_generate_old(system_info, answer_text, question_text, reference_text
             system_text=pattern_body,
             model='gpt-4o-mini',
             max_tokens=2048,
-            have_log=True
+            have_log=HAVE_LOGPROBS
             )
         
         return {
@@ -801,11 +709,6 @@ def comment_submit_old():
     question_this = data.get("question", "")
     predefined_flag = data.get("predefined_flag", "")
     reference_this = data.get("reference", "")
-    
-    # style_keywords = data.get("style_keywords", [])
-    # feedback_templates = data.get("feedback_templates", [])
-    # feedback_pattern = data.get("feedback_pattern", "")
-    # custom_rubric = data.get("custom_rubric", "")
     
     history_prompt_dict = None
     
@@ -1192,7 +1095,7 @@ def api_image_convert():
         # =================================================
         # 4. Call vLLM / Gemini
         # =================================================
-        output, _ = utils.vllm_generate(
+        output, _ = llm_utils.vllm_generate_gemini(
             input_text="",
             system_text=system_prompt,
             input_image=input_image,
@@ -1206,8 +1109,8 @@ def api_image_convert():
                 f"rubric {idx+1}": {"points": rbrc.points, "content": rbrc.content}
                 for idx, rbrc in enumerate(rubric_list)
                 }
-            full_score = sum(item["points"] for item in rubric_dict.values())
-            rubric_dict['Full Score'] = round(full_score, 2)
+
+            rubric_dict['Full Score'] = utils.extract_full_score(str(rubric_dict))
             print(rubric_dict)
             processed_text = json.dumps(rubric_dict, indent=2, ensure_ascii=False)
             api_output['text'] = processed_text
