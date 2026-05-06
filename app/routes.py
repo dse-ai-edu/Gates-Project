@@ -7,12 +7,16 @@ from flask import (
     render_template,
     request,
     jsonify,
+    Blueprint
 )
 
-from app import app, database
 
-import app.routes_image
-import app.routes_feedback
+bp_main = Blueprint(
+    "bp_main",
+    __name__,
+)
+
+from app import database
 
 from app.config import (
     KEYWORD_PATH,
@@ -45,17 +49,17 @@ PATTERN_ITEMS, DEFAULT_PATTERN = (
 # Page Routes
 # ====================
 
-@app.route("/")
+@bp_main.route("/")
 def home():
     return render_template("login.html")
 
 
-@app.route("/login")
+@bp_main.route("/login")
 def login():
     return render_template("login.html")
 
 
-@app.route("/page_1")
+@bp_main.route("/page_1")
 def page_1():
 
     return render_template(
@@ -67,7 +71,7 @@ def page_1():
     )
 
 
-@app.route("/page_2")
+@bp_main.route("/page_2")
 def step2():
 
     return render_template(
@@ -77,12 +81,12 @@ def step2():
     )
 
 
-@app.route("/page_final")
+@bp_main.route("/page_final")
 def page_final():
     return render_template("page_final.html")
 
 
-@app.route("/page_final_example")
+@bp_main.route("/page_final_example")
 def page_final_example():
     return render_template(
         "page_final_example.html"
