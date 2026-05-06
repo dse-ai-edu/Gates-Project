@@ -136,27 +136,27 @@
 
         /* ---------- Save & Proceed ---------- */
         function saveAndProceed_page1() {
-        const steps = ["step11", "step12", "step13", "step14"];
-        const missing = steps.filter((k) => !sessionStorage.getItem(k));
+            const steps = ["step11", "step12", "step13", "step14"];
+            const missing = steps.filter((k) => !sessionStorage.getItem(k));
 
-        if (missing.length > 0) {
-            alert("❗ Please select one keyword in each group.");
-            return;
-        }
+            if (missing.length > 0) {
+                alert("❗ Please select one keyword in each group.");
+                return;
+            }
 
-        const step2 = sessionStorage.getItem("step2");
-        if (!step2 || !/[a-zA-Z]/.test(step2)) {
-            alert("❗ Feedback template is invalid.");
-            return;
-        }
+            const step2 = sessionStorage.getItem("step2");
+            if (!step2 || !/[a-zA-Z]/.test(step2)) {
+                alert("❗ Feedback template is invalid.");
+                return;
+            }
 
-        const status = document.getElementById("save-status");
-        status.textContent = "✔ Saved";
-        status.style.color = "green";
+            const status = document.getElementById("save-status");
+            status.textContent = "✔ Saved";
+            status.style.color = "green";
 
-        setTimeout(() => {
-            window.location.href = "/page_2";
-        }, 800);
+            setTimeout(() => {
+                window.location.href = "/page_2";
+            }, 800);
         }
 
         /* ---------- Play with Toy Examples ---------- */
