@@ -371,15 +371,9 @@ def _llm_generate_gemini(
     )
 
     if system_prompt is not None:
-
-        if not isinstance(
-            system_prompt,
-            str,
-        ):
-
-            system_prompt = str(
-                system_prompt
-            )
+        if not isinstance(system_prompt, str):
+            system_prompt = str(system_prompt)
+            
 
     config = {
         "system_instruction":
@@ -399,12 +393,7 @@ def _llm_generate_gemini(
             "response_mime_type"
         ] = "application/json"
 
-        config[
-            "response_schema"
-        ] = (
-            text_format
-            .model_json_schema()
-        )
+        config["response_schema"] = (text_format.model_json_schema())
 
     for retry_i in range(max_retry):
 
