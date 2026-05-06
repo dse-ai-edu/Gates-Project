@@ -50,6 +50,10 @@ from app.pattern_utils import (
 )
 
 
+# default data
+with open(KEYWORD_PATH, "r") as f:
+    KEYWORD_INFO = json.load(f)
+
 # ====================
 # QA Demo
 # ====================
@@ -580,6 +584,7 @@ def comment_generate(
             system_prompt=pattern_body,
             model=DEFAULT_MODEL,
             max_tokens=2048,
+            enable_logprob=HAVE_LOGPROB,
         )
 
         feedback_text = (
@@ -951,13 +956,7 @@ def comment_load():
         "attempt_id"
     )
 
-    with open(
-        KEYWORD_PATH,
-        "r",
-        encoding="utf-8",
-    ) as f:
-
-        keyword_info = json.load(f)
+    keyword_info = KEYWORD_INFO
 
     try:
 
