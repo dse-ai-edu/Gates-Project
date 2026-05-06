@@ -284,7 +284,7 @@ def _prepare_gemini_parts(
 
         parts.append(
             types.Part.from_text(
-                user_prompt
+                text=user_prompt
             )
         )
 
