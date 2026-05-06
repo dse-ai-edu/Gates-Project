@@ -346,6 +346,8 @@ def _llm_generate_gemini(
     text_format=None,
 ):
 
+    import json
+
     from google import genai
 
     api_key = os.getenv(
@@ -407,17 +409,45 @@ def _llm_generate_gemini(
 
             if structured:
 
+                response_text = (
+                    _extract_gemini_text(
+                        response
+                    ).strip()
+                )
+
+                try:
+
+                    structured_data = (
+                        json.loads(
+                            response_text
+                        )
+                    )
+
+                except Exception as e:
+
+                    raise RuntimeError(
+                        f"Failed to parse "
+                        f"Gemini JSON response: "
+                        f"{response_text}"
+                    ) from e
+
                 try:
 
                     structured_obj = (
-                        response.parsed
+                        text_format
+                        .model_validate(
+                            structured_data
+                        )
                     )
 
-                except Exception:
+                except Exception as e:
 
-                    structured_obj = (
-                        response
-                    )
+                    raise RuntimeError(
+                        f"Failed to validate "
+                        f"Gemini structured "
+                        f"output: "
+                        f"{structured_data}"
+                    ) from e
 
                 return llm_output(
                     obj=structured_obj,
@@ -443,7 +473,6 @@ def _llm_generate_gemini(
             )
 
     raise RuntimeError(error_msg)
-
 
 # =========================
 # MAIN ENTRY

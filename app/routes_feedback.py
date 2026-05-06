@@ -346,77 +346,33 @@ def comment_generate(
 
     try:
 
-        style_keywords = (
-            system_info.get(
-                "style_keywords",
-                [],
-            )
-        )
-
-        feedback_templates = (
-            system_info.get(
-                "feedback_templates",
-                [],
-            )
-        )
-
-        feedback_pattern = (
-            system_info.get(
-                "feedback_pattern",
-                "",
-            )
-        )
-
-        custom_rubric = (
-            system_info.get(
-                "custom_rubric",
-                "",
-            )
-        )
+        style_keywords = system_info.get("style_keywords", [])
+        feedback_templates = system_info.get("feedback_templates", [])
+        feedback_pattern = system_info.get("feedback_pattern", "")
+        custom_rubric = system_info.get("custom_rubric", "")
 
         if suggestion is not None:
-
-            grading_suggestion = (
-                suggestion.get("grading")
-            )
-
-            feedback_suggestion = (
-                suggestion.get("feedback")
-            )
-
+            grading_suggestion = suggestion.get("grading")
+            feedback_suggestion = suggestion.get("feedback")
         else:
-
             grading_suggestion = None
-
             feedback_suggestion = None
 
         judge_input_text = (
-            f"# Question:\n"
-            f"{question_text}\n\n"
-
-            f"# Assessment Rubric:\n"
-            f"{reference_text}\n\n"
-
-            f"# Student Answer:\n"
-            f"{answer_text}\n\n"
+            f"# Question:\n{question_text}\n\n"
+            f"# Assessment Rubric:\n{reference_text}\n\n"
+            f"# Student Answer:\n{answer_text}\n\n"
         )
 
-        if (
-            grading_suggestion
-            and str(grading_suggestion).strip()
-        ):
-
+        if grading_suggestion and str(grading_suggestion).strip():
             judge_input_text += (
-                "\n\n# Grading Suggestion "
-                "from Human Expert:\n"
+                "\n\n# Grading Suggestion from Human Expert:\n"
                 f"{grading_suggestion}"
             )
 
-        grading_result = (
-            multi_agent_judge(
-                base_prompt=judge_input_text,
-                system_prompt=JUDGE,
-            )
+        grading_result = multi_agent_judge(
+            base_prompt=judge_input_text,
+            system_prompt=JUDGE,
         )
 
         if grading_result["pass"] is False:
@@ -424,18 +380,13 @@ def comment_generate(
             return {
                 "success": True,
                 "feedback_text":
-                "We can not process this "
-                "answer. Please involve "
-                "human experts.",
+                "We can not process this answer. "
+                "Please involve human experts.",
                 "feedback_prob": None,
-                "style_keywords":
-                style_keywords,
-                "feedback_templates":
-                feedback_templates,
-                "feedback_pattern":
-                feedback_pattern,
-                "custom_rubric":
-                custom_rubric,
+                "style_keywords": style_keywords,
+                "feedback_templates": feedback_templates,
+                "feedback_pattern": feedback_pattern,
+                "custom_rubric": custom_rubric,
                 "grade_success": True,
                 "grade": None,
                 "grade_history":
@@ -448,9 +399,7 @@ def comment_generate(
         full_score = run_score_extract(
             user_prompt=(
                 f"# Grading Rubric:\n"
-                f"```\n"
-                f"{reference_text}\n"
-                f"```"
+                f"```\n{reference_text}\n```"
             )
         )
 
@@ -463,21 +412,15 @@ def comment_generate(
             return {
                 "success": True,
                 "feedback_text":
-                "Congratulations! "
-                "The answer fully meets "
-                "the requirements.",
+                "Congratulations! The answer fully "
+                "meets the requirements.",
                 "feedback_prob": None,
-                "style_keywords":
-                style_keywords,
-                "feedback_templates":
-                feedback_templates,
-                "feedback_pattern":
-                feedback_pattern,
-                "custom_rubric":
-                custom_rubric,
+                "style_keywords": style_keywords,
+                "feedback_templates": feedback_templates,
+                "feedback_pattern": feedback_pattern,
+                "custom_rubric": custom_rubric,
                 "grade_success": True,
-                "grade":
-                grading_result["score"],
+                "grade": grading_result["score"],
                 "grade_history":
                 grading_result.get(
                     "dialogue_history",
@@ -485,10 +428,7 @@ def comment_generate(
                 ),
             }
 
-        if (
-            "adaptive"
-            in feedback_pattern.lower()
-        ):
+        if "adaptive" in feedback_pattern.lower():
 
             selected_pattern_key = (
                 decide_adaptive_pattern(
@@ -502,50 +442,30 @@ def comment_generate(
 
         else:
 
-            selected_pattern_key = (
-                feedback_pattern
-            )
-
+            selected_pattern_key = feedback_pattern
             from_adaptive = False
 
-        pattern_dict = (
-            parse_feedback_pattern(
-                feedback_pattern=
-                selected_pattern_key,
-
-                custom_rubric=
-                custom_rubric,
-
-                from_adaptive=
-                from_adaptive,
-            )
+        pattern_dict = parse_feedback_pattern(
+            feedback_pattern=selected_pattern_key,
+            custom_rubric=custom_rubric,
+            from_adaptive=from_adaptive,
         )
 
-        pattern_body = (
-            pattern_dict.get(
-                "pattern_body",
-                None,
-            )
+        pattern_body = pattern_dict.get(
+            "pattern_body",
+            None,
         )
 
-        if (
-            reference_text
-            and len(reference_text.strip()) > 0
-        ):
-
+        if reference_text and len(reference_text.strip()) > 0:
             question_text += (
                 "\n ## Rubric: "
                 + reference_text
             )
 
-        if grading_result.get(
-            "reasoning",
-            None,
-        ):
+        if grading_result.get("reasoning", None):
 
             question_text += (
-                f"\n ## Score of this "
-                f"Answer: "
+                f"\n ## Score of this Answer: "
                 f"{grading_result.get('score')}\n"
             )
 
@@ -554,16 +474,11 @@ def comment_generate(
                 f"{grading_result.get('reasoning')}"
             )
 
-        user_prompt = (
-            parse_teaching_text(
-                question=question_text,
-                answer=answer_text.strip(),
-                style_keywords=
-                style_keywords,
-
-                feedback_templates=
-                feedback_templates,
-            )
+        user_prompt = parse_teaching_text(
+            question=question_text,
+            answer=answer_text.strip(),
+            style_keywords=style_keywords,
+            feedback_templates=feedback_templates,
         )
 
         if (
@@ -577,14 +492,12 @@ def comment_generate(
                 f"{feedback_suggestion}"
             )
 
-            user_prompt = (
-                user_prompt.replace(
-                    "[PLACEHOLDER]",
-                    feedback_suggestion_text,
-                )
+            user_prompt = user_prompt.replace(
+                "[PLACEHOLDER]",
+                feedback_suggestion_text,
             )
 
-        feedback_obj = llm_generate(
+        feedback_output = llm_generate(
             user_prompt=user_prompt,
             system_prompt=pattern_body,
             model=DEFAULT_MODEL,
@@ -592,13 +505,8 @@ def comment_generate(
             enable_logprob=HAVE_LOGPROB,
         )
 
-        feedback_text = (
-            feedback_obj.text
-        )
-
-        feedback_prob = (
-            feedback_obj.logprob
-        )
+        feedback_text = feedback_output.text
+        feedback_prob = feedback_output.logprob
 
         score_text = re.sub(
             r"-(\d)",
@@ -615,13 +523,12 @@ def comment_generate(
             )
 
             feedback_text = (
-                feedback_text_processed[
-                    "text"
-                ]
+                feedback_text_processed["text"]
             )
 
         except Exception:
 
+            traceback.print_exc()
             feedback_text += "\n>"
 
         feedback_text += (
@@ -631,35 +538,16 @@ def comment_generate(
 
         return {
             "success": True,
-            "feedback_text":
-            feedback_text,
-
-            "feedback_prob":
-            feedback_prob,
-
-            "style_keywords":
-            style_keywords,
-
-            "feedback_templates":
-            feedback_templates,
-
-            "feedback_pattern":
-            selected_pattern_key,
-
-            "from_adaptive":
-            from_adaptive,
-
-            "custom_rubric":
-            custom_rubric,
-
-            "pattern_body":
-            pattern_body,
-
+            "feedback_text": feedback_text,
+            "feedback_prob": feedback_prob,
+            "style_keywords": style_keywords,
+            "feedback_templates": feedback_templates,
+            "feedback_pattern": selected_pattern_key,
+            "from_adaptive": from_adaptive,
+            "custom_rubric": custom_rubric,
+            "pattern_body": pattern_body,
             "grade_success": True,
-
-            "grade":
-            grading_result["score"],
-
+            "grade": grading_result["score"],
             "grade_history":
             grading_result.get(
                 "dialogue_history",
@@ -675,7 +563,6 @@ def comment_generate(
             "success": False,
             "error": str(e),
         }
-
 
 # ====================
 # Submit Feedback
