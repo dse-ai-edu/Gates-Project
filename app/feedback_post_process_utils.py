@@ -1,56 +1,72 @@
-from pydantic import BaseModel, Field
-import openai
+from app.text_prompts import FEEDBACK_POST_PROCESS_PROMPT
 
-from app.prompts import FEEDBACK_POST_PROCESS_PROMPT
+from app.llm_utils import llm_generate
 
-from app import key_iter
-
-class FeedbackPostProcessOutput(BaseModel):
-    text: str
-    flag: int
+from pydantic import BaseModel
 
 
 def run_feedback_post_process_llm(
     user_text: str,
-    model: str = "gpt-5-mini",
+    model: str = "gemini-3.1-flash-lite-preview",
     max_retry: int = 3,
 ):
-    messages = [
-        {"role": "system", "content": FEEDBACK_POST_PROCESS_PROMPT},
-        {"role": "user", "content": f"# Input: the feedback text to process: ```{user_text}```"},
-    ]
 
-    last_error = None
+    from app.data_structure import FeedbackPostProcessOutput
 
-    for i in range(max_retry):
-        try:
-            client = openai.OpenAI(api_key=next(key_iter))
-            response = client.responses.parse(
-                input=messages,
-                model=model,
-                text_format=FeedbackPostProcessOutput,
+    try:
+
+        response = llm_generate(
+            user_prompt=f"# Input: the feedback text to process: ```{user_text}```",
+            system_prompt=FEEDBACK_POST_PROCESS_PROMPT,
+            model=model,
+            text_format=FeedbackPostProcessOutput,
+            max_retry=max_retry,
+        )
+
+        if response.obj is None:
+            raise ValueError(
+                "Structured output missing from LLM."
             )
 
-            parsed_output = response.output_parsed
-            parsed_output = parsed_output.dict()
+        if isinstance(response.obj, BaseModel):
+            parsed_output = response.obj.model_dump()
 
-            final_text = parsed_output.get("text", "")
-            final_flag = parsed_output.get("flag", "")
+        elif isinstance(response.obj, dict):
+            parsed_output = response.obj
 
-            # ===== Sanity Checks =====
-            if not final_text:
-                raise ValueError("Empty output from post-process LLM.")
+        else:
+            raise ValueError(
+                f"Unexpected structured output type: "
+                f"{type(response.obj)}"
+            )
 
-            if "0" in str(final_flag):
-                return {"text": user_text, "flag": 0}
-            else:
-                final_output = {"text": final_text.strip(), "flag": 1}
-            return final_output
+        final_text = parsed_output.get("text", "")
+        final_flag = parsed_output.get("flag", "")
 
-        except Exception as e:
-            last_error = e
-            continue
+        if not final_text:
+            raise ValueError(
+                "Empty output from post-process LLM."
+            )
 
-    print(f"[ERROR]: {last_error}")
-    print(f"[ERROR INPUT]: {messages}")
-    raise RuntimeError(f"Feedback Post-process LLM failed after {max_retry} retries. Last error: {last_error}")
+        if "0" in str(final_flag):
+
+            return {
+                "text": user_text,
+                "flag": 0,
+            }
+
+        return {
+            "text": final_text.strip(),
+            "flag": 1,
+        }
+
+    except Exception as e:
+
+        print(f"[ERROR]: {e}")
+        print(f"[ERROR INPUT]: {user_text}")
+
+        raise RuntimeError(
+            f"Feedback Post-process LLM failed "
+            f"after {max_retry} retries. "
+            f"Last error: {e}"
+        )
