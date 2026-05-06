@@ -18,6 +18,7 @@ bp_main = Blueprint(
 
 from app import database
 
+
 from app.config import (
     KEYWORD_PATH,
     EXAMPLE_PATH,
