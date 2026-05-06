@@ -974,7 +974,7 @@ def health_check():
 def clear_tmp():
     import shutil
     for f in TMP_DIR.iterdir():
-        path = os.path.join(TMP_DIR, f)
+        p = os.path.join(TMP_DIR, f)
         if p.is_file():
             p.unlink()
         else:
