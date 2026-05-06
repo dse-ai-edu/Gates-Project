@@ -55,7 +55,7 @@ def home():
     return render_template("login.html")
 
 
-@bp_main.route("/login")
+@bp_main.route("/api/login")
 def login():
     return render_template("login.html")
 
