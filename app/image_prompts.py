@@ -325,3 +325,11 @@ Constraints:
 - No explanation, no text, no markdown.
 - Output ONLY the list.
 """
+
+
+SOLUTION_REJECT_PRMPT = """
+# IMPORTANT: SERVER-SIDE REJECTION RULES FOR UNPROCESSABLE INPUTS:"
+- IF the content is illegible, non-mathematical, irrelevant, or cannot be reliably interpreted after reasonable effort, respond with exactly one word: [REJECT]"
+- The response must be precisely: [REJECT] — including the square brackets, with no additional text, explanation, punctuation, or formatting."
+- If this rule applies, it overrides all other instructions above. Do NOT attempt transcription or partial interpretation."     
+"""
