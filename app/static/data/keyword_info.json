@@ -75,7 +75,7 @@
     "subgroup_info": "The directness refers to how explicit or softened the feedback language is. \n - Direct: Uses explicit and plain language. \n - Indirect: Uses softened or more conditional language.",
     "group_idx": 2,
     "name": "Indirect",
-    "short": "Uses softened and conditional language,.",
+    "short": "Uses softened and conditional language.",
     "good_examples": "1) It looks like the product rule may not have been fully applied here. Your second term appears to be missing its derivative.\n2) It looks like you only differentiated part of the product. The second term might need attention.",
     "bad_examples": "1) The product rule is wrong. You failed to differentiate the second term.\n2) I observe that the solution may possibly appear to potentially lack a complete application of the product rule to all terms."
   },
