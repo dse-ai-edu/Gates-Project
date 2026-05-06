@@ -87,6 +87,10 @@ function getSelectedStyles() {
     return Array.from(checkboxes).map(cb => cb.value);
 }
 
+function goBack_final() {
+    window.location.href = '/page_2';
+}
+
 function getTemplateTexts() {
     const inputs = document.querySelectorAll('.template-input');
     return Array.from(inputs).map(input => input.value).filter(value => value.trim() !== '');
