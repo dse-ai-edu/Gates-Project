@@ -164,9 +164,20 @@ def llm_generate(
 ## Response Generation 
 def format_keyword_block(keyword: str, info: dict) -> str:
     # component 1 with 4 keywords
-    short = info.get("short", "NA").strip()
-    detail = info.get("detail", "NA").strip()
-    return (f"KEYWORD: {keyword} \n SUMMARY: {short} \n DETAILS: {detail}")
+    keyword_name = info.get("name", keyword).strip()
+    short_summary = info.get("short", "N/A").strip()
+    keyword_group = info.get("subgroup_name", "Keyword").strip()
+    subgroup_info = info.get("subgroup_info", "").strip()
+    good_examples = info.get("good_examples", "N/A").strip()
+    bad_examples = info.get("bad_examples", "N/A").strip()
+
+    return (
+        f" - TRAIT KEYWORD: {keyword_name} \n"
+        f" -- Introduction to {keyword_name.upper()}: {short_summary} \n"
+        f" -- TRAIT TYPE: {keyword_group} \n"
+        f" -- Subgroup Information (with Opposite Traits to Avoid): {subgroup_info} \n" if subgroup_info else ""
+        f" -- EXAMPLES aligning with {keyword_name.upper()} Trait: {good_examples} \n"
+        f" -- EXAMPLES failing on {keyword_name.upper()} Trait: {bad_examples} \n\n")
 
 
 # def parse_teaching_style(
@@ -333,12 +344,12 @@ def parse_teaching_text(
     
     # keyword formatting
     keyword_full_text = ""
-    for kw in keywords:
+    for kw_idx, kw in enumerate(keywords):
         matched_kw = best_match_by_lcs(kw, keywords)
         info = keyword_info.get(matched_kw , None)
         if info is not None:
             kw_text_this = format_keyword_block(matched_kw, info)
-            keyword_full_text += f"""\n\n{kw_text_this}"""
+            keyword_full_text += f"""### TRAIT KEYWORD {kw_idx+1}: \n {kw_text_this}"""
             
     macro_trait_prompt = MACRO_TRAIT_BASE.format(keyword_full_text)
 
