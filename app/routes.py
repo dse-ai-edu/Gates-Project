@@ -55,9 +55,40 @@ def home():
     return render_template("login.html")
 
 
-@bp_main.route("/api/login")
-def login():
-    return render_template("login.html")
+@bp_main.route(
+    "/api/login",
+    methods=["POST"],
+)
+def api_login():
+
+    try:
+
+        data = request.get_json()
+
+        username = data.get("username")
+        password = data.get("password")
+
+        if username and password:
+
+            return jsonify({
+                "success": True,
+                "user": username,
+                "token": str(uuid.uuid4()),
+            })
+
+        return jsonify({
+            "success": False,
+            "message": "Invalid credentials",
+        })
+
+    except Exception as e:
+
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "message": str(e),
+        })
 
 
 @bp_main.route("/page_1")
