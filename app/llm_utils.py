@@ -368,6 +368,11 @@ def _llm_generate_gemini(
         img_type=img_type,
     )
 
+    if system_prompt is not None:
+        if not isinstance(system_prompt, str):
+            system_prompt = str(system_prompt)
+            
+
     config = {
         "system_instruction":
         system_prompt,
@@ -386,9 +391,7 @@ def _llm_generate_gemini(
             "response_mime_type"
         ] = "application/json"
 
-        config[
-            "response_schema"
-        ] = text_format
+        config["response_schema"] = (text_format.model_json_schema())
 
     for retry_i in range(max_retry):
 
