@@ -8,10 +8,15 @@ from datetime import datetime
 from flask import (
     request,
     jsonify,
+    Blueprint
+)
+
+bp_feedback = Blueprint(
+    "bp_feedback",
+    __name__,
 )
 
 from app import (
-    app,
     database,
 )
 
@@ -58,7 +63,7 @@ with open(KEYWORD_PATH, "r") as f:
 # QA Demo
 # ====================
 
-@app.route(
+@bp_feedback.route(
     "/api/demo/calculus",
     methods=["POST"],
 )
@@ -133,7 +138,7 @@ def catch_demo_answer():
 # Update Style Config
 # ====================
 
-@app.route(
+@bp_feedback.route(
     "/api/comment/update_style",
     methods=["POST"],
 )
@@ -246,7 +251,7 @@ def update_style_config():
 # Retrieve Style Config
 # ====================
 
-@app.route(
+@bp_feedback.route(
     "/api/comment/retrieve_style",
     methods=["POST"],
 )
@@ -676,7 +681,7 @@ def comment_generate(
 # Submit Feedback
 # ====================
 
-@app.route(
+@bp_feedback.route(
     "/api/comment/submit",
     methods=["POST"],
 )
@@ -944,7 +949,7 @@ def comment_submit():
 # Load Feedback
 # ====================
 
-@app.route(
+@bp_feedback.route(
     "/api/comment/load",
     methods=["GET"],
 )

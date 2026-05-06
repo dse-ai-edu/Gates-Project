@@ -23,7 +23,14 @@ from flask import (
 
 from werkzeug.utils import secure_filename
 
-from app import app, database
+from app import database
+
+from flask import Blueprint
+bp_image = Blueprint(
+    "bp_image",
+    __name__,
+)
+
 
 from app.config import (
     TMP_DIR,
@@ -55,7 +62,7 @@ app_dir = find_app_dir()
 # Upload PDF
 # ====================
 
-@app.route(
+@bp_image.route(
     "/api/preprocess/upload_pdf",
     methods=["POST"],
 )
@@ -126,7 +133,7 @@ def upload_pdf():
 # Segment PDF
 # ====================
 
-@app.route(
+@bp_image.route(
     "/api/preprocess/segment",
     methods=["POST"],
 )
@@ -176,7 +183,7 @@ def segment_pdf():
 # Download Segments
 # ====================
 
-@app.route(
+@bp_image.route(
     "/api/preprocess/segment_download",
     methods=["POST"],
 )
@@ -231,7 +238,7 @@ def download_all():
 # Image Convert
 # ====================
 
-@app.route(
+@bp_image.route(
     "/api/image/convert",
     methods=["POST"],
 )
@@ -654,7 +661,7 @@ def api_image_convert():
 # Asset
 # ====================
 
-@app.route("/asset/<asset_id>")
+@bp_image.route("/asset/<asset_id>")
 def get_asset(asset_id):
 
     asset = database["assets"].find_one(
