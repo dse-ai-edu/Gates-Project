@@ -31,7 +31,11 @@ Here is the grading result of the same question and student answer for your refe
 
 FEEDBACK_BASE = """
 # Task
-Based on the given question and student answer, please generate a response to the student.
+Based on the given question and student answer, please generate a response to the student. The feedback should be supportive to the student with hints, explanations, or questions. 
+# Core Principle: 
+ - The feedback should never directly include the correct answer to the original question. 
+ - If the student answer asks for the correct answer, you can give hints or explanations but do not directly give away the answer.
+ - If the student answer asks other questions or expresses confusion, you can give answer with supportive feedback, but still avoid giving away the correct answer to the original question.
 """
 
 
@@ -42,7 +46,7 @@ FEEDBACK_INPUT_BASE = """
 
 
 FEEDBACK_OUTPUT_INSTRUCTION = """
-Start your reply immediately with the feedback itself.  
+Start your reply immediately with the feedback itself. Remember, the feedback should NOT contain the correct answer to the original question.
 Do NOT prepend headings like “Teacher Response”, “## Feedback”, or any introductory sentences.  
 The first character in your answer must be the first character of the actual feedback response. \n
 """
@@ -96,6 +100,17 @@ The final text must:
 - read as a continuous natural response
 - optionally use short lists if multiple suggestions are mentioned
 - remain clear and readable
+
+## Issues to Avoid:
+### Unnatural:
+ - 1st person: use expression like `I observe`, `I note`, `I acknowledge`;
+ - 2nd person: too robotic, weird word choice;
+### Complicated Response:
+ - too wordy;
+ -passive voice;
+### Unexpected Components:
+ - Force to make up weak suggestion even unnecessary;
+ - Gives away the answer in feedback;
 
 ## Restrictions
 
