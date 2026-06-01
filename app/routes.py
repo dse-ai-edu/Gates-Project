@@ -105,7 +105,6 @@ def page_1():
 
 @bp_main.route("/page_2")
 def step2():
-
     return render_template(
         "page_2.html",
         pattern_items=PATTERN_ITEMS,
@@ -123,3 +122,19 @@ def page_final_example():
     return render_template(
         "page_final_example.html"
     )
+    
+
+@bp_main.route('/api/configuration/showexample', methods=['POST'])
+def show_keyword_feedback_example():
+    """Save final configuration and mark system as complete"""
+    data = request.get_json()
+    keywordLongText = data.get('keywordLongText')
+    try:
+        example_body = return_keyword_combination_example(keywords_str=keywordLongText, default_keywords=DEFAULT_KEYWORDS, example_path=EXAMPLE_PATH)
+        example_body['success'] = True
+        response = example_body
+    except:
+        traceback.print_exc()
+        response = {'success': False}
+    return jsonify(response)
+
