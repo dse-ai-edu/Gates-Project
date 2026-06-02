@@ -1,82 +1,62 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+import openai
 
-from app.image_prompts import IMAGE_POST_PROCESS_PROMPT
+from app.question_image_prompt import IMAGE_POST_PROCESS_PROMPT
 
-from app.llm_utils import llm_generate
+from app import key_iter
 
-from app.data_structure import ImagePostProcessOutput
+class ImagePostProcessOutput(BaseModel):
+    text: str
+    flag: int
 
 
 def run_image_post_process_llm(
     user_text: str,
-    model: str = "gemini-3.1-flash-lite-preview",
+    model: str = "gpt-4.1-nano",
     max_retry: int = 3,
 ):
+    messages = [
+        {"role": "system", "content": IMAGE_POST_PROCESS_PROMPT},
+        {"role": "user", "content": user_text},
+    ]
 
-    try:
+    last_error = None
 
-        response = llm_generate(
-            user_prompt=user_text,
-            system_prompt=IMAGE_POST_PROCESS_PROMPT,
-            model=model,
-            text_format=ImagePostProcessOutput,
-            max_retry=max_retry,
-        )
-
-        if response.obj is None:
-            raise ValueError(
-                "Structured output missing from LLM."
+    for i in range(max_retry):
+        try:
+            client = openai.OpenAI(api_key=next(key_iter))
+            response = client.responses.parse(
+                input=messages,
+                model=model,
+                text_format=ImagePostProcessOutput,
             )
 
-        if isinstance(response.obj, BaseModel):
-            parsed_output = response.obj.model_dump()
+            parsed_output = response.output_parsed
+            parsed_output = parsed_output.dict()
 
-        elif isinstance(response.obj, dict):
-            parsed_output = response.obj
+            final_text = parsed_output.get("text", "").strip()
 
-        else:
-            raise ValueError(
-                f"Unexpected structured output type: "
-                f"{type(response.obj)}"
-            )
+            # ===== Sanity Checks =====
+            if not final_text:
+                raise ValueError("Empty output from post-process LLM.")
 
-        final_text = parsed_output.get(
-            "text",
-            "",
-        ).strip()
+            lowered = final_text.lower()
+            # Case 1: Clean reject
+            if lowered == "[reject]":
+                return {"text": "[REJECT]", "flag": 0}
 
-        if not final_text:
-            raise ValueError(
-                "Empty output from post-process LLM."
-            )
+            # Case 2: Must NOT contain extra commentary about rejection
+            elif "[reject]" in lowered and lowered != "[REJECT]":
+                return {"text": "[REJECT] - soft", "flag": 0}
 
-        lowered = final_text.lower()
+            # Otherwise: faithfully return cleaned content
+            else:
+                final_output = {"text": final_text, "flag": 1}
+            return final_output
 
-        if lowered == "[reject]":
+        except Exception as e:
+            last_error = e
+            continue
 
-            return {
-                "text": "[REJECT]",
-                "flag": 0,
-            }
-
-        elif "[reject]" in lowered and lowered != "[reject]":
-
-            return {
-                "text": "[REJECT] - soft",
-                "flag": 0,
-            }
-
-        return {
-            "text": final_text,
-            "flag": 1,
-        }
-
-    except Exception as e:
-
-        print(f"[ERROR INPUT]: {user_text}")
-
-        raise RuntimeError(
-            f"Image Post-process LLM failed "
-            f"after {max_retry} retries. "
-            f"Last error: {e}"
-        )
+    print(f"[ERROR INPUT]: {messages}")
+    raise RuntimeError(f"Image Post-process LLM failed after {max_retry} retries. Last error: {last_error}")

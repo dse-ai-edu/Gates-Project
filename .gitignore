@@ -218,4 +218,3 @@ assets/
 tmp*.json
 tmp*.jsonlapp/tmp/
 app/tmp/*
-*.bak
