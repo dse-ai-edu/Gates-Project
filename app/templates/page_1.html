@@ -203,7 +203,7 @@
             .then(res => res.json())
             .then(data => {
                 if (!data.success) {
-                    box.textContent = "Example Retrirval Fails";
+                    box.textContent = "Example Retrieval Fails";
                     return;
                 }
 
@@ -222,7 +222,7 @@
                     "Feedback: " + (data.feedback || "");
             })
             .catch(() => {
-                box.textContent = "Example Retrirval Fails";
+                box.textContent = "Example Retrieval Fails";
             });
         }
 
