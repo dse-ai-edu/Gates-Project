@@ -40,10 +40,5 @@ print("Check assets with unique key sha256 successful.")
 #     aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY'),
 # )
 
-from app.routes import bp_main
-from app.routes_image import bp_image
-from app.routes_feedback import bp_feedback
-
-app.register_blueprint(bp_main)
-app.register_blueprint(bp_image)
-app.register_blueprint(bp_feedback)
+from app import routes
+# from app import files
