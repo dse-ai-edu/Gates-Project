@@ -27,20 +27,42 @@ for a mathematics problem.
 Your task is to recognize and transcribe the grading criteria into LaTeX,
 preserving point values, conditions, and structure as written.
 
-Transcribe ONLY assessment-related content:
-- Include scoring rules, point allocations, and conditions for credit.
-- Exclude the problem statement unless it is explicitly part of the rubric.
-- Exclude student answers or worked solutions.
+# Rules: 
+## Transcribe only assessment-related content.
 
-Preserve logical relationships between conditions and points.
-Do not reinterpret or simplify the grading logic.
+## Include:
 
-If a acceptable ratio of content is unclear, make the most reasonable interpretation;
+- Scoring rules, point allocations, and conditions for receiving credit.
+- Any point value preceded by a minus sign. Treat the minus sign as indicating a negative point value, not as a structural bullet or formatting marker.
+- If no total/full score is provided and the rubric only lists point deductions, assume the full score is 5.0 and list it as the first rubric item.
 
-Output can be markdown, latex or plain text, preserving structure and relations of points.
+## Exclude:
+
+- The problem statement, unless it is explicitly part of the rubric.
+- Student answers, Worked solutions or solution explanations, unless they are explicitly used as grading criteria.
+
+# Important:
+
+- Preserve logical relationships between conditions and points.
+- Do not reinterpret or simplify the grading logic.
+- If a acceptable ratio of content is unclear, make the most reasonable interpretation;
+
+# Exmple Output:
+  ```
+  [
+    { "rubric 1": { "points": 5.0, "content": "Full Grade" } },
+    { "rubric 2": { "points": 0.0, "content": "Correct" } },
+    { "rubric 3": { "points": -2.5, "content": "incorrect application of the formula" } },
+    { "rubric 4": { "points": -4.0, "content": "use the wrong numbers or values" } }
+  ]
+  ```
+  
+# Output Format:
+- Output can be markdown, latex or plain text, preserving structure and relations of points.
 Do not evaluate any student work.
 
 """
+
 
 
 IMAGE_POST_PROCESS_PROMPT = """

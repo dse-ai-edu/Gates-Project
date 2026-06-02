@@ -2,27 +2,32 @@
   "FirstP": {
     "subgroup": 1,
     "subgroup_name": "Point of View",
-    "subgroup_info": "The point of view refers to the perspective used to write the feedback message: \n - 1st person: Written from the instructor’s perspective using “I” statements. \n - 2nd person: Addresses the student directly using “you.” \n - 3rd person: Focused on the work itself rather than the instructor or student.",
+    "subgroup_info": "The point of view refers to the perspective used to write the feedback message: \n - 1st person: Written from the instructor's perspective using 'I' statements. \n - 2nd person: Addresses the student directly using 'you'.\n - 3rd person: Focused on the work itself rather than the instructor or student.",
     "group_idx": 1,
     "name": "First Person",
-    "short": "Feedback is written from the instructor’s perspective, using “I” statements.",
-    "detail": "Example: “I notice that the derivative does not yet apply the product rule.”\n\nKEYWORD SECTION: Point of View\nKEYWORD NAME: First Person\n\nPROMPT: Write feedback from the instructor’s perspective using first-person language (“I”).\n\nHARD CONSTRAINTS:\n- The feedback must include first-person pronouns (e.g., “I notice,” “I expect,” “I recommend”).\n- Do not use second person (“you”) or third-person references to the student."
+    "short": "Feedback is written from the instructor's perspective, using 'I' statements.",
+    "good_examples": "1) I think you only differentiated part of the product here. It looks like the product rule might be missing.\n2) When I look at this, it seems like the derivative is only accounting for part of the product. Did you apply the full product rule?",
+    "bad_examples": "1) I notice that the derivative appears to include only part of the product.\n2) I observe that the product rule is not applied."
   },
   "SecondP": {
     "subgroup": 1,
     "subgroup_name": "Point of View",
+    "subgroup_info": "The point of view refers to the perspective used to write the feedback message: \n - 1st person: Written from the instructor's perspective using 'I' statements. \n - 2nd person: Addresses the student directly using 'you'.\n - 3rd person: Focused on the work itself rather than the instructor or student.",
     "group_idx": 2,
     "name": "Second Person",
-    "short": "Feedback addresses the student directly using “you.”",
-    "detail": "Example: “You did not apply the product rule in this derivative.”\n\nKEYWORD SECTION: Point of View\nKEYWORD NAME: Second Person\n\nPROMPT: Write feedback that directly addresses the student using “you.”\n\nHARD CONSTRAINTS:\n- Must include second-person pronouns (e.g., “you,” “your”).\n- Must not include first-person pronouns (e.g., “I,” “we”).\n- Must not refer to “the student” in the third person."
+    "short": "Feedback addresses the student directly using 'you'.",
+    "good_examples": "1) You may have missed applying the product rule to the second term.\n1) You do not apply the product rule.",
+    "bad_examples": "1) You differentiate only x^2 and leave sin(x) unchanged.\n2) It is observed that you have included only part of the product in the derivative."
   },
   "ThirdP": {
     "subgroup": 1,
     "subgroup_name": "Point of View",
+    "subgroup_info": "The point of view refers to the perspective used to write the feedback message: \n - 1st person: Written from the instructor's perspective using 'I' statements. \n - 2nd person: Addresses the student directly using 'you'.\n - 3rd person: Focused on the work itself rather than the instructor or student.",
     "group_idx": 3,
     "name": "Third Person",
     "short": "Feedback refers to the work itself rather than the instructor or student.",
-    "detail": "Example: “The derivative shown does not apply the product rule.”\n\nKEYWORD SECTION: Point of View\nKEYWORD NAME: Third Person\n\nPROMPT: Write feedback that refers only to the work or solution, not the instructor or student.\n\nHARD CONSTRAINTS:\n- Must not include first-person or second-person pronouns (“I,” “we,” “you”).\n- Must refer to the work, solution, or response (e.g., “the derivative,” “the solution shown,” “the work”)."
+    "good_examples": "1) The derivative is missing the second term from the product rule.\n2) Only part of the product was differentiated here.",
+    "bad_examples": "1) It is observed that the student has failed to fully differentiate the product.\n2) It is noted that the solution does not reflect a complete differentiation of the product."
   },
   "Neutral": {
     "subgroup": 2,
@@ -31,23 +36,28 @@
     "group_idx": 1,
     "name": "Neutral",
     "short": "Emotionally even and matter of fact. Signals objectivity and consistency.",
-    "detail": "Example: “The derivative shown does not account for the product rule. When differentiating a product of two functions, both functions must be considered.”\n\nKEYWORD SECTION: Interpersonal Quality\nKEYWORD NAME: Neutral\n\nPROMPT: Use emotionally neutral, non-evaluative language. State observations, criteria, and expectations plainly, without praise, encouragement, or softening language.\n\nHARD CONSTRAINTS:\n- Do not include emotional language or affective cues.\n- Do not include praise, reassurance, or encouragement.\n- Avoid hedging, politeness markers, or conversational fillers.\n- Focus on facts, rules, or criteria only."
+    "good_examples": "1) The product rule requires differentiating both terms. The second term is not differentiated here.\n2) One term is missing from the product rule application.",
+    "bad_examples": "1) Great effort! It looks like you may have accidentally missed the second term, but you're on the right track!\n2) No worries, it seems like the product rule might not have been fully applied here."
   },
   "Formal": {
     "subgroup": 2,
     "subgroup_name": "Interpersonal Quality",
+    "subgroup_info": "The interpersonal quality refers to the tone and level of formality used in the feedback message. \n - Neutral: Emotionally even and matter of fact. \n - Conversational: Uses natural and approachable language. \n - Formal: Uses professional and academic language.",
     "group_idx": 2,
     "name": "Formal",
     "short": "Professional and academic. Emphasizes standards and disciplinary norms.",
-    "detail": "Example: “The submitted derivative is incomplete. The product rule must be applied when differentiating the function.”\n\nKEYWORD SECTION: Interpersonal Quality\nKEYWORD NAME: Formal\n\nPROMPT: Use professional, academic language aligned with disciplinary norms. Emphasize standards and conventions rather than tone or emotion.\n\nHARD CONSTRAINTS:\n- Maintain an impersonal, academic register.\n- Avoid conversational phrasing or casual expressions.\n- May reference standards and expectations explicitly.\n- Do not include emotional reassurance or informal language."
+    "good_examples": "1) A complete application of the product rule produces two terms. Your solution only includes one.\n2) The product rule requires differentiation of both factors. The second term is missing from your solution.",
+    "bad_examples": "1) Hey, looks like you forgot to differentiate the second term when using the product rule!\n2) Don't worry, this is a common mistake. Just make sure to apply the product rule to both parts next time!"
   },
   "Conversational": {
     "subgroup": 2,
     "subgroup_name": "Interpersonal Quality",
+    "subgroup_info": "The interpersonal quality refers to the tone and level of formality used in the feedback message. \n - Neutral: Emotionally even and matter of fact. \n - Conversational: Uses natural and approachable language. \n - Formal: Uses professional and academic language.",
     "group_idx": 3,
     "name": "Conversational",
     "short": "Uses natural and approachable language.",
-    "detail": "Example: “Here, the derivative only reflects part of the function. Since this expression is a product, both pieces need to be included when differentiating.”\n\nKEYWORD SECTION: Interpersonal Quality\nKEYWORD NAME: Conversational\n\nPROMPT: Use natural, approachable language while remaining instructional. The tone should feel human and accessible without sacrificing clarity or accuracy.\n\nHARD CONSTRAINTS:\n- Plain language is allowed; academic jargon should be minimized.\n- Do not use slang, emojis, or humor.\n- Do not include emotional coaching or motivational language unless specified elsewhere.\n- The feedback must still clearly reference the task or concept."
+    "good_examples": "1) Both parts of the product need a derivative. It looks like the second term was skipped.\n2) Remember that the product rule needs to be applied to both terms, not just the first one.",
+    "bad_examples": "1) The application of the product rule necessitates the differentiation of each constituent factor in the expression.\n2) It is required that the product rule be applied to all constituent terms in the expression."
   },
   "Direct": {
     "subgroup": 3,
@@ -56,15 +66,18 @@
     "group_idx": 1,
     "name": "Direct",
     "short": "Uses explicit and plain language.",
-    "detail": "Example: “This derivative is incorrect. The product rule was not applied.”\n\nKEYWORD SECTION: Directness\nKEYWORD NAME: Direct\n\nPROMPT: State errors, gaps, or judgments explicitly and unambiguously. Do not hedge, soften, or qualify statements.\n\nHARD CONSTRAINTS:\n- Do not use hedging or modal language (e.g., “may,” “might,” “appears,” “could”).\n- Do not use politeness markers or softeners (e.g., “please,” “you may want to”).\n- Statements should be definitive and concise."
+    "good_examples": "1) The product rule is not fully applied. Your second term is missing its derivative.\n2) Your solution skips the derivative of the second term. Remember, the product rule requires both.",
+    "bad_examples": "1) It is determined that the solution does not reflect a complete application of the product rule to all constituent terms.\n2) It looks like the product rule may not have been fully applied here."
   },
   "Indirect": {
     "subgroup": 3,
     "subgroup_name": "Directness",
+    "subgroup_info": "The directness refers to how explicit or softened the feedback language is. \n - Direct: Uses explicit and plain language. \n - Indirect: Uses softened or more conditional language.",
     "group_idx": 2,
     "name": "Indirect",
-    "short": "Uses softened and conditional language,.",
-    "detail": "Example: “It appears that the product rule may not have been fully applied when taking this derivative.”\n\nKEYWORD SECTION: Directness\nKEYWORD NAME: Indirect\n\nPROMPT: Use softened, conditional, or tentative language. Signal partial completion or uncertainty rather than definitive error.\n\nHARD CONSTRAINTS:\n- Must include hedging language (e.g., “appears,” “may,” “might,” “seems,” “not yet”).\n- Avoid blunt judgments (e.g., “incorrect,” “wrong,” “failed”).\n- Frame issues as possible or emerging rather than conclusive.\n- Maintain instructional clarity despite softened phrasing."
+    "short": "Uses softened and conditional language.",
+    "good_examples": "1) It looks like the product rule may not have been fully applied here. Your second term appears to be missing its derivative.\n2) It looks like you only differentiated part of the product. The second term might need attention.",
+    "bad_examples": "1) The product rule is wrong. You failed to differentiate the second term.\n2) I observe that the solution may possibly appear to potentially lack a complete application of the product rule to all terms."
   },
   "TaskFocused": {
     "subgroup": 4,
@@ -73,22 +86,27 @@
     "group_idx": 1,
     "name": "Task-Focused",
     "short": "Maintains attention on the work, process, or criteria and avoids personal attribution.",
-    "detail": "Example: “The issue is in the differentiation step. Applying the product rule will produce a derivative that accounts for both factors in the function.”\n\nKEYWORD SECTION: Motivational Framing\nKEYWORD NAME: Task-Focused\n\nPROMPT: Keep feedback focused on the work, process, or criteria. Describe what is missing, incomplete, or needed in the task without referencing the student personally.\n\nHARD CONSTRAINTS:\n- Focus only on the work, steps, rules, or criteria.\n- Do not reference the student’s ability, effort, or identity.\n- Do not reference future growth, learning over time, or encouragement.\n- Avoid motivational or affective language."
+    "good_examples": "1) The second factor in the product was not differentiated. Remember, both factors need derivatives.\n2) The product rule requires two terms. One term is missing from your derivative.",
+    "bad_examples": "1) You forgot to differentiate the second term, but with practice you'll get the hang of the product rule.\n2) It is noted that the solution submitted by the student does not contain a complete derivation of all constituent factors as required by the product rule."
   },
   "GrowthOriented": {
     "subgroup": 4,
     "subgroup_name": "Motivational Framing",
+    "subgroup_info": "Motivational framing refers to how feedback is phrased to support motivation and confidence. \n - Task-Focused: Emphasizes the work, process, or criteria rather than the student. \n - Growth-Focused: Frames performance as something that can improve over time. \n - Wise Feedback: Communicates high standards while affirming the student is capable of meeting them.",
     "group_idx": 2,
     "name": "Growth-Oriented",
     "short": "Frames performance as improvable over time.",
-    "detail": "Example: “Applying the product rule here will strengthen your handling of composite expressions, which becomes increasingly important in later calculus problems.”\n\nKEYWORD SECTION: Motivational Framing\nKEYWORD NAME: Growth-Oriented\n\nPROMPT: Frame the feedback as part of ongoing learning and improvement over time. Emphasize how applying the feedback will support future performance or more advanced work.\n\nHARD CONSTRAINTS:\n- Must reference learning, development, or improvement over time.\n- Must connect the feedback to future or increasingly complex tasks.\n- Avoid fixed standards language (e.g., “at this level…”).\n- Do not include reassurance about ability unless explicitly specified elsewhere."
+    "good_examples": "1) The product rule comes up a lot in later work, so it's worth making sure both terms are accounted for.\n2) Going back through each step of the product rule to find where it broke down is exactly the kind of practice that'll make this rule stick.",
+    "bad_examples": "1) It is expected that the student will demonstrate improved application of the product rule in subsequent submissions over the course of the learning period.\n2) Some students just struggle with the product rule. It's one of the harder concepts to pick up."
   },
   "HighExpectation": {
     "subgroup": 4,
     "subgroup_name": "Motivational Framing",
+    "subgroup_info": "Motivational framing refers to how feedback is phrased to support motivation and confidence. \n - Task-Focused: Emphasizes the work, process, or criteria rather than the student. \n - Growth-Focused: Frames performance as something that can improve over time. \n - Wise Feedback: Communicates high standards while affirming the student is capable of meeting them.",
     "group_idx": 3,
     "name": "High Expectations + Reassurance",
     "short": "Sets clear standards while affirming that the student is capable of meeting them.",
-    "detail": "Example: “At this level, derivatives of products are expected to reflect both components of the function. Applying the product rule here will allow you to include the missing term and produce a complete derivative going forward.”\n\nKEYWORD SECTION: Motivational Framing\nKEYWORD NAME: High Expectations and Reassurance\n\nPROMPT: Communicate clear academic standards while explicitly affirming that the student is capable of meeting those standards. Frame errors as expected and fixable. Focuses on what to do next while signaling explicitly, “this is within your reach.” Override the selected Point of View and write the reassurance in second person (“you”).\n\nHARD CONSTRAINTS:\n- Must explicitly state an academic expectation or standard (e.g., “At this level…”, “This problem requires…”).\n- Must include an explicit affirmation of capability in second person (e.g., “You are capable of meeting this standard,” “You can absolutely do this”).\n- Must include a concrete next step for revision.\n- Must frame the error as normal and correctable. 模仿这个函数，为我写一个函数，输入为一个长文本，先用加号拆分，然后在这个文本列表里，寻找匹配中的关键词（备选关键词列表 是下面的raw 的dict 的所有keys）。如果匹配中，根据raw[keyword][“subgroup”]得到所属的组（正整数，1到4）. 完成或如果有某组关键词缺失，则用raw[keyword][“subgroup”]==missing_group_idx and raw[keyword][“group_idx”] == 1"
+    "good_examples": "1) Remember, both terms in a product need to be differentiated. Missing one is a normal slip, but I know that you are fully capable of catching it. Try rewriting the product rule formula and matching each term to your work.\n2) This problem requires applying the product rule to both terms. This is a common place to lose a term, and I know that you can absolutely get this right. Go back and write out each part of the product rule separately before combining them.",
+    "bad_examples": "1) You forgot the second term, but don't worry, just try harder next time and you'll probably get it.\n2) It is expected that the student will, upon review, demonstrate the capacity to apply the product rule in a manner consistent with the stated academic requirements of this course."
   }
 }
