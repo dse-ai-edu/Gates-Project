@@ -1,14 +1,16 @@
 import json
+import os
 
 from typing import Dict, Tuple
 
 from pydantic import BaseModel
 
-import openai
-from app import key_iter
-
+from app.config import Config
 from app.prompts import GET_FULL_POINT_PRMPT
 # =========================
+
+# Assumed total/full score when a rubric does not explicitly state one.
+DEFAULT_FULL_SCORE = 5.0
 
 class JudgeOutput(BaseModel):
     score: float
@@ -19,31 +21,35 @@ class FullScoreOutput(BaseModel):
 
 # LLM main calling
 def llm_structured_generate(
-    input_text: str, 
-    system_text: str = None, 
-    model: str = 'gpt-4o-mini', 
-    max_retry: int = 3, 
+    input_text: str,
+    system_text: str = None,
+    model: str = Config.GEMINI_MODEL_LOW,
+    max_retry: int = 3,
     max_tokens: int = 2048,
     format_obj: BaseModel = JudgeOutput
     ) -> str:
-    
-    user_msg = {'role':'user','content': str(input_text)}
-    if system_text is not None:
-        system_msg = {'role':'system','content':str(system_text)}
-        messages = [system_msg, user_msg]
-    else:
-        messages = [user_msg]  
-        
+    from google import genai
+    from google.genai import types
+
+    api_key = os.getenv("GOOGLE_API_KEY")
+
+    config = {
+        "system_instruction": str(system_text) if system_text is not None else None,
+        "max_output_tokens": max_tokens,
+        "response_mime_type": "application/json",
+        "response_json_schema": format_obj.model_json_schema(),
+    }
+
     for _ in range(max_retry):
         print(f"[SYS] Num of Try: {_}:")
         try:
-            client = openai.OpenAI(api_key=next(key_iter))
-            response = client.responses.parse(
-                input=messages, 
-                model=model, 
-                text_format=format_obj
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model=model,
+                contents=[types.Part.from_text(str(input_text))],
+                config=config,
                 )
-            parsed_output = response.output_parsed
+            parsed_output = format_obj.model_validate_json(response.text)
             return parsed_output
         except Exception as e:
             error_msg = str(e)
@@ -59,7 +65,7 @@ def llm_structured_generate(
 def _run_judge(
     user_prompt: str,
     system_prompt: str,
-    model: str = "gpt-4o-mini",
+    model: str = Config.GEMINI_MODEL_LOW,
     max_tokens: int = 2048,
 ) -> Dict:
     """
@@ -144,7 +150,7 @@ def multi_agent_judge(
     base_prompt: str,
     system_prompt: str,
     *,
-    model: str = "gpt-4o-mini",
+    model: str = Config.GEMINI_MODEL_LOW,
     max_tokens: int = 2048,
     score_tolerance: float = 0.25,
 ) -> Dict[str, object]:
@@ -220,7 +226,7 @@ def multi_agent_judge(
 
 def run_score_extract(
     user_prompt: str,
-    model: str = "gpt-4o-mini",
+    model: str = Config.GEMINI_MODEL_LOW,
     max_tokens: int = 2048,
 ) -> Dict:
     """

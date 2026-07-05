@@ -1,5 +1,4 @@
 import base64
-import openai
 import traceback
 import numpy as np
 
@@ -13,7 +12,8 @@ import os
 import html
 import re
 
-from app import key_iter
+from app.config import Config
+from app.judge import DEFAULT_FULL_SCORE
 
 from app.prompts import *
 from app.pattern_prompt import *
@@ -83,73 +83,61 @@ def verify_response(response_text):
 #     raise SystemError('failed to generate response with llm.')
 
 
-def ppl_from_response(response, min_logprob=-100):
-    logps = []
-    for item in response.choices[0].logprobs.content:
-        lp = item.logprob
-        if lp is None:
-            continue
-        if lp < min_logprob: 
-            continue
-        logps.append(lp)
-    if not logps:
+def ppl_from_gemini_response(response, min_logprob=-100):
+    candidates = getattr(response, "candidates", None) or []
+    if not candidates:
         return None
-    return float(np.exp(-np.mean(logps)))
+    avg_logprob = getattr(candidates[0], "avg_logprobs", None)
+    if avg_logprob is None or avg_logprob < min_logprob:
+        return None
+    return float(np.exp(-avg_logprob))
 
 # LLM main calling
 def llm_generate(
-    input_text: str, 
-    system_text: str = None, 
-    model: str = 'gpt-4o-mini', 
-    max_retry: int = 3, 
+    input_text: str,
+    system_text: str = None,
+    model: str = Config.GEMINI_MODEL_HIGH,
+    max_retry: int = 3,
     max_tokens: int = 2048,
-    have_log: bool = False, 
+    have_log: bool = False,
     # **kwarg
     ) -> str:
-    
-    user_msg = {'role':'user','content': str(input_text)}
-    if system_text is not None:
-        system_msg = {'role':'system','content':str(system_text)}
-        messages = [system_msg, user_msg]
-    else:
-        messages = [user_msg]  
-        
+    from google import genai
+    from google.genai import types
+
+    api_key = os.getenv("GOOGLE_API_KEY")
+
+    config = {
+        "system_instruction": str(system_text) if system_text is not None else None,
+        "max_output_tokens": max_tokens if max_tokens is not None else 2048,
+        "response_mime_type": "text/plain",
+    }
+    if have_log:
+        config["response_logprobs"] = True
+
     for _ in range(max_retry):
         print(f"[SYS] Num of Try: {_}:")
         try:
-            client = openai.OpenAI(api_key=next(key_iter))
-            if have_log: 
+            client = genai.Client(api_key=api_key)
+            if have_log:
                 print(f"!!! debug: before response generation A: ")
-                response = client.chat.completions.create(
-                    messages=messages, 
-                    model=model,
-                    max_tokens=max_tokens if max_tokens is not None else 2048,
-                    top_logprobs=1,
-                    logprobs=True,
-                    # **kwarg
-                    )
-                
-                response_showing = f"{str(response)[:200]} ... {str(response)[-200:]}" if len(str(response)) > 450 else str(response)
-                
-                print(f"!!! debug: after response generation A, {response_showing}")
-                
             else:
                 print(f"!!! debug: before response generation B: ")
-                response = client.chat.completions.create(messages=messages, model=model, max_tokens=max_tokens)
-                response_showing = f"{str(response)[:200]} ... {str(response)[-200:]}" if len(str(response)) > 450 else str(response)
-                print(f"!!! debug: after response generation B, {response_showing}")
-                
-            response_text = response.choices[0].message.content
+            response = client.models.generate_content(
+                model=model,
+                contents=[types.Part.from_text(str(input_text))],
+                config=config,
+                )
+            response_showing = f"{str(response)[:200]} ... {str(response)[-200:]}" if len(str(response)) > 450 else str(response)
+            print(f"!!! debug: after response generation, {response_showing}")
+
+            response_text = get_gemini_output_text(response).strip()
             response_text_showing = f"{str(response_text)[:200]} ... {str(response_text)[-200:]}" if len(str(response_text)) > 450 else str(response_text)
             print(f"!!! debug: response_text: {response_text_showing}")
-            if hasattr(response.choices[0], "logprobs") and response.choices[0].logprobs is not None:
+            if have_log:
                 print(f"--- LOGPROB: ")
-                # with open("tmp0202.json", "w") as g:
-                #     response_dict = response.model_dump()
-                #     json.dump(response_dict, g, ensure_ascii=False, indent=2)
                 print(f"--- TEXT: {response_text}")
-                print(f"--- Len of log content: {len(response.choices[0].logprobs.content)}")
-                response_prob = ppl_from_response(response)
+                response_prob = ppl_from_gemini_response(response)
             else:
                 response_prob = None
             print(f"!!! debug: response_prob: {response_prob}")
@@ -228,7 +216,7 @@ def best_match_by_lcs(query: str, candidates: list) -> str | None:
             best_candidate = c
     return best_candidate
 
-def decide_adaptive_pattern(question, answer, model):
+def decide_adaptive_pattern(question, answer, model=Config.GEMINI_MODEL_HIGH):
     app_dir = find_app_dir()
     json_path = app_dir / "static" / "data" / "pattern_info.json"
     with open(json_path, "r", encoding="utf-8") as f:
@@ -247,9 +235,9 @@ def decide_adaptive_pattern(question, answer, model):
 
 
 def parse_feedback_pattern(
-        feedback_pattern: str = None, 
-        custom_rubric: str = None, 
-        model: str = 'gpt-4o-mini',
+        feedback_pattern: str = None,
+        custom_rubric: str = None,
+        model: str = Config.GEMINI_MODEL_HIGH,
         from_adaptive: bool = False,
         **kwarg) -> str:
     
@@ -460,7 +448,7 @@ def vllm_generate(
                 system_prompt=system_text,
                 user_prompt=input_text,
                 image=image_arg,
-                model="gemini-2.5-flash",
+                model=Config.GEMINI_MODEL_VISION,
                 max_tokens=8192,
                 img_type=img_type,
                 config=config,
@@ -478,7 +466,7 @@ def llm_generate_gemini(
     system_prompt: str,
     user_prompt: str,
     image=None,
-    model: str = "gemini-2.5-flash",
+    model: str = Config.GEMINI_MODEL_VISION,
     max_tokens: int = 8192,
     img_type: str | None = None,
     config: dict = None
@@ -585,8 +573,9 @@ def get_gemini_output_text(response):
 
 ## extract full score
 def extract_full_score(text):
-    vals=re.findall(r'"points"\s*:\s*"?(-?\d+(?:\.\d+)?)"?',text)
-    nums=[float(v) for v in vals]
-    total=sum(x for x in nums if x>=0)
-    s=f"{total:.2f}".rstrip("0").rstrip(".")
-    return s if s!="" else "0"
+    # Deduction-based rubric: the total/full score is an explicit "Full Score"
+    # value, never a sum of the (negative) rubric deduction items.
+    match = re.search(r'"Full Score"\s*:\s*"?(-?\d+(?:\.\d+)?)"?', text)
+    total = float(match.group(1)) if match else DEFAULT_FULL_SCORE
+    s = f"{total:.2f}".rstrip("0").rstrip(".")
+    return s if s != "" else "0"

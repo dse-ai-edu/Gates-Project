@@ -38,7 +38,7 @@ from app.question_image_prompt import QUESTION_RECOGNITION, ASSESSMENT_RECOGNITI
 from app.image_prompts_latest import RECOGNITION as ANSWER_RECOGNITION
 from app.prompts import JUDGE, SOLUTION_REJECT_PRMPT
 
-from app.judge import multi_agent_judge, run_score_extract, is_consistent
+from app.judge import multi_agent_judge, run_score_extract, is_consistent, DEFAULT_FULL_SCORE
 
 from pathlib import Path
 
@@ -47,10 +47,11 @@ from typing import List, Optional
 
 
 class RubricOutputItem(BaseModel):
-    points: float = Field(description="Points of the one rubric item.")
+    points: float = Field(description="Point deduction of the one rubric item (0 or negative).")
     content: str = Field(description="Content of the one rubric item.")
 
 class RubricOutput(BaseModel):
+    total_score: float = Field(description="Total/full score for the problem, the baseline that rubric deductions are subtracted from.")
     rubrics: List[RubricOutputItem]
     
     
@@ -499,7 +500,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                             user_prompt = f"# Grading Rubric:\n```\n{reference_text}\n```"
                             )
         
-        if is_consistent(full_score, grading_result['score'], 0.25):
+        if is_consistent(full_score['score'], grading_result['score'], 0.25):
             return {
                 'success': True,
                 'feedback_text': "Congratulations! The answer fully meets the problem requirements and demonstrates a correct understanding of the task.",
@@ -515,7 +516,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
         
         
         if "adaptive" in feedback_pattern.lower():
-            selected_pattern_key = utils.decide_adaptive_pattern(question=question_text, answer=answer_text, model='gpt-4o-mini')
+            selected_pattern_key = utils.decide_adaptive_pattern(question=question_text, answer=answer_text)
             from_adaptive = True
         else:
             selected_pattern_key = feedback_pattern
@@ -561,7 +562,6 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
         feedback_text, feedback_prob = utils.llm_generate(
             input_text=user_prompt,
             system_text=pattern_body,
-            model='gpt-4o-mini',
             max_tokens=2048,
             have_log=HAVE_LOGPROB
             )
@@ -635,7 +635,6 @@ def comment_generate_old(system_info, answer_text, question_text, reference_text
         feedback_text, feedback_prob = utils.llm_generate(
             input_text=user_prompt,
             system_text=pattern_body,
-            model='gpt-4o-mini',
             max_tokens=2048,
             have_log=HAVE_LOGPROB
             )
@@ -1203,13 +1202,14 @@ def api_image_convert():
         )
         
         if input_type == 'assessment':
-            rubric_list = list(RubricOutput.model_validate_json(output.text).rubrics)
+            rubric_output = RubricOutput.model_validate_json(output.text)
+            rubric_list = list(rubric_output.rubrics)
             rubric_dict = {
                 f"rubric {idx+1}": {"points": rbrc.points, "content": rbrc.content}
                 for idx, rbrc in enumerate(rubric_list)
                 }
-            full_score = sum(max(item["points"], 0) for item in rubric_dict.values())
-            rubric_dict['Full Score'] = round(full_score, 2)
+            total_score = rubric_output.total_score if rubric_output.total_score is not None else DEFAULT_FULL_SCORE
+            rubric_dict['Full Score'] = round(total_score, 2)
             print(rubric_dict)
             processed_text = json.dumps(rubric_dict, indent=2, ensure_ascii=False)
             api_output['text'] = processed_text
@@ -1219,7 +1219,6 @@ def api_image_convert():
                 print(f"[INFO] running in reject-able image recognition model.`")
                 processed_output = run_image_post_process_llm(
                     user_text = str(output),
-                    model = 'gpt-4.1-nano', 
                 )
                 if int(processed_output.get("flag", 0)) == 0:
                     api_output['success'] = False
