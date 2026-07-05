@@ -1,4 +1,5 @@
-from app.img_utils import llm_generate_gpt
+from app.config import Config
+from app.img_utils import llm_generate_gemini
 import json
 
 SYSTEM_PROMPT = """You are a document layout analyzer.
@@ -77,36 +78,18 @@ import ast
 
 def get_vertical_splits_from_llm(
     image_path: str,
-    model: str = "gpt-5-nano",
+    model: str = Config.GEMINI_MODEL_VISION,
 ):
     with open("schema.json", "r") as f:
         schema = json.load(f)
-        text = {
-        "format": {
-            "type": "json_schema",
-            "schema": schema, 
-            "strict": True,
-            "name": "vertical_splits"
-        }}
-        
-    if "gpt" in model.lower():
-        raw = llm_generate_gpt(
-            system_prompt=SYSTEM_PROMPT,
-            user_prompt="",
-            image_path=image_path,
-            model=model,
-            text=text,
-            structured=True  
-        )
-    elif "gemini" in model.lower() or "gemma" in model.lower():
-        raw = llm_generate_gemini(
-            system_prompt=SYSTEM_PROMPT,
-            user_prompt="",
-            image_path=image_path,
-            model=model
-        )
-    else:
-        raise ValueError("Unknown model for LLM segmentation")
+
+    raw = llm_generate_gemini(
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt="",
+        image_path=image_path,
+        model=model,
+        response_schema=schema,
+    )
 
     # structured output: raw is dict
     if not isinstance(raw, dict) or "splits" not in raw:
@@ -150,7 +133,7 @@ def crop_image_by_percentages(
 def process_single_page(
     image_path: str,
     output_dir: str,
-    model: str = "gpt-5-nano",
+    model: str = Config.GEMINI_MODEL_VISION,
     ):
     splits = get_vertical_splits_from_llm(
         image_path=image_path,
@@ -173,7 +156,7 @@ def process_single_page(
 def process_pdf(
     pdf_path: str,
     work_dir: str = "tmp",
-    model: str = "gpt-5-nano",
+    model: str = Config.GEMINI_MODEL_VISION,
 ):
     pages_dir = Path(work_dir) / f"{model}_pages"
     crops_dir = Path(work_dir) / f"{model}_crops"

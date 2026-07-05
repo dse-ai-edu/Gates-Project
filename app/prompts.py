@@ -444,9 +444,24 @@ You will be given:
 - A grading rubric
 - A student's answer
 
+# Grading Model (IMPORTANT)
+The rubric always follows a **deduction-based** grading model:
+- There is a single total/full score for the problem (explicitly stated in
+  the rubric, e.g. as "Full Score", "Total", "Full Grade"; if truly no total
+  is stated anywhere, assume the full score is 5.0).
+- Every other listed criterion is a point deduction from that total (zero
+  deduction for a fully-correct case).
+- The student's answer maps to exactly ONE rubric criterion — the single
+  criterion that best matches the overall answer. Compute the final score by
+  starting from the total/full score and subtracting that one criterion's
+  deduction.
+- Do NOT stack or combine deductions from more than one criterion for the
+  same answer, and do NOT add up the rubric's point values as if they were
+  separate credits to be summed into a score.
+
 Your task:
-- Assign a numerical score strictly following the rubric.
-- Provide a concise but clear explanation.
+- Assign a numerical score strictly following the rubric's deduction logic above.
+- Provide a concise but clear explanation, citing which single criterion (and its deduction) was applied.
 
 Rules:
 - Do NOT consider other judges' opinions unless explicitly shown.
@@ -517,21 +532,28 @@ Return only the structured output. No extra text.
 GET_FULL_POINT_PRMPT = """
 You are a scoring-rule parser.
 
-Input: a grading rubric that lists scoring items with numerical point values.  
+Input: a grading rubric that lists scoring items with numerical point values.
 The format may be JSON, plain text, Markdown, or LaTeX.
 
-Your task is to compute the **maximum achievable score** implied by the rubric.
+The rubric always follows a **deduction-based** grading model: there is a
+single total/full score for the problem, and every other listed item is a
+point deduction from that total (not an additive credit).
+
+Your task is to determine the **total/full score** of the rubric.
 
 Rules:
-1. Extract all numerical point values that represent scoring items.
-2. Treat positive or zero values as points that can be earned.
-3. Ignore all negative values (they represent penalties).
-4. The full score is the **sum of all non-negative point values**.
-5. If no non-negative values exist, return 0.
+1. Look for an explicit total/full score, e.g. a field or label such as
+   "Full Score", "Total", "Full Grade", "Full Marks", or the single
+   non-negative baseline value the rubric deducts points from.
+2. Do NOT sum up the rubric's individual point values -- they represent
+   deductions, not additive credits, and must never be added together to
+   form the total.
+3. If no explicit total/full score can be found anywhere in the rubric,
+   assume the full score is 5.0.
 
 Important:
 - Do NOT return the correct answer to the original problem.
-- Ignore numbers that appear in explanations (e.g., “the correct answer is 2”) unless they are clearly part of a scoring item.
+- Ignore numbers that appear in explanations (e.g., "the correct answer is 2") unless they are clearly the stated total/full score.
 
 Output:
 Return only a single number representing the full score. No text, no explanation.

@@ -24,17 +24,32 @@ ASSESSMENT_RECOGNITION = """
 You are given an image containing grading rules or a scoring rubric
 for a mathematics problem.
 
-Your task is to recognize and transcribe the grading criteria into LaTeX,
-preserving point values, conditions, and structure as written.
+Your task is to recognize and transcribe the grading criteria into a
+deduction-based rubric, preserving point values, conditions, and structure
+as written.
 
-# Rules: 
-## Transcribe only assessment-related content.
+# Grading Model (IMPORTANT)
 
-## Include:
+This rubric always follows a **deduction-based** grading model:
+- There is a single total/full score for the problem.
+- Every other criterion is a point deduction from that total (zero
+  deduction for a fully-correct case, with no penalty).
+- Do NOT treat several listed point values as additive components that sum
+  up to the total — the total is a single number, not a sum of the listed
+  items.
 
-- Scoring rules, point allocations, and conditions for receiving credit.
-- Any point value preceded by a minus sign. Treat the minus sign as indicating a negative point value, not as a structural bullet or formatting marker.
-- If no total/full score is provided and the rubric only lists point deductions, assume the full score is 5.0 and list it as the first rubric item.
+# Rules:
+
+## Determine the total score
+- If the image explicitly states a total/full score (e.g. "Total: 5 points", "Full marks: 10", "满分5分"), extract that exact value as the total score.
+- If no total/full score is stated anywhere in the image, assume the total score is 5.0.
+
+## Transcribe the remaining criteria as deduction items
+- Include scoring rules and the conditions under which points are deducted.
+- Any point value preceded by a minus sign is a deduction. Treat the minus sign as indicating a negative point value, not as a structural bullet or formatting marker — this holds whether or not there is a space between the "-" and the number that follows (e.g. "-2.5: wrong formula" and "- 2.5: wrong formula" both mean a deduction of 2.5, NOT a bullet-list item reading "2.5: wrong formula").
+- Every listed criterion (other than the total/full score) is always a deduction, even when its point value is written with no leading "-" or sign at all (e.g. a line reading "2.5: wrong formula" with no minus sign still means a deduction of 2.5, never a positive credit to add).
+- A criterion describing a fully-correct case with no penalty should be transcribed with a point value of 0.0 (equivalently written as "-0.0" in the source — both mean zero deduction, not the total/full score).
+- Do NOT list the total/full score itself as one of these criteria — it belongs only in the total score, not in the deduction list.
 
 ## Exclude:
 
@@ -43,20 +58,46 @@ preserving point values, conditions, and structure as written.
 
 # Important:
 
-- Preserve logical relationships between conditions and points.
+- Preserve logical relationships between conditions and deductions.
 - Do not reinterpret or simplify the grading logic.
 - If a acceptable ratio of content is unclear, make the most reasonable interpretation;
 
 # Exmple Output:
   ```
-  [
-    { "rubric 1": { "points": 5.0, "content": "Full Grade" } },
-    { "rubric 2": { "points": 0.0, "content": "Correct" } },
-    { "rubric 3": { "points": -2.5, "content": "incorrect application of the formula" } },
-    { "rubric 4": { "points": -4.0, "content": "use the wrong numbers or values" } }
-  ]
+  {
+    "total_score": 5.0,
+    "rubrics": [
+      { "points": 0.0, "content": "Correct" },
+      { "points": -2.5, "content": "incorrect application of the formula" },
+      { "points": -4.0, "content": "use the wrong numbers or values" }
+    ]
+  }
   ```
-  
+
+# Example of ambiguous dash formatting:
+
+  Given source text (no explicit total/full score stated):
+  ```
+  -0.0: all correct
+  -2.5: use the wrong formula
+  -0.5: miss the edge cases
+  ```
+  The leading "-" on each line is the sign of the point value, not a bullet
+  marker, so this must be transcribed as:
+  ```
+  {
+    "total_score": 5.0,
+    "rubrics": [
+      { "points": 0.0, "content": "all correct" },
+      { "points": -2.5, "content": "use the wrong formula" },
+      { "points": -0.5, "content": "miss the edge cases" }
+    ]
+  }
+  ```
+  (total_score assumed 5.0 since none was explicitly stated.) The same result
+  applies even if the source omitted the leading "-" entirely (e.g. "2.5: use
+  the wrong formula") — it is still transcribed as a deduction: `-2.5`.
+
 # Output Format:
 - Output can be markdown, latex or plain text, preserving structure and relations of points.
 Do not evaluate any student work.
