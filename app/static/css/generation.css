@@ -342,8 +342,13 @@ button:hover {
 }
 
 
-.content-split .info-textarea {
+.text-view-pane {
     width: 50%;
+    position: relative;
+}
+
+.content-split .info-textarea {
+    width: 100%;
     min-height: 140px;
     resize: vertical;
 }
@@ -389,4 +394,79 @@ button:hover {
   box-shadow: 0 8px 20px rgba(0,0,0,0.3);
   pointer-events: none;
   display: none;
+}
+
+
+/* ===============================
+   Source / Rendered view toggle
+   =============================== */
+
+.view-tabs {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.view-tab-btn {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.85rem;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+    margin-right: 0;
+}
+
+.view-tab-btn.active {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+.view-pane {
+    display: none;
+}
+
+.view-pane.active {
+    display: block;
+}
+
+.info-rendered-preview {
+    width: 100%;
+    min-height: 140px;
+    max-height: 300px;
+    overflow-y: auto;
+
+    box-sizing: border-box;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: inherit;
+    font-size: 1rem;
+    background-color: #fdfdfd;
+}
+
+#result-source-view {
+    height: 200px;
+    max-height: 240px;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: inherit;
+
+    padding: 10px;
+    padding-top: 48px;
+    margin: 0;
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
 }
