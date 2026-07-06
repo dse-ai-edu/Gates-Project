@@ -125,7 +125,7 @@ def llm_generate(
                 print(f"!!! debug: before response generation B: ")
             response = client.models.generate_content(
                 model=model,
-                contents=[types.Part.from_text(str(input_text))],
+                contents=[types.Part.from_text(text=str(input_text))],
                 config=config,
                 )
             response_showing = f"{str(response)[:200]} ... {str(response)[-200:]}" if len(str(response)) > 450 else str(response)
@@ -524,7 +524,7 @@ def llm_generate_gemini(
 
     # ---- optional user text ----
     if user_prompt:
-        parts.append(types.Part.from_text(user_prompt))
+        parts.append(types.Part.from_text(text=user_prompt))
 
     if not parts:
         raise ValueError("Both image and user_prompt are empty")

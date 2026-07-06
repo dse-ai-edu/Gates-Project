@@ -46,7 +46,7 @@ def llm_structured_generate(
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
                 model=model,
-                contents=[types.Part.from_text(str(input_text))],
+                contents=[types.Part.from_text(text=str(input_text))],
                 config=config,
                 )
             parsed_output = format_obj.model_validate_json(response.text)
