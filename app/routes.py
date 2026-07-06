@@ -930,7 +930,7 @@ def comment_load():
             
             return_data = {'success': True,
                             'response': formatted_response,
-                            # 'response_text': response_text,
+                            'response_text': response_text,
                             'grade_history': grade_history_body,
                             'keyword_text': str(style_keywords_text),
                             'template_text': str(feedback_templates),
