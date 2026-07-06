@@ -344,18 +344,21 @@ button:hover {
 
 .text-view-pane {
     width: 50%;
+    box-sizing: border-box;
     position: relative;
 }
 
 .content-split .info-textarea {
     width: 100%;
     min-height: 140px;
+    box-sizing: border-box;
     resize: vertical;
 }
 .image-preview {
     width: 50%;
-    height: 250px;              
+    height: 250px;
     min-height: 100px;
+    box-sizing: border-box;
 
     border: 1px dashed #ddd;
     background-color: #fafafa;
@@ -469,4 +472,10 @@ button:hover {
     border: 1px solid #ccc;
     border-radius: 6px;
     box-sizing: border-box;
+}
+
+#result-grade-display {
+    margin-top: 8px;
+    font-weight: bold;
+    color: #0b3c8a;
 }
