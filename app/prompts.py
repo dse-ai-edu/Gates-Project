@@ -367,9 +367,12 @@ FEEDBACK_INPUT_BASE = """
 ## Student Answer: {answer}. \n"""
 
 FEEDBACK_OUTPUT_INSTRUCTION = """
-Start your reply immediately with the feedback itself.  
-Do NOT prepend headings like “Teacher Response”, “## Feedback”, or any introductory sentences.  
+Start your reply immediately with the feedback itself.
+Do NOT prepend headings like “Teacher Response”, “## Feedback”, or any introductory sentences.
 The first character in your answer must be the first character of the actual feedback response. \n
+Write your entire response in English, regardless of the language used in
+the question or the student's answer. Do not translate the question or
+answer back to the student; just write your feedback in English. \n
 """
 ## Feedback Promopt as Requirements
 FEEDBACK_REQUIREMENT = """
@@ -467,6 +470,8 @@ Rules:
 - Do NOT consider other judges' opinions unless explicitly shown.
 - Be objective and rubric-driven.
 - If there are suggestions from human experts, consider them seriously.
+- Write your reasoning in English, regardless of the language used in the
+  question, rubric, or student's answer.
 
 Output format:
 Include both the score and reasoning.

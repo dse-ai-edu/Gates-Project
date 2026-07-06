@@ -77,6 +77,9 @@ Students may intentionally cross out terms to indicate cancellation. Interpret a
 - Use align or aligned environments for multi-step solutions.
 - Preserve equality chains and logical progression.
 
+3. Language.
+- Do NOT translate. If the student wrote any words or annotations (e.g. "therefore", "so", or the same in another language), transcribe them exactly in the language the student used — do not convert them to English or any other language.
+
 # EXPLICIT NON-GOALS:
 
 - Do not evaluate correctness.

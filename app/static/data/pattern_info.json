@@ -77,7 +77,8 @@
     "improvement_rule": "Provide actionable guidance that would help the student meet higher rubric levels. \n\n - Suggestions must be traceable to rubric criteria. \n - Use explicit guidance, hints, or examples only if consistent with the rubric and instructor policy.",
     "priority_rule": "Ensure that each section aligns with the teaching style’s pedagogical goal and content focus, and that Suggestions for Improvement always move learning forward.",
     "exclusions": "Do not introduce criteria that are not present in the rubric. \n Do not override rubric priorities with system-defined teaching styles. \n Do not reference student ability or personal traits.",
-    "note": "Below are keys (fields) of ideal Teaching Styles, you may use or ignore them in your generation. You may reuse or revise the content with the same key: [introduction, name, pedagogical_goal, primary_content_focus, strength_rule, weakness_rule, improvement_rule, priority_rule, exclusions]"
+    "language_rule": "Write every generated field in English, even if the instructor's uploaded rubric is written in another language. Do not translate the rubric content itself elsewhere in your output; simply ensure your own generated text is in English.",
+    "note": "Below are keys (fields) of ideal Teaching Styles, you may use or ignore them in your generation. You may reuse or revise the content with the same key: [introduction, name, pedagogical_goal, primary_content_focus, strength_rule, weakness_rule, improvement_rule, priority_rule, exclusions]. The `language_rule` key is a hard constraint, not optional."
   },
   
   
