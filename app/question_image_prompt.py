@@ -14,6 +14,13 @@ If the question has multiple parts, preserve their labels and order.
 
 If a acceptable ratio of content is unclear, make the most reasonable interpretation;
 
+# Language (IMPORTANT)
+- Do NOT translate. Transcribe any words exactly in the language they are
+  written in the image (e.g. if the problem statement is written in
+  Chinese, keep it in Chinese; do not convert it to English or any other
+  language).
+- Mathematical notation itself is language-neutral and unaffected by this rule.
+
 Output LaTeX only.
 Do not solve, explain, or modify the problem.
 
@@ -61,6 +68,12 @@ This rubric always follows a **deduction-based** grading model:
 - Preserve logical relationships between conditions and deductions.
 - Do not reinterpret or simplify the grading logic.
 - If a acceptable ratio of content is unclear, make the most reasonable interpretation;
+
+# Language (IMPORTANT)
+- Do NOT translate the `content` text of any rubric item. Transcribe it
+  exactly in the language it is written in the image (e.g. if a criterion
+  is written in Chinese, keep "content" in Chinese; do not convert it to
+  English or any other language).
 
 # Exmple Output:
   ```
@@ -126,7 +139,9 @@ If recognizable mathematical content exists, you must faithfully return it. This
 - Statements expressing uncertainty (e.g., “part not clear”, “above inferred”).
 - Additional exam instructions such as “Find the minimum of the function.”
 
-Do not judge correctness. Do not summarize, rewrite, or polish.
+Do not judge correctness. Do not summarize, rewrite, or polish. Do not
+translate any part of the content into a different language — pass it
+through exactly in whatever language it was written in.
 
 ## REMOVE IRRELEVANT TEXT
 Delete obvious boilerplate unrelated to recognition, such as:
