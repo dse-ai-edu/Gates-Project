@@ -1,4 +1,3 @@
-import re
 import os
 import json
 import uuid
@@ -565,18 +564,13 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
             max_tokens=2048,
             have_log=HAVE_LOGPROB
             )
-        score_text = re.sub(r'-(\d)', r'- \1', str(grading_result['score']))
-        feedback_text = feedback_text 
-        
         try: # clean the feedback!
             feedback_text_processed = run_feedback_post_process_llm(user_text=feedback_text)
             feedback_text = feedback_text_processed["text"]
         except:
             feedback_text = feedback_text + "\n>" # a symbol for further debug
-        
-        if 1: # show score to user?
-            feedback_text = feedback_text + f"\n\n<<< Grade: {score_text} >>>\n\n"
-        
+
+
         return {
                 'success': True,
                 'feedback_text': feedback_text,
@@ -762,6 +756,7 @@ def comment_submit():
             'attempt_id': next_attempt_id,
             'student_answer': answer_text,
             'generated_response': generate_result['feedback_text'],
+            'grade': generate_result['grade'],
             'grade_history': generate_result['grade_history'],
             'system_config': {
                 'style_keywords': generate_result['style_keywords'],
@@ -895,6 +890,7 @@ def comment_load():
         print(f"want to find one record with tid {tid} and atmp_id {attempt_id}")
         result = database['comment'].find_one({'tid': tid, 'attempt_id': int(attempt_id)})
         response_text = result.get('generated_response', '')
+        grade = result.get('grade', None)
         grade_history_body = result.get('grade_history', None)
         
         system_config = result.get('system_config', dict())
@@ -931,6 +927,7 @@ def comment_load():
             return_data = {'success': True,
                             'response': formatted_response,
                             'response_text': response_text,
+                            'grade': grade,
                             'grade_history': grade_history_body,
                             'keyword_text': str(style_keywords_text),
                             'template_text': str(feedback_templates),

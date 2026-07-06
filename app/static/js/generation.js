@@ -612,8 +612,8 @@ function generatePersonalizedFeedback() {
       }
 
       // `response` is already backend-formatted HTML (html.escape()'d text
-      // with real <br>/<strong> tags mixed in, e.g. around "<<< Grade: X >>>")
-      // -- it must be inserted as-is via innerHTML, not escaped again here.
+      // with real <br>/<strong> tags mixed in) -- it must be inserted as-is
+      // via innerHTML, not escaped again here.
       resultBox.innerHTML = loadResult.response || "";
       if (window.MathJax) {
         MathJax.typesetPromise([resultBox]);
@@ -622,6 +622,17 @@ function generatePersonalizedFeedback() {
       // Source pane: the raw, unformatted plain text (view-only, same as before).
       const sourceView = document.getElementById("result-source-view");
       if (sourceView) sourceView.textContent = loadResult.response_text || "";
+
+      // Grade: rendered as its own plain-text element (set via textContent,
+      // never string-concatenated into the feedback text), so it can't run
+      // into HTML-escaping issues and shows regardless of Source/Rendered tab.
+      const gradeDisplay = document.getElementById("result-grade-display");
+      if (gradeDisplay) {
+        gradeDisplay.textContent =
+          loadResult.grade === null || loadResult.grade === undefined
+            ? ""
+            : `(Grade: ${loadResult.grade})`;
+      }
 
       if (enhancementSection) {
         enhancementSection.style.display = "block";
@@ -644,6 +655,8 @@ function generatePersonalizedFeedback() {
         `❌ Error generating feedback:\n${err.message}`;
       const sourceView = document.getElementById("result-source-view");
       if (sourceView) sourceView.textContent = "";
+      const gradeDisplay = document.getElementById("result-grade-display");
+      if (gradeDisplay) gradeDisplay.textContent = "";
     });
 }
 
@@ -716,6 +729,8 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       const sourceView = document.getElementById("result-source-view");
       if (sourceView) sourceView.textContent = "";
+      const gradeDisplay = document.getElementById("result-grade-display");
+      if (gradeDisplay) gradeDisplay.textContent = "";
       resultBox.textContent = "Generating feedback...";
       generatePersonalizedFeedback();
     });
