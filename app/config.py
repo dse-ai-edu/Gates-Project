@@ -18,4 +18,5 @@ class Config:
     GEMINI_MODEL_HIGH = os.getenv('GEMINI_MODEL_HIGH', 'gemini-3-flash-preview')
     GEMINI_MODEL_LOW = os.getenv('GEMINI_MODEL_LOW', GEMINI_MODEL_HIGH)
     GEMINI_MODEL_VISION = os.getenv('GEMINI_MODEL_VISION', GEMINI_MODEL_HIGH)
+
     MAX_CONTENT_LENGTH = 10 * 1000 * 1000  # 10 MB
