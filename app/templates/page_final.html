@@ -138,11 +138,20 @@
           <span class="file-name" title=""></span>
         </div>
 
+        <div class="view-tabs">
+          <button type="button" class="view-tab-btn active" data-view="source">Source</button>
+          <button type="button" class="view-tab-btn" data-view="rendered">Rendered</button>
+        </div>
+
         <div class="content-split">
-          <textarea
-            class="info-textarea"
-            placeholder="Load the question here..."
-          ></textarea>
+          <div class="text-view-pane">
+            <textarea
+              class="info-textarea view-pane active"
+              data-view="source"
+              placeholder="Load the question here..."
+            ></textarea>
+            <div class="info-rendered-preview view-pane" data-view="rendered"></div>
+          </div>
 
           <div class="image-preview">
             <img class="preview-img" alt="" />
@@ -166,11 +175,20 @@
           <span class="file-name" title=""></span>
         </div>
 
+        <div class="view-tabs">
+          <button type="button" class="view-tab-btn active" data-view="source">Source</button>
+          <button type="button" class="view-tab-btn" data-view="rendered">Rendered</button>
+        </div>
+
         <div class="content-split">
-          <textarea
-            class="info-textarea"
-            placeholder="Load the rubric here..."
-          ></textarea>
+          <div class="text-view-pane">
+            <textarea
+              class="info-textarea view-pane active"
+              data-view="source"
+              placeholder="Load the rubric here..."
+            ></textarea>
+            <div class="info-rendered-preview view-pane" data-view="rendered"></div>
+          </div>
 
           <div class="image-preview">
             <img class="preview-img" alt="" />
@@ -194,11 +212,20 @@
           <span class="file-name" title=""></span>
         </div>
 
+        <div class="view-tabs">
+          <button type="button" class="view-tab-btn active" data-view="source">Source</button>
+          <button type="button" class="view-tab-btn" data-view="rendered">Rendered</button>
+        </div>
+
         <div class="content-split">
-          <textarea
-            class="info-textarea"
-            placeholder="Load the answer here..."
-          ></textarea>
+          <div class="text-view-pane">
+            <textarea
+              class="info-textarea view-pane active"
+              data-view="source"
+              placeholder="Load the answer here..."
+            ></textarea>
+            <div class="info-rendered-preview view-pane" data-view="rendered"></div>
+          </div>
 
           <div class="image-preview">
             <img class="preview-img" alt="" />
@@ -295,10 +322,16 @@
 
         <br>
 
+        <div class="view-tabs">
+          <button type="button" class="view-tab-btn active" data-view="rendered">Rendered</button>
+          <button type="button" class="view-tab-btn" data-view="source">Source</button>
+        </div>
+
         <div class="feedback-container">
-          <div id="result-textarea">
+          <div id="result-textarea" class="view-pane active" data-view="rendered">
             Generating Feedback... Please Wait a Minute...
           </div>
+          <pre id="result-source-view" class="view-pane" data-view="source"></pre>
         </div>
 
         <div id="suggestion-modal" style="display: none">

@@ -4,6 +4,68 @@ const INPUT_CACHE_KEYS = {
   answer: "input_answer_text",
 };
 
+// ===============================
+// Source / Rendered view toggle helpers
+// ===============================
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : str;
+  return div.innerHTML;
+}
+
+// Re-render the "Rendered" preview of an information_box from its
+// (editable) textarea's current value.
+function refreshInfoPreview(box) {
+  const textarea = box.querySelector(".info-textarea");
+  const preview = box.querySelector(".info-rendered-preview");
+  if (!textarea || !preview) return;
+
+  const raw = textarea.value || "";
+  const escaped = escapeHtml(raw);
+
+  // The recognition/OCR prompts output bare LaTeX with no $ / \( / \[
+  // delimiters, so MathJax has nothing to key off unless we add one. If the
+  // text already contains a delimiter (e.g. manually typed prose with
+  // inline math), trust it as-is instead of double-wrapping.
+  const hasDelimiters = /\$|\\\(|\\\[/.test(raw);
+  preview.innerHTML =
+    !raw.trim() || hasDelimiters ? escaped : `\\[${escaped}\\]`;
+
+  if (window.MathJax) {
+    MathJax.typesetPromise([preview]);
+  }
+}
+
+// Wire up every Source/Rendered tab bar on the page. Works generically for
+// both the information_box (question/rubric/answer) tabs and the feedback
+// result tabs, since both follow the same .view-tabs / .view-pane pattern.
+function setupViewToggles() {
+  document.querySelectorAll(".view-tabs").forEach((tabBar) => {
+    const scope =
+      tabBar.closest(".information_box") || tabBar.closest(".section");
+    if (!scope) return;
+
+    const buttons = tabBar.querySelectorAll(".view-tab-btn");
+    const panes = scope.querySelectorAll(".view-pane");
+
+    buttons.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const targetView = btn.dataset.view;
+
+        buttons.forEach((b) => b.classList.toggle("active", b === btn));
+        panes.forEach((p) =>
+          p.classList.toggle("active", p.dataset.view === targetView)
+        );
+
+        if (targetView === "rendered" && scope.classList.contains("information_box")) {
+          refreshInfoPreview(scope);
+        }
+      });
+    });
+  });
+}
+
 
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll(".information_box").forEach((box) => {
@@ -86,6 +148,13 @@ document.addEventListener("DOMContentLoaded", () => {
           const recognizedText = data.text || "";
           sessionStorage.setItem(INPUT_CACHE_KEYS[type], recognizedText);
           if (textarea) textarea.value = recognizedText;
+
+          // If this box is currently showing the Rendered tab, refresh it
+          // with the newly recognized text.
+          const activeTab = box.querySelector(".view-tab-btn.active");
+          if (activeTab && activeTab.dataset.view === "rendered") {
+            refreshInfoPreview(box);
+          }
 
           const assetId = data.asset_id || "";
           if (assetId && previewImg) {
@@ -542,7 +611,17 @@ function generatePersonalizedFeedback() {
         throw new Error(loadResult.error || "Load failed");
       }
 
-      resultBox.innerHTML = loadResult.response || "";
+      const rawFeedback = loadResult.response || "";
+
+      // Rendered pane: escape then let MathJax typeset the $...$ / \[...\] math.
+      resultBox.innerHTML = escapeHtml(rawFeedback);
+      if (window.MathJax) {
+        MathJax.typesetPromise([resultBox]);
+      }
+
+      // Source pane: plain, un-rendered text (view-only, same as before).
+      const sourceView = document.getElementById("result-source-view");
+      if (sourceView) sourceView.textContent = rawFeedback;
 
       if (enhancementSection) {
         enhancementSection.style.display = "block";
@@ -563,6 +642,8 @@ function generatePersonalizedFeedback() {
       console.error(err);
       resultBox.innerText =
         `❌ Error generating feedback:\n${err.message}`;
+      const sourceView = document.getElementById("result-source-view");
+      if (sourceView) sourceView.textContent = "";
     });
 }
 
@@ -623,6 +704,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (generateFeedbackBtn && resultBox) {
     generateFeedbackBtn.addEventListener("click", function () {
+      // Reset the feedback view back to "Rendered" (the default) on every
+      // new generation, in case the user had switched to "Source".
+      if (feedbackDisplay) {
+        feedbackDisplay.querySelectorAll(".view-tab-btn").forEach((b) => {
+          b.classList.toggle("active", b.dataset.view === "rendered");
+        });
+        feedbackDisplay.querySelectorAll(".view-pane").forEach((p) => {
+          p.classList.toggle("active", p.dataset.view === "rendered");
+        });
+      }
+      const sourceView = document.getElementById("result-source-view");
+      if (sourceView) sourceView.textContent = "";
       resultBox.textContent = "Generating feedback...";
       generatePersonalizedFeedback();
     });
@@ -630,6 +723,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadConfiguredSystem();
   initHover();
+  setupViewToggles();
 
   if (window.MathJax) {
     MathJax.typesetPromise();
