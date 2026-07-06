@@ -63,7 +63,7 @@ def llm_generate_gemini(
         )
 
     if user_prompt:
-        parts.append(types.Part.from_text(user_prompt))
+        parts.append(types.Part.from_text(text=user_prompt))
 
     config = {
         "system_instruction": system_prompt if system_prompt else None,

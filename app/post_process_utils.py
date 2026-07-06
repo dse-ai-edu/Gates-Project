@@ -33,7 +33,7 @@ def run_image_post_process_llm(
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
                 model=model,
-                contents=[types.Part.from_text(user_text)],
+                contents=[types.Part.from_text(text=user_text)],
                 config=config,
             )
 
