@@ -234,14 +234,20 @@
         function reset_page1() {
 
             const keys = ["step11", "step12", "step13", "step14"];
-            keys.forEach(k => sessionStorage.removeItem(k));
 
-            const radios = document.querySelectorAll('input[type="radio"]');
-            radios.forEach(r => r.checked = false);
-
+            // Reset each group to its FIRST option, keeping sessionStorage in
+            // sync with the UI. Setting radio.checked programmatically does not
+            // fire a 'change' event, so we must write sessionStorage explicitly
+            // -- otherwise the UI would show a selection while the backend saw
+            // an empty value (and Save would wrongly complain).
             keys.forEach(k => {
-                const first = document.querySelector(`input[name="${k}"]`);
-                if (first) first.checked = true;
+                const groupRadios = document.querySelectorAll(`input[name="${k}"]`);
+                groupRadios.forEach(r => r.checked = false);
+                const first = groupRadios[0];
+                if (first) {
+                    first.checked = true;
+                    sessionStorage.setItem(k, first.value);
+                }
             });
 
             const status = document.getElementById("save-status");

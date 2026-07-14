@@ -42,168 +42,6 @@ def is_path_like(x):
     return isinstance(x, (str, Path))
 
 
-# =========================
-# GPT TOOLS
-# =========================
-
-def ppl_from_response(
-    response,
-    min_logprob=-100,
-):
-
-    logps = []
-
-    for item in response.choices[0].logprobs.content:
-
-        lp = item.logprob
-
-        if lp is None:
-            continue
-
-        if lp < min_logprob:
-            continue
-
-        logps.append(lp)
-
-    if not logps:
-        return None
-
-    return float(
-        np.exp(-np.mean(logps))
-    )
-
-
-def _llm_generate_gpt(
-    system_prompt,
-    user_prompt,
-    model,
-    max_tokens,
-    max_retry,
-    text_format=None,
-    enable_logprob=False,
-):
-
-    import openai
-
-    user_msg = {
-        "role": "user",
-        "content": str(user_prompt),
-    }
-
-    if system_prompt is not None:
-
-        messages = [
-            {
-                "role": "system",
-                "content": str(system_prompt),
-            },
-            user_msg,
-        ]
-
-    else:
-
-        messages = [user_msg]
-
-    structured = (
-        text_format is not None
-    )
-
-    for retry_i in range(max_retry):
-
-        try:
-
-            client = openai.OpenAI(
-                api_key=next(key_iter)
-            )
-
-            kwargs = {
-                "messages": messages,
-                "model": model,
-                "max_tokens": max_tokens,
-            }
-
-            if structured:
-
-                kwargs["response_format"] = (
-                    text_format
-                )
-
-            elif enable_logprob:
-
-                kwargs["logprobs"] = True
-                kwargs["top_logprobs"] = 1
-
-            response = (
-                client.chat.completions.create(
-                    **kwargs
-                )
-            )
-
-            response_text = (
-                response
-                .choices[0]
-                .message
-                .content
-            )
-
-            if structured:
-
-                try:
-
-                    structured_obj = (
-                        response
-                        .choices[0]
-                        .message
-                        .parsed
-                    )
-
-                except Exception:
-
-                    structured_obj = (
-                        response_text
-                    )
-
-                return llm_output(
-                    obj=structured_obj,
-                    logprob=None,
-                )
-
-            if (
-                enable_logprob
-                and hasattr(
-                    response.choices[0],
-                    "logprobs",
-                )
-                and response.choices[0]
-                .logprobs is not None
-            ):
-
-                response_prob = (
-                    ppl_from_response(
-                        response
-                    )
-                )
-
-            else:
-
-                response_prob = None
-
-            return llm_output(
-                text=response_text,
-                logprob=response_prob,
-            )
-
-        except Exception as e:
-
-            error_msg = str(e)
-
-            print(
-                f"[GPT ERROR] "
-                f"{error_msg}"
-            )
-
-    raise RuntimeError(error_msg)
-
 
 # =========================
 # GEMINI TOOLS
@@ -492,37 +330,21 @@ def llm_generate(
 
     model_lower = model.lower()
 
-    if "gpt" in model_lower:
+    # Requirement: EVERY LLM call -- text or image, strong or weak model -- must
+    # go through Gemini. We never call OpenAI or any other provider. Any
+    # non-Gemini model that slips in is redirected to the Gemini default rather
+    # than routed to a different backend.
+    if not ("gemini" in model_lower or "gemma" in model_lower):
+        print(f"[LLM] Non-Gemini model '{model}' redirected to Gemini default.")
+        model = "gemini-3.1-flash-lite-preview"
 
-        return _llm_generate_gpt(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            model=model,
-            max_tokens=max_tokens,
-            max_retry=max_retry,
-            text_format=text_format,
-            enable_logprob=
-            enable_logprob,
-        )
-
-    elif (
-        "gemini" in model_lower
-        or "gemma" in model_lower
-    ):
-
-        return _llm_generate_gemini(
-            system_prompt=system_prompt,
-            user_prompt=user_prompt,
-            image=image,
-            model=model,
-            max_tokens=max_tokens,
-            max_retry=max_retry,
-            img_type=img_type,
-            text_format=text_format,
-        )
-
-    else:
-
-        raise ValueError(
-            f"Unknown model: {model}"
-        )
+    return _llm_generate_gemini(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        image=image,
+        model=model,
+        max_tokens=max_tokens,
+        max_retry=max_retry,
+        img_type=img_type,
+        text_format=text_format,
+    )

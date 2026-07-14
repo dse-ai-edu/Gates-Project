@@ -224,7 +224,7 @@
                 
                 // Redirect to step_final after successful save
                 setTimeout(() => {
-                    window.location.href = ROUTES.page_final;
+                    window.location.href = ROUTES.page_final_example;
                 }, 1000);
             } else {
                 console.log("Failed result is", result);
@@ -263,8 +263,15 @@
     }
 
     function goBackAndReset_page2() {
-        const step1Keys = ["step11", "step12", "step13", "step14"];
-        step1Keys.forEach(k => sessionStorage.removeItem(k));
+        // "Back & Reset" resets THIS page (page 2: feedback focus, custom
+        // rubric, teaching example) back to defaults, then returns to page 1.
+        // Page 1's own selections must NOT be touched. On the next visit to
+        // page 2, the pattern component re-initialises to the default
+        // (Correctness). Removing step3 here (rather than the page-1 keys the
+        // old code wrongly cleared) is what makes this reset the current page.
+        ["step3", "step3A", "step2_teach_example", "locked_style"].forEach(
+            k => sessionStorage.removeItem(k)
+        );
         window.location.href = '/page_1';
     }
 

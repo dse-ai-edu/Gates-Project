@@ -80,16 +80,16 @@ function loadFeedbackTemplatesFromSessionStorage() {
 
         const templateRow = document.createElement('div');
         templateRow.className = 'template-row';
+        // Feedback Components are FIXED: rendered read-only so they can be
+        // selected/copied but never edited (requirement 2b). No input listener
+        // is attached, so the fixed set in sessionStorage stays authoritative.
         templateRow.innerHTML = `
             <input type="text" class="template-input"
                    maxlength="50"
-                   value="${template}">
+                   value="${template}" readonly>
         `;
         templateContainer.appendChild(templateRow);
         templateCount++;
-
-        const input = templateRow.querySelector('.template-input');
-        input.addEventListener('input', saveFeedbackTemplatesToSessionStorage);
     });
 }
 

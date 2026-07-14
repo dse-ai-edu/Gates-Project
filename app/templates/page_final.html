@@ -39,6 +39,25 @@
       function goBack_final() {
         window.location.href = '/page_2';
       }
+
+      function goBackAndReset_final() {
+        // "Back & Reset" resets THIS page (the uploaded/typed question,
+        // assessment, answer and their recognised images, plus any
+        // suggestions / grading debate) back to empty, then returns to
+        // page 2. Page 2's selections and the session tid are left intact.
+        [
+          "input_question_text",
+          "input_assessment_text",
+          "input_answer_text",
+          "asset_id_question",
+          "asset_id_assessment",
+          "asset_id_answer",
+          "suggestion_grading",
+          "suggestion_feedback",
+          "debate",
+        ].forEach((k) => sessionStorage.removeItem(k));
+        window.location.href = "/page_2";
+      }
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>

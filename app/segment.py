@@ -63,7 +63,7 @@ def validate_splits(splits):
 
 def get_vertical_splits_from_llm(
     image_path: str,
-    model: str = "gpt-5-nano",
+    model: str = "gemini-3.1-flash-lite-preview",
 ):
 
     result = llm_generate(
@@ -139,7 +139,7 @@ def crop_image_by_percentages(
 def process_single_page(
     image_path: str,
     output_dir: str,
-    model: str = "gpt-5-nano",
+    model: str = "gemini-3.1-flash-lite-preview",
 ):
 
     splits = get_vertical_splits_from_llm(
@@ -164,7 +164,7 @@ def process_single_page(
 def process_pdf(
     pdf_path: str,
     work_dir: str = "tmp",
-    model: str = "gpt-5-nano",
+    model: str = "gemini-3.1-flash-lite-preview",
 ):
 
     pages_dir = Path(work_dir) / f"{model}_pages"
