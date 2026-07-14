@@ -413,11 +413,20 @@ def api_image_convert():
 
             try:
 
-                image_paths = process_pdf(
-                    pdf_path=saved_path
+                # Only the FIRST page is needed for recognition. Render just
+                # page 1 instead of process_pdf(), which renders AND
+                # LLM-segments EVERY page -- the main reason PDF conversion was
+                # slow enough to risk timeouts.
+                from pdf2image import convert_from_path
+
+                first_pages = convert_from_path(
+                    saved_path,
+                    dpi=200,
+                    first_page=1,
+                    last_page=1,
                 )
 
-                if not image_paths:
+                if not first_pages:
 
                     api_output["error"] = (
                         "Empty PDF after processing"
@@ -427,7 +436,17 @@ def api_image_convert():
                         api_output
                     ), 500
 
-                input_image = image_paths[0]
+                first_page_path = os.path.join(
+                    tmp_dir,
+                    f"{asset_id}_{sha256[:8]}_p1.png",
+                )
+
+                first_pages[0].save(
+                    first_page_path,
+                    "PNG",
+                )
+
+                input_image = first_page_path
 
             except Exception:
 

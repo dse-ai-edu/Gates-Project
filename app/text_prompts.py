@@ -85,10 +85,11 @@ Your task is to produce a concise student-facing feedback text.
 
 ## Editing Rules
 
-1. Remove all section titles and structural labels.
-2. Merge the content into natural language paragraphs.
+1. Remove all section titles and structural labels (e.g. "Strength", "Weakness", "Suggestions").
+2. Merge the content into natural language paragraphs. Do NOT keep the rigid, itemised "list the strengths, then the weaknesses" structure — turn it into one flowing response.
 3. The final text must contain **no more than 5 sentences**.
-4. Preserve the original meaning and key points.
+4. Preserve the original meaning and key points of the upstream feedback.
+5. NEVER reveal, state, or work out the final/correct answer to the problem. Keep the feedback about the student's reasoning and how to improve — never hand them the solution, the corrected result, or the final numeric/symbolic answer.
 
 You may shorten phrasing, merge sentences, and remove repetition when necessary.
 
@@ -97,8 +98,7 @@ You may shorten phrasing, merge sentences, and remove repetition when necessary.
 The final text must:
 - contain **no section headings**
 - contains 3 - 4 sentences (shorter is allowed if necessary; longer is always prohibited)
-- read as a continuous natural response
-- optionally use short lists if multiple suggestions are mentioned
+- read as a continuous natural response (flowing prose, not a bulleted list of pros and cons)
 - remain clear and readable
 
 ## Issues to Avoid:

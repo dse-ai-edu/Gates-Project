@@ -339,18 +339,23 @@ button:hover {
     display: flex;
     gap: 12px;
     margin-top: 8px;
+    align-items: flex-start;
 }
 
 
 .content-split .info-textarea {
     width: 50%;
+    min-width: 0;              /* allow the textarea to shrink instead of forcing overflow */
     min-height: 140px;
     resize: vertical;
+    box-sizing: border-box;
 }
 .image-preview {
     width: 50%;
-    height: 250px;              
+    min-width: 0;              /* let both halves stay side-by-side without overlapping */
+    height: 250px;
     min-height: 100px;
+    box-sizing: border-box;
 
     border: 1px dashed #ddd;
     background-color: #fafafa;
@@ -360,6 +365,17 @@ button:hover {
     justify-content: center;
 
     overflow: hidden;
+}
+
+/* Narrow windows: stack the text and the preview instead of squeezing them. */
+@media (max-width: 600px) {
+    .content-split {
+        flex-direction: column;
+    }
+    .content-split .info-textarea,
+    .content-split .image-preview {
+        width: 100%;
+    }
 }
 
 .image-preview .preview-img {

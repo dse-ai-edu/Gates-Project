@@ -111,8 +111,8 @@ document.addEventListener("DOMContentLoaded", () => {
             console.warn("[UPLOAD] Image unclear but potentially processable.");
 
             alert(
-              "The image appears too blurry for us to confidently recognize its content. " +
-              "Please consult a human expert to identify the content and manually enter it in the text area."
+              "We could not confidently recognize the content of this image. " +
+              "Please re-upload a clearer image, or type the content manually into the text area."
             );
 
             const assetId = data.asset_id || "";
@@ -432,6 +432,30 @@ function estimateExpectation(cfg) {
 }
 
 // ===============================
+// Rating: record a thumbs up/down (and optional opinion) for the current
+// grade or feedback. Fire-and-forget; a failure must never disrupt the UI.
+// ===============================
+function postRating(target, sentiment, opinion) {
+  const tid = sessionStorage.getItem("tid");
+  const attempt_id = sessionStorage.getItem("current_attempt_id");
+
+  // Nothing generated yet -> nothing to rate.
+  if (!tid || attempt_id === null || attempt_id === undefined || attempt_id === "") {
+    return;
+  }
+
+  const body = { tid: tid, attempt_id: attempt_id, target: target };
+  if (sentiment) body.sentiment = sentiment;
+  if (opinion !== undefined) body.opinion = opinion;
+
+  fetch("/api/comment/rate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  }).catch((e) => console.error("[RATE] failed:", e));
+}
+
+// ===============================
 // MAIN: generate feedback
 // ===============================function generatePersonalizedFeedback() {
 function generatePersonalizedFeedback() {
@@ -526,6 +550,10 @@ function generatePersonalizedFeedback() {
         throw new Error(submitResult.error || "Submit failed");
       }
 
+      // Remember which attempt is on screen so the thumbs-up/down ratings can
+      // be attached to it.
+      sessionStorage.setItem("current_attempt_id", submitResult.attempt_id);
+
       return fetch(
         `/api/comment/load?tid=${tid}&attempt_id=${submitResult.attempt_id}`
       );
@@ -606,8 +634,16 @@ document.addEventListener("DOMContentLoaded", function () {
   const gradingUp = document.getElementById("grading-thumb-up");
   const feedbackUp = document.getElementById("feedback-thumb-up");
 
-  if (gradingUp) gradingUp.addEventListener("click", showThankYou);
-  if (feedbackUp) feedbackUp.addEventListener("click", showThankYou);
+  if (gradingUp)
+    gradingUp.addEventListener("click", (e) => {
+      postRating("grading", "positive");
+      showThankYou(e);
+    });
+  if (feedbackUp)
+    feedbackUp.addEventListener("click", (e) => {
+      postRating("feedback", "positive");
+      showThankYou(e);
+    });
 
   /* ===============================
        Main feedback generation
@@ -690,7 +726,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const feedbackDown = document.getElementById("feedback-thumb-down");
 
   if (gradingDown) {
-    gradingDown.addEventListener("click", () => openSuggestionModal("grading"));
+    gradingDown.addEventListener("click", () => {
+      postRating("grading", "negative");
+      openSuggestionModal("grading");
+    });
   }
 
   if (debateBtn) {
@@ -698,9 +737,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   if (feedbackDown) {
-    feedbackDown.addEventListener("click", () =>
-      openSuggestionModal("feedback")
-    );
+    feedbackDown.addEventListener("click", () => {
+      postRating("feedback", "negative");
+      openSuggestionModal("feedback");
+    });
   }
 
   if (saveBtn) {
@@ -708,6 +748,9 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!currentType) return;
       const key = `suggestion_${currentType}`;
       sessionStorage.setItem(key, textareaEl.value);
+      // Attach the written opinion to the negative reaction just recorded, and
+      // it will also be folded into the prompt on the next generate.
+      postRating(currentType, "negative", textareaEl.value);
       closeSuggestionModal();
     });
   }

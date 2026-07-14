@@ -1017,6 +1017,74 @@ def comment_load():
 
 
 # ====================
+# Rate a generated grade / feedback (thumbs up-down + optional opinion)
+# ====================
+
+@bp_feedback.route(
+    "/api/comment/rate",
+    methods=["POST"],
+)
+def comment_rate():
+    """Record a user's reaction to a generated grade or feedback text.
+
+    target   : "grading" | "feedback"  (which part is being rated)
+    sentiment: "positive" | "negative" (thumbs up / down)
+    opinion  : optional free-text the user typed after a thumbs-down.
+
+    Records are upserted per (tid, attempt_id, target) so a later opinion
+    attaches to the same reaction rather than creating a duplicate. The opinion
+    is ALSO sent back with the next generate request, where it is folded into
+    the grading / feedback prompt -- this endpoint only persists the reaction.
+    """
+    try:
+
+        data = request.get_json(silent=True) or {}
+
+        tid = data.get("tid")
+        attempt_id = data.get("attempt_id")
+        target = data.get("target")
+        sentiment = data.get("sentiment")
+        opinion = data.get("opinion")
+
+        if target not in ("grading", "feedback"):
+            return jsonify({
+                "success": False,
+                "error": "Invalid rating target.",
+            })
+
+        try:
+            attempt_id = int(attempt_id) if attempt_id is not None else None
+        except (TypeError, ValueError):
+            pass  # keep as-is if not an int
+
+        set_fields = {"updated_at": datetime.utcnow()}
+        if sentiment in ("positive", "negative"):
+            set_fields["sentiment"] = sentiment
+        if opinion is not None:
+            set_fields["opinion"] = opinion
+
+        database["comment_feedback"].find_one_and_update(
+            {"tid": tid, "attempt_id": attempt_id, "target": target},
+            {
+                "$set": set_fields,
+                "$setOnInsert": {"created_at": datetime.utcnow()},
+            },
+            upsert=True,
+        )
+
+        return jsonify({"success": True})
+
+    except Exception:
+
+        traceback.print_exc()
+
+        return jsonify({
+            "success": False,
+            "error": "Could not record your rating. Please try again.",
+        })
+
+
+# ====================
 # Legacy Feedback (no scoring) -- preserves the second page-2 -> page-3 path
 # ====================
 
