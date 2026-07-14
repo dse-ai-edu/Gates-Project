@@ -134,6 +134,15 @@ PATTERN_ITEMS, DEFAULT_PATTERN = load_pattern_items()
 
 log_prob_text = os.environ.get("HAVE_LOGPROB", "0")
 HAVE_LOGPROB = any([pos_k in str(log_prob_text).lower() for pos_k in ["yes", "true", "1"]])
+
+# User-facing message for any *unexpected* backend error. The real exception is
+# always logged server-side via traceback.print_exc(); raw exception strings
+# (e.g. a KeyError name like 'from_adaptive') must never be returned to the
+# frontend, where they would surface in place of the feedback text.
+GENERIC_FEEDBACK_ERROR = (
+    "Something went wrong while generating feedback. "
+    "Please try again; if the problem persists, contact support."
+)
 # ==================== Page Route (returns HTML) ==================== #
 
 @app.route('/')
@@ -335,7 +344,7 @@ def update_style_config():
     except Exception as e:
         print(f"Error in update_style_config: {str(e)}")
         traceback.print_exc()
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': 'Failed to save your configuration. Please try again.'}
     return jsonify(response)
 
 @app.route('/api/comment/retrieve_style', methods=['POST'])
@@ -375,7 +384,7 @@ def retrieve_style_config():
     except Exception as e:
         print(f"Error in retrieve_style_config: {str(e)}")
         traceback.print_exc()
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': 'Failed to retrieve the saved configuration. Please try again.'}
     
     return jsonify(response)
 
@@ -593,7 +602,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
     except Exception as e:
         traceback.print_exc()
         print(system_info)
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': GENERIC_FEEDBACK_ERROR}
    
    
    
@@ -651,7 +660,7 @@ def comment_generate_old(system_info, answer_text, question_text, reference_text
     except Exception as e:
         traceback.print_exc()
         print(system_info)
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': GENERIC_FEEDBACK_ERROR}
     
     
      
@@ -684,7 +693,11 @@ def comment_submit():
         if archive_tid:
             history_record = database['comment_config'].find_one({'tid': archive_tid})
             if not history_record:
-                raise ValueError(f'Archive system not found: {archive_tid}')
+                print(f"Debug: No archived config found for archive_tid {archive_tid}")
+                return jsonify({
+                    'success': False,
+                    'error': 'No saved configuration was found for that transaction ID. Please check the ID and try again.'
+                })
 
             history_system_info = history_record['config']
             system_info = (
@@ -706,7 +719,10 @@ def comment_submit():
             current_record = database['comment_config'].find_one({'tid': tid})
             if not current_record:
                 print(f"Debug: No config record found for tid {tid}")
-                raise ValueError(f'Feedback system not found')
+                return jsonify({
+                    'success': False,
+                    'error': 'Your feedback configuration was not found. Please go back and complete the setup steps before generating feedback.'
+                })
 
             current_system_info = current_record['config']
             system_info = (
@@ -783,7 +799,7 @@ def comment_submit():
 
     except Exception as e:
         traceback.print_exc()
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': GENERIC_FEEDBACK_ERROR}
 
     return jsonify(response)
 
@@ -814,7 +830,11 @@ def comment_submit_old():
         if archive_tid:
             history_record = database['comment_config'].find_one({'tid': archive_tid})
             if not history_record:
-                raise ValueError(f'Archive system not found: {archive_tid}')
+                print(f"Debug: No archived config found for archive_tid {archive_tid}")
+                return jsonify({
+                    'success': False,
+                    'error': 'No saved configuration was found for that transaction ID. Please check the ID and try again.'
+                })
             history_system_info = history_record['config']
             system_info = history_system_info[-1] if isinstance(history_system_info, list) else history_system_info
 
@@ -876,7 +896,7 @@ def comment_submit_old():
             
     except Exception as e:
         traceback.print_exc()
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': GENERIC_FEEDBACK_ERROR}
 
     return jsonify(response)
 
@@ -1241,7 +1261,7 @@ def api_image_convert():
 
     except Exception as e:
         traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to process the image. Please try again.'}), 500
 
 
 
