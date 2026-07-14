@@ -134,6 +134,15 @@ PATTERN_ITEMS, DEFAULT_PATTERN = load_pattern_items()
 
 log_prob_text = os.environ.get("HAVE_LOGPROB", "0")
 HAVE_LOGPROB = any([pos_k in str(log_prob_text).lower() for pos_k in ["yes", "true", "1"]])
+
+# User-facing message for any *unexpected* backend error. The real exception is
+# always logged server-side via traceback.print_exc(); raw exception strings
+# (e.g. a KeyError name like 'from_adaptive') must never be returned to the
+# frontend, where they would surface in place of the feedback text.
+GENERIC_FEEDBACK_ERROR = (
+    "Something went wrong while generating feedback. "
+    "Please try again; if the problem persists, contact support."
+)
 # ==================== Page Route (returns HTML) ==================== #
 
 @app.route('/')
@@ -335,7 +344,7 @@ def update_style_config():
     except Exception as e:
         print(f"Error in update_style_config: {str(e)}")
         traceback.print_exc()
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': 'Failed to save your configuration. Please try again.'}
     return jsonify(response)
 
 @app.route('/api/comment/retrieve_style', methods=['POST'])
@@ -375,7 +384,7 @@ def retrieve_style_config():
     except Exception as e:
         print(f"Error in retrieve_style_config: {str(e)}")
         traceback.print_exc()
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': 'Failed to retrieve the saved configuration. Please try again.'}
     
     return jsonify(response)
 
@@ -488,7 +497,9 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'style_keywords': style_keywords,
                 'feedback_templates': feedback_templates,
                 'feedback_pattern': feedback_pattern,
+                'from_adaptive': False,
                 'custom_rubric': custom_rubric,
+                'pattern_body': None,
                 "grade_success": True,
                 "grade": None,
                 "grade_history": grading_result.get("dialogue_history", []),
@@ -507,8 +518,10 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'style_keywords': style_keywords,
                 'feedback_templates': feedback_templates,
                 'feedback_pattern': feedback_pattern,
+                'from_adaptive': False,
                 'custom_rubric': custom_rubric,
-                "grade_success": True, 
+                'pattern_body': None,
+                "grade_success": True,
                 "grade": grading_result['score'],
                 "grade_history": grading_result.get("dialogue_history", []),
                 }
@@ -577,11 +590,11 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'feedback_prob': feedback_prob,
                 'style_keywords': style_keywords,
                 'feedback_templates': feedback_templates,
-                'feedback_pattern': selected_pattern_key,
+                'feedback_pattern': pattern_key,   # resolved/effective pattern (e.g. Plain, Custom)
                 'from_adaptive': from_adaptive,
                 'custom_rubric': custom_rubric,
                 'pattern_body': pattern_body,
-                "grade_success": True, 
+                "grade_success": True,
                 "grade": grading_result['score'],
                 "grade_history": grading_result.get("dialogue_history", []),
             }
@@ -589,7 +602,7 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
     except Exception as e:
         traceback.print_exc()
         print(system_info)
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': GENERIC_FEEDBACK_ERROR}
    
    
    
@@ -639,15 +652,15 @@ def comment_generate_old(system_info, answer_text, question_text, reference_text
                 'feedback_prob': feedback_prob,
                 'style_keywords': style_keywords,
                 'feedback_templates': feedback_templates,
-                'feedback_pattern': feedback_pattern,
+                'feedback_pattern': pattern_key,   # resolved/effective pattern (e.g. Plain, Custom)
                 'custom_rubric': custom_rubric,
                 'pattern_body': pattern_body,
             }
-        
+
     except Exception as e:
         traceback.print_exc()
         print(system_info)
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': GENERIC_FEEDBACK_ERROR}
     
     
      
@@ -680,7 +693,11 @@ def comment_submit():
         if archive_tid:
             history_record = database['comment_config'].find_one({'tid': archive_tid})
             if not history_record:
-                raise ValueError(f'Archive system not found: {archive_tid}')
+                print(f"Debug: No archived config found for archive_tid {archive_tid}")
+                return jsonify({
+                    'success': False,
+                    'error': 'No saved configuration was found for that transaction ID. Please check the ID and try again.'
+                })
 
             history_system_info = history_record['config']
             system_info = (
@@ -702,7 +719,10 @@ def comment_submit():
             current_record = database['comment_config'].find_one({'tid': tid})
             if not current_record:
                 print(f"Debug: No config record found for tid {tid}")
-                raise ValueError(f'Feedback system not found')
+                return jsonify({
+                    'success': False,
+                    'error': 'Your feedback configuration was not found. Please go back and complete the setup steps before generating feedback.'
+                })
 
             current_system_info = current_record['config']
             system_info = (
@@ -756,17 +776,17 @@ def comment_submit():
             'attempt_id': next_attempt_id,
             'student_answer': answer_text,
             'generated_response': generate_result['feedback_text'],
-            'grade': generate_result['grade'],
-            'grade_history': generate_result['grade_history'],
+            'grade': generate_result.get('grade'),
+            'grade_history': generate_result.get('grade_history', []),
             'system_config': {
-                'style_keywords': generate_result['style_keywords'],
-                'feedback_templates': generate_result['feedback_templates'],
-                'feedback_pattern': generate_result['feedback_pattern'],
-                'feedback_pattern_from_adaptive': generate_result['from_adaptive'],
-                'custom_rubric': generate_result['custom_rubric'],
-                'pattern_body': generate_result['pattern_body'],
+                'style_keywords': generate_result.get('style_keywords', []),
+                'feedback_templates': generate_result.get('feedback_templates', []),
+                'feedback_pattern': generate_result.get('feedback_pattern', ""),
+                'feedback_pattern_from_adaptive': generate_result.get('from_adaptive', False),
+                'custom_rubric': generate_result.get('custom_rubric', ""),
+                'pattern_body': generate_result.get('pattern_body'),
             },
-            'feedback_prob': generate_result['feedback_prob'],
+            'feedback_prob': generate_result.get('feedback_prob'),
             'generated_at': datetime.utcnow()
         })
 
@@ -779,7 +799,7 @@ def comment_submit():
 
     except Exception as e:
         traceback.print_exc()
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': GENERIC_FEEDBACK_ERROR}
 
     return jsonify(response)
 
@@ -810,7 +830,11 @@ def comment_submit_old():
         if archive_tid:
             history_record = database['comment_config'].find_one({'tid': archive_tid})
             if not history_record:
-                raise ValueError(f'Archive system not found: {archive_tid}')
+                print(f"Debug: No archived config found for archive_tid {archive_tid}")
+                return jsonify({
+                    'success': False,
+                    'error': 'No saved configuration was found for that transaction ID. Please check the ID and try again.'
+                })
             history_system_info = history_record['config']
             system_info = history_system_info[-1] if isinstance(history_system_info, list) else history_system_info
 
@@ -872,7 +896,7 @@ def comment_submit_old():
             
     except Exception as e:
         traceback.print_exc()
-        response = {'success': False, 'error': str(e)}
+        response = {'success': False, 'error': GENERIC_FEEDBACK_ERROR}
 
     return jsonify(response)
 
@@ -1237,7 +1261,7 @@ def api_image_convert():
 
     except Exception as e:
         traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': False, 'error': 'Failed to process the image. Please try again.'}), 500
 
 
 

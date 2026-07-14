@@ -1,4 +1,5 @@
 import base64
+import copy
 import traceback
 import numpy as np
 
@@ -216,22 +217,64 @@ def best_match_by_lcs(query: str, candidates: list) -> str | None:
             best_candidate = c
     return best_candidate
 
-def decide_adaptive_pattern(question, answer, model=Config.GEMINI_MODEL_HIGH):
+# The three focus patterns adaptive mode chooses between.
+FOCUS_KEYS = ("Conceptual", "Procedural", "Correctness")
+# Keys in pattern_info.json that are NOT directly usable as a feedback body:
+# "Adaptive" is a selector meta-pattern, "Rubric" is the template used to
+# generate a Custom pattern from an instructor rubric.
+SPECIAL_PATTERN_KEYS = ("Adaptive", "Rubric")
+
+
+def _load_pattern_info():
     app_dir = find_app_dir()
     json_path = app_dir / "static" / "data" / "pattern_info.json"
     with open(json_path, "r", encoding="utf-8") as f:
-        pattern_info = json.load(f)
+        return json.load(f)
+
+
+def _canonical_pattern_key(raw, pattern_info):
+    """Exact, case-insensitive match of a selection string to a pattern_info
+    key. Returns the canonical key, or None when there is no exact match.
+
+    Exact matching (not fuzzy LCS) because the incoming value is always a real
+    pattern key from the UI radios or from decide_adaptive_pattern; fuzzy
+    ranking there could silently pick the wrong pattern.
+    """
+    if raw is None:
+        return None
+    norm = str(raw).strip().lower()
+    if not norm:
+        return None
+    for key in pattern_info:
+        if key.lower() == norm:
+            return key
+    return None
+
+
+def _match_focus_key(text, default="Conceptual"):
+    """Map a free-text model reply to one of the three canonical focus keys.
+    Tries an exact match, then a whole-word match, then falls back to `default`.
+    """
+    norm = (text or "").strip().lower()
+    for key in FOCUS_KEYS:
+        if norm == key.lower():
+            return key
+    for key in FOCUS_KEYS:
+        if re.search(rf"\b{re.escape(key.lower())}\b", norm):
+            return key
+    return default
+
+
+def decide_adaptive_pattern(question, answer, model=Config.GEMINI_MODEL_HIGH):
+    pattern_info = _load_pattern_info()
     adaptive_pattern_dict = pattern_info["Adaptive"]
     selection_prompt_tmp = "You are an educational expert. Below are a pair of (question, student answer) and the guidance to select proper feedback pattern to him/her. You should response with one word in [conceptual, procedural, correctness] without any other comments or explanation. You are NOT asked to comment on or give feedback to the student answer."
     selection_prompt_tmp += str(adaptive_pattern_dict)
     qa_query = f"# Question: {question}; # Studeng Answer: {answer}; \n # Your Selection (one word in [conceptual, procedural, correctness]):"
     select_pattern_text, _ = llm_generate(
-                           input_text=qa_query, system_text=selection_prompt_tmp, 
+                           input_text=qa_query, system_text=selection_prompt_tmp,
                             model=model, max_retry=5, have_log=False)
-    matched_pattern_key = best_match_by_lcs(select_pattern_text, pattern_info.keys())
-    if matched_pattern_key.lower() not in ['conceptual', 'procedural', 'correctness']:
-        matched_pattern_key = 'conceptual'
-    return matched_pattern_key.capitalize()
+    return _match_focus_key(select_pattern_text)
 
 
 def parse_feedback_pattern(
@@ -239,53 +282,54 @@ def parse_feedback_pattern(
         custom_rubric: str = None,
         model: str = Config.GEMINI_MODEL_HIGH,
         from_adaptive: bool = False,
-        **kwarg) -> str:
-    
-    app_dir = find_app_dir()
-    json_path = app_dir / "static" / "data" / "pattern_info.json"
-    with open(json_path, "r", encoding="utf-8") as f:
-        pattern_info = json.load(f)
-    
-    pattern_input_lower = feedback_pattern.lower().strip()
-    default_pattern_key, default_pattern = next(iter(pattern_info.items()))  # default = first one
-    pattern_body, case_num = None, 0
+        **kwarg) -> dict:
+    """Resolve a feedback-pattern selection into the concrete (pattern_key,
+    pattern_body) actually applied.
+
+    `pattern_key` is the *effective* pattern name (e.g. 'Plain', 'Custom',
+    'Conceptual'), so callers can persist it faithfully instead of the raw
+    selection.
+    """
+    pattern_info = _load_pattern_info()
+    has_rubric = str(custom_rubric).strip() not in ("", "None")
+
+    # --- Adaptive: feedback_pattern is a focus key picked by
+    #     decide_adaptive_pattern. Enrich a private deep copy and return it
+    #     directly, so the enrichment can never be overwritten by later logic. ---
     if from_adaptive:
-        case_num = -1
-        matched_pattern_key = best_match_by_lcs(pattern_input_lower, pattern_info.keys())
-        pattern_body = pattern_info.get(matched_pattern_key.capitalize(), {})
-        focus_selection_rule = pattern_info['Adaptive']['focus_selection_rule'].get(matched_pattern_key.lower(), "")
-        pattern_body['primary_content_focus'] = f"{focus_selection_rule} \n {pattern_body['primary_content_focus']}"
-        pattern_body['feedback_scope_rule'] = pattern_info['Adaptive']['feedback_scope_rule']
-        pattern_body['exclusions'] = f"{pattern_info['Adaptive']['exclusions']} \n {pattern_body['exclusions']}"
-    if len(pattern_input_lower) > 0 and 'custom' not in pattern_input_lower:
-        case_num = 1
-        # Case 1: Pre-defined Pattern
-        matched_pattern_key = best_match_by_lcs(pattern_input_lower, pattern_info.keys())
-        pattern_body = pattern_info.get(matched_pattern_key)
-    elif str(custom_rubric).strip() == 0:
-        case_num = 3
-        # Case 3: No match and no rubric -> plain pattern
-        matched_pattern_key = "Plain"
-        pattern_body = pattern_info.get(matched_pattern_key)
-    else:
-        # Case 2: Generate personal template
-        case_num = 2
-        matched_pattern_key = "Custom"
-        customize_prompt = pattern_info.get("Rubric")
-        system_text = str(customize_prompt)
+        focus_key = _match_focus_key(feedback_pattern)
+        adaptive = pattern_info["Adaptive"]
+        pattern_body = copy.deepcopy(pattern_info[focus_key])
+        focus_rule = adaptive.get("focus_selection_rule", {}).get(focus_key.lower(), "")
+        pattern_body["primary_content_focus"] = f"{focus_rule} \n {pattern_body.get('primary_content_focus', '')}"
+        pattern_body["feedback_scope_rule"] = adaptive.get("feedback_scope_rule", "")
+        pattern_body["exclusions"] = f"{adaptive.get('exclusions', '')} \n {pattern_body.get('exclusions', '')}"
+        print(f"[PATTERN] adaptive -> `{focus_key}` from `{feedback_pattern}`")
+        return {"pattern_key": focus_key, "pattern_body": pattern_body}
+
+    # --- Directly-usable preset (Conceptual / Procedural / Correctness / Plain). ---
+    canonical = _canonical_pattern_key(feedback_pattern, pattern_info)
+    if canonical is not None and canonical not in SPECIAL_PATTERN_KEYS:
+        print(f"[PATTERN] preset -> `{canonical}` from `{feedback_pattern}`")
+        return {"pattern_key": canonical, "pattern_body": copy.deepcopy(pattern_info[canonical])}
+
+    # --- Custom: an instructor rubric was supplied; generate a bespoke pattern. ---
+    if has_rubric:
+        system_text = str(pattern_info.get("Rubric"))
         input_text = f"""User Rubric: {custom_rubric}"""
         print(f"*** debug: generate pattern input_text: `{input_text}`")
-        print(f"*** debug: generate pattern system_text: `{system_text}`")
-        pattern_body, pattern_prob = llm_generate(
-            input_text=input_text, system_text=system_text, 
+        pattern_body, _ = llm_generate(
+            input_text=input_text, system_text=system_text,
             model=model, max_retry=5, have_log=False)
         if pattern_body is None:
-            matched_pattern_key = "Custom (override by Plain)"
-            pattern_body = pattern_info.get("Plain")
-            
-    print(f"[PATTERN] Pattern Case Above: {case_num}: `{matched_pattern_key}` from `{feedback_pattern}`")
-    return {"pattern_key": matched_pattern_key, 
-            "pattern_body": pattern_body}
+            print(f"[PATTERN] custom generation failed -> fallback `Plain`")
+            return {"pattern_key": "Plain", "pattern_body": copy.deepcopy(pattern_info["Plain"])}
+        print(f"[PATTERN] custom -> `Custom` from `{feedback_pattern}`")
+        return {"pattern_key": "Custom", "pattern_body": pattern_body}
+
+    # --- Nothing selected and no rubric: minimal 'Plain' feedback. ---
+    print(f"[PATTERN] no selection/rubric -> `Plain` from `{feedback_pattern}`")
+    return {"pattern_key": "Plain", "pattern_body": copy.deepcopy(pattern_info["Plain"])}
 
 
 def parse_teaching_text(
