@@ -59,6 +59,16 @@ from app.pattern_utils import (
 with open(KEYWORD_PATH, "r") as f:
     KEYWORD_INFO = json.load(f)
 
+
+# User-facing message for any *unexpected* backend error. The real exception is
+# always logged server-side via traceback.print_exc(); raw exception strings
+# (e.g. a KeyError name) must never be returned to the frontend, where they
+# would surface in place of the feedback text.
+GENERIC_FEEDBACK_ERROR = (
+    "Something went wrong while generating feedback. "
+    "Please try again; if the problem persists, contact support."
+)
+
 # ====================
 # QA Demo
 # ====================
@@ -241,7 +251,9 @@ def update_style_config():
 
         response = {
             "success": False,
-            "error": str(e),
+            "error":
+            "The configuration request could not be "
+            "completed. Please try again.",
         }
 
     return jsonify(response)
@@ -324,7 +336,9 @@ def retrieve_style_config():
 
         response = {
             "success": False,
-            "error": str(e),
+            "error":
+            "The configuration request could not be "
+            "completed. Please try again.",
         }
 
     return jsonify(response)
@@ -386,7 +400,9 @@ def comment_generate(
                 "style_keywords": style_keywords,
                 "feedback_templates": feedback_templates,
                 "feedback_pattern": feedback_pattern,
+                "from_adaptive": False,
                 "custom_rubric": custom_rubric,
+                "pattern_body": None,
                 "grade_success": True,
                 "grade": None,
                 "grade_history":
@@ -418,7 +434,9 @@ def comment_generate(
                 "style_keywords": style_keywords,
                 "feedback_templates": feedback_templates,
                 "feedback_pattern": feedback_pattern,
+                "from_adaptive": False,
                 "custom_rubric": custom_rubric,
+                "pattern_body": None,
                 "grade_success": True,
                 "grade": grading_result["score"],
                 "grade_history":
@@ -454,6 +472,11 @@ def comment_generate(
         pattern_body = pattern_dict.get(
             "pattern_body",
             None,
+        )
+
+        pattern_key = pattern_dict.get(
+            "pattern_key",
+            selected_pattern_key,
         )
 
         if reference_text and len(reference_text.strip()) > 0:
@@ -542,7 +565,7 @@ def comment_generate(
             "feedback_prob": feedback_prob,
             "style_keywords": style_keywords,
             "feedback_templates": feedback_templates,
-            "feedback_pattern": selected_pattern_key,
+            "feedback_pattern": pattern_key,
             "from_adaptive": from_adaptive,
             "custom_rubric": custom_rubric,
             "pattern_body": pattern_body,
@@ -561,7 +584,7 @@ def comment_generate(
 
         return {
             "success": False,
-            "error": str(e),
+            "error": GENERIC_FEEDBACK_ERROR,
         }
 
 # ====================
@@ -644,11 +667,13 @@ def comment_submit():
 
             if not history_record:
 
-                raise ValueError(
-                    f"Archive system "
-                    f"not found: "
-                    f"{archive_tid}"
-                )
+                print(f"Debug: No archived config for archive_tid {archive_tid}")
+                return jsonify({
+                    "success": False,
+                    "error":
+                    "No saved configuration was found for that "
+                    "transaction ID. Please check the ID and try again.",
+                })
 
             history_system_info = (
                 history_record["config"]
@@ -672,10 +697,14 @@ def comment_submit():
 
             if not current_record:
 
-                raise ValueError(
-                    "Feedback system "
-                    "not found"
-                )
+                print(f"Debug: No config record for tid {tid}")
+                return jsonify({
+                    "success": False,
+                    "error":
+                    "Your feedback configuration was not found. "
+                    "Please go back and complete the setup steps "
+                    "before generating feedback.",
+                })
 
             current_system_info = (
                 current_record["config"]
@@ -763,52 +792,37 @@ def comment_submit():
             answer_text,
 
             "generated_response":
-            generate_result[
-                "feedback_text"
-            ],
+            generate_result["feedback_text"],
+
+            "grade":
+            generate_result.get("grade"),
 
             "grade_history":
-            generate_result[
-                "grade_history"
-            ],
+            generate_result.get("grade_history", []),
 
             "system_config": {
 
                 "style_keywords":
-                generate_result[
-                    "style_keywords"
-                ],
+                generate_result.get("style_keywords", []),
 
                 "feedback_templates":
-                generate_result[
-                    "feedback_templates"
-                ],
+                generate_result.get("feedback_templates", []),
 
                 "feedback_pattern":
-                generate_result[
-                    "feedback_pattern"
-                ],
+                generate_result.get("feedback_pattern", ""),
 
                 "feedback_pattern_from_adaptive":
-                generate_result[
-                    "from_adaptive"
-                ],
+                generate_result.get("from_adaptive", False),
 
                 "custom_rubric":
-                generate_result[
-                    "custom_rubric"
-                ],
+                generate_result.get("custom_rubric", ""),
 
                 "pattern_body":
-                generate_result[
-                    "pattern_body"
-                ],
+                generate_result.get("pattern_body"),
             },
 
             "feedback_prob":
-            generate_result[
-                "feedback_prob"
-            ],
+            generate_result.get("feedback_prob"),
 
             "generated_at":
             datetime.utcnow(),
@@ -828,7 +842,7 @@ def comment_submit():
 
         return jsonify({
             "success": False,
-            "error": str(e),
+            "error": GENERIC_FEEDBACK_ERROR,
         })
 
 
@@ -998,6 +1012,228 @@ def comment_load():
 
         return jsonify({
             "success": False,
-            "error": str(e),
+            "error": GENERIC_FEEDBACK_ERROR,
         })
+
+
+# ====================
+# Legacy Feedback (no scoring) -- preserves the second page-2 -> page-3 path
+# ====================
+
+def comment_generate_old(
+    system_info,
+    answer_text,
+    question_text,
+    reference_text,
+    history_prompt_dict,
+    predefined_flag="",
+):
+    """Simple, score-free feedback generation used by the [Legacy] Save path."""
+    try:
+
+        style_keywords = system_info.get("style_keywords", [])
+        feedback_templates = system_info.get("feedback_templates", [])
+        feedback_pattern = system_info.get("feedback_pattern", "")
+        custom_rubric = system_info.get("custom_rubric", "")
+
+        pattern_dict = parse_feedback_pattern(
+            feedback_pattern=feedback_pattern,
+            custom_rubric=custom_rubric,
+            model=DEFAULT_MODEL,
+        )
+
+        pattern_key = pattern_dict.get("pattern_key", None)
+        pattern_body = pattern_dict.get("pattern_body", None)
+
+        if reference_text and len(reference_text.strip()) > 0:
+            question_text = (
+                question_text
+                + "\n ## Reference Answer(s): "
+                + reference_text
+            )
+
+        user_prompt = parse_teaching_text(
+            question=question_text,
+            answer=answer_text.strip(),
+            style_keywords=style_keywords,
+            feedback_templates=feedback_templates,
+        )
+
+        feedback_output = llm_generate(
+            user_prompt=user_prompt,
+            system_prompt=pattern_body,
+            model=DEFAULT_MODEL,
+            max_tokens=2048,
+            enable_logprob=HAVE_LOGPROB,
+        )
+
+        return {
+            "success": True,
+            "feedback_text": feedback_output.text,
+            "feedback_prob": feedback_output.logprob,
+            "style_keywords": style_keywords,
+            "feedback_templates": feedback_templates,
+            "feedback_pattern": pattern_key,
+            "custom_rubric": custom_rubric,
+            "pattern_body": pattern_body,
+        }
+
+    except Exception:
+
+        traceback.print_exc()
+
+        return {
+            "success": False,
+            "error": GENERIC_FEEDBACK_ERROR,
+        }
+
+
+@bp_feedback.route(
+    "/api/comment/submit_old",
+    methods=["POST"],
+)
+def comment_submit_old():
+    """Legacy feedback path (no scoring). Mirrors comment_submit but calls the
+    score-free generator, and reads a JSON body instead of form data."""
+
+    data = request.get_json()
+
+    tid = data.get("tid")
+    archive_tid = data.get("archive_tid", "").strip()
+    aid = data.get("aid", str(uuid.uuid4()))
+    qid = data.get("qid")
+    answer_text = data.get("student_answer", "")
+    question_this = data.get("question", "")
+    predefined_flag = data.get("predefined_flag", "")
+    reference_this = data.get("reference", "")
+
+    history_prompt_dict = None
+
+    try:
+
+        if archive_tid:
+
+            history_record = (
+                database["comment_config"]
+                .find_one({"tid": archive_tid})
+            )
+
+            if not history_record:
+
+                print(f"Debug: No archived config for archive_tid {archive_tid}")
+                return jsonify({
+                    "success": False,
+                    "error":
+                    "No saved configuration was found for that "
+                    "transaction ID. Please check the ID and try again.",
+                })
+
+            history_system_info = history_record["config"]
+
+            system_info = (
+                history_system_info[-1]
+                if isinstance(history_system_info, list)
+                else history_system_info
+            )
+
+            try:
+                history_prompt_record = (
+                    database["comment"]
+                    .find_one({"tid": archive_tid}, sort=[("_id", -1)])
+                )
+                history_prompt_dict = history_prompt_record["system_config"]
+            except Exception:
+                history_prompt_dict = None
+
+        else:
+
+            current_record = (
+                database["comment_config"]
+                .find_one({"tid": tid})
+            )
+
+            if not current_record:
+
+                print(f"Debug: No config record for tid {tid}")
+                return jsonify({
+                    "success": False,
+                    "error":
+                    "Your feedback configuration was not found. "
+                    "Please go back and complete the setup steps "
+                    "before generating feedback.",
+                })
+
+            current_system_info = current_record["config"]
+
+            system_info = (
+                current_system_info[-1]
+                if isinstance(current_system_info, list)
+                else current_system_info
+            )
+
+        if not answer_text.strip():
+
+            return jsonify({
+                "success": False,
+                "error": "Student answer cannot be empty",
+            })
+
+        generate_result = comment_generate_old(
+            system_info=system_info,
+            answer_text=answer_text,
+            question_text=question_this,
+            reference_text=reference_this,
+            history_prompt_dict=history_prompt_dict,
+            predefined_flag=predefined_flag,
+        )
+
+        if not generate_result["success"]:
+            return jsonify(generate_result)
+
+        max_attempt_record = (
+            database["comment"]
+            .find_one({"tid": tid}, sort=[("attempt_id", -1)])
+        )
+
+        next_attempt_id = (
+            max_attempt_record.get("attempt_id", -1) + 1
+            if max_attempt_record
+            else 0
+        )
+
+        database["comment"].insert_one({
+            "tid": tid,
+            "aid": aid,
+            "question": qid,
+            "attempt_id": next_attempt_id,
+            "student_answer": answer_text,
+            "generated_response": generate_result["feedback_text"],
+            "system_config": {
+                "style_keywords": generate_result.get("style_keywords", []),
+                "feedback_templates": generate_result.get("feedback_templates", []),
+                "feedback_pattern": generate_result.get("feedback_pattern", ""),
+                "custom_rubric": generate_result.get("custom_rubric", ""),
+                "pattern_body": generate_result.get("pattern_body"),
+            },
+            "feedback_prob": generate_result.get("feedback_prob"),
+            "generated_at": datetime.utcnow(),
+        })
+
+        response = {
+            "success": True,
+            "tid": tid,
+            "aid": aid,
+            "attempt_id": next_attempt_id,
+        }
+
+    except Exception:
+
+        traceback.print_exc()
+
+        response = {
+            "success": False,
+            "error": GENERIC_FEEDBACK_ERROR,
+        }
+
+    return jsonify(response)
 

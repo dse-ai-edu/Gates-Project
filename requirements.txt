@@ -6,6 +6,7 @@ tqdm
 numpy
 
 openai
+google-genai
 
 boto3
 

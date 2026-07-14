@@ -1,0 +1,122 @@
+{
+  "q1": {
+    "content": "Use the limit definition of derivative to find the derivative of f(x) = \\frac{-3}{x^2}. You must use the limit definition of derivative to get any credit for this problem.",
+    "image": "",
+    "a1": {
+      "content": "",
+      "image": "./img/q1_a1.png"
+    },
+    "a2": {
+      "content": "",
+      "image": "./img/q1_a2.png"
+    },
+    "a3": {
+      "content": "",
+      "image": "./img/q1_a3.png"
+    },
+    "a4": {
+      "content": "",
+      "image": "./img/q1_a4.png"
+    },
+    "a5": {
+      "content": "",
+      "image": "./img/q1_a5.png"
+    }
+  },
+  "q2": {
+    "content": "Find the derivative of g(x) = \\sqrt[5]{\\frac{e^{x}+a}{2x^{3} + ax}}, where a is a constant. You do not need to simplify your answer.",
+    "image": "./img/q2.jpg",
+    "a1": {
+      "content": "",
+      "image": "./img/q2_a1.png"
+    },
+    "a2": {
+      "content": "",
+      "image": "./img/q2_a2.png"
+    },
+    "a3": {
+      "content": "",
+      "image": "./img/q2_a3.png"
+    },
+    "a4": {
+      "content": "",
+      "image": "./img/q2_a4.png"
+    },
+    "a5": {
+      "content": "",
+      "image": "./img/q2_a5.png"
+    }
+  },
+  "q3": {
+    "content": "A sphere is shrinking so that its volume is decreasing at a rate of 16 \\text{ cm}^{3}/\\text{min}. How fast is the sphere's radius decreasing when the volume is \\frac{32\\pi}{3} \\text{ cm}^{3}? Include units in your answer. \\textit{Hint:} The volume of a sphere of radius r is V = \\frac{4}{3}\\pi\\text{r}^{3}.",
+    "image": "./img/q3.jpg",
+    "a1": {
+      "content": "",
+      "image": "./img/q3_a1.png"
+    },
+    "a2": {
+      "content": "",
+      "image": "./img/q3_a2.png"
+    },
+    "a3": {
+      "content": "",
+      "image": "./img/q3_a3.png"
+    },
+    "a4": {
+      "content": "",
+      "image": "./img/q3_a4.png"
+    },
+    "a5": {
+      "content": "",
+      "image": "./img/q3_a5.png"
+    }
+  },
+  "q4": {
+    "content": "Find an equivalent expression for \\sin\\left(\\arccot\\left(\\frac{2\\sec(\\arctan x)}{x^{2}}\\right)\\right) that involves no trigonometric or inverse trigonometric functions.",
+    "image": "./img/q4.png",
+    "a1": {
+      "content": "",
+      "image": "./img/q4_a1.png"
+    },
+    "a2": {
+      "content": "",
+      "image": "./img/q4_a2.png"
+    },
+    "a3": {
+      "content": "",
+      "image": "./img/q4_a3.png"
+    },
+    "a4": {
+      "content": "",
+      "image": "./img/q4_a4.png"
+    },
+    "a5": {
+      "content": "",
+      "image": "./img/q4_a5.png"
+    }
+  },
+  "q5": {
+    "content": "Evaluate the following integrals. You do not need to simplify your answers. \\int \\left( \\frac{\\ln x}{x} \\right)^{2} \\, dx",
+    "image": "./img/q5.jpg",
+    "a1": {
+      "content": "",
+      "image": "./img/q5_a1.png"
+    },
+    "a2": {
+      "content": "",
+      "image": "./img/q5_a2.png"
+    },
+    "a3": {
+      "content": "",
+      "image": "./img/q5_a3.png"
+    },
+    "a4": {
+      "content": "",
+      "image": "./img/q5_a4.png"
+    },
+    "a5": {
+      "content": "",
+      "image": "./img/q5_a5.png"
+    }
+  }
+}

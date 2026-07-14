@@ -653,7 +653,7 @@ def api_image_convert():
 
         return jsonify({
             "success": False,
-            "error": str(e),
+            "error": "Failed to process the image. Please try again.",
         }), 500
 
 

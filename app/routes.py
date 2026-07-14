@@ -55,6 +55,11 @@ def home():
     return render_template("login.html")
 
 
+@bp_main.route("/login")
+def login():
+    return render_template("login.html")
+
+
 @bp_main.route(
     "/api/login",
     methods=["POST"],
@@ -87,7 +92,7 @@ def api_login():
 
         return jsonify({
             "success": False,
-            "message": str(e),
+            "message": "Login failed. Please try again.",
         })
 
 
@@ -137,4 +142,47 @@ def show_keyword_feedback_example():
         traceback.print_exc()
         response = {'success': False}
     return jsonify(response)
+
+
+@bp_main.route('/api/configuration/final', methods=['POST'])
+def configuration_final():
+    """Save final configuration and mark system as complete."""
+    data = request.get_json()
+    tid = data.get('tid')
+    try:
+        database['comment_status'].find_one_and_update(
+            {'tid': tid},
+            {'$set': {
+                'completed': True,
+                'completed_at': datetime.utcnow(),
+                'final_config': data.get('finalConfiguration', {}),
+            }},
+        )
+        response = {'success': True}
+    except Exception:
+        traceback.print_exc()
+        response = {'success': False}
+    return jsonify(response)
+
+
+@bp_main.route('/api/session/create', methods=['POST'])
+def session_create():
+    """Create a new session id for the feedback system."""
+    try:
+        session_id = str(uuid.uuid4())
+        response = {'success': True, 'session_id': session_id}
+    except Exception:
+        traceback.print_exc()
+        response = {'success': False}
+    return jsonify(response)
+
+
+@bp_main.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint."""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'service': 'feedback-generation-system',
+    })
 
