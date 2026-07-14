@@ -590,11 +590,11 @@ def comment_generate(system_info, answer_text, question_text, reference_text, hi
                 'feedback_prob': feedback_prob,
                 'style_keywords': style_keywords,
                 'feedback_templates': feedback_templates,
-                'feedback_pattern': selected_pattern_key,
+                'feedback_pattern': pattern_key,   # resolved/effective pattern (e.g. Plain, Custom)
                 'from_adaptive': from_adaptive,
                 'custom_rubric': custom_rubric,
                 'pattern_body': pattern_body,
-                "grade_success": True, 
+                "grade_success": True,
                 "grade": grading_result['score'],
                 "grade_history": grading_result.get("dialogue_history", []),
             }
@@ -652,11 +652,11 @@ def comment_generate_old(system_info, answer_text, question_text, reference_text
                 'feedback_prob': feedback_prob,
                 'style_keywords': style_keywords,
                 'feedback_templates': feedback_templates,
-                'feedback_pattern': feedback_pattern,
+                'feedback_pattern': pattern_key,   # resolved/effective pattern (e.g. Plain, Custom)
                 'custom_rubric': custom_rubric,
                 'pattern_body': pattern_body,
             }
-        
+
     except Exception as e:
         traceback.print_exc()
         print(system_info)
