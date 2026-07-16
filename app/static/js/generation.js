@@ -106,9 +106,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const file = fileInput.files[0];
       if (!file) return;
 
-      const allowed = ["image/png", "image/jpeg", "application/pdf"];
+      // Uploads are restricted to images on the frontend. PDF is intentionally
+      // NOT offered here, but the backend still accepts and processes PDFs
+      // (see the `ext == 'pdf'` branch / process_pdf in the image-convert
+      // route), so re-enabling it later only means adding "application/pdf"
+      // back here and ".pdf" to the accept="" attributes in page_final.html.
+      const allowed = ["image/png", "image/jpeg"];
       if (!allowed.includes(file.type)) {
-        alert("Only PNG, JPG, or PDF files are allowed.");
+        alert("Only PNG or JPG files are allowed.");
         fileInput.value = "";
         return;
       }
